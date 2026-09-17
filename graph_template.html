@@ -1,0 +1,580 @@
+<title>理财词图</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700&display=swap">
+<style>
+/* ── 配色：账本纸 + 墨。浅色是默认，深色是重定义同一批 token ── */
+:root{
+  --paper:#F2F5F2; --card:#FFFFFF; --card-2:#F7F9F7;
+  --ink:#141C18; --ink-2:#4A5751; --ink-3:#7C8A83;
+  --rule:#DDE3DE; --rule-2:#EAEFEA;
+  --accent:#1B6B4C;
+  --dot:#D7DED8;
+  --shadow:0 1px 2px rgba(20,28,24,.06),0 8px 28px -12px rgba(20,28,24,.22);
+  --f0:#3D6FB4; --f1:#12897A; --f2:#C4761A; --f3:#B44A73; --f4:#6E5AA8; --f5:#BF452F;
+  --serif:"Noto Serif SC",Georgia,"Songti SC",serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#101512; --card:#171E1A; --card-2:#1D2620;
+    --ink:#E8EEE9; --ink-2:#A9B7B0; --ink-3:#7A8881;
+    --rule:#27322C; --rule-2:#1F2A24;
+    --accent:#5CC79A;
+    --dot:#232E28;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px -14px rgba(0,0,0,.7);
+    --f0:#7BA3DE; --f1:#3FBCA8; --f2:#E0A253; --f3:#DE7BA1; --f4:#A292DC; --f5:#E5765C;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#101512; --card:#171E1A; --card-2:#1D2620;
+  --ink:#E8EEE9; --ink-2:#A9B7B0; --ink-3:#7A8881;
+  --rule:#27322C; --rule-2:#1F2A24;
+  --accent:#5CC79A;
+  --dot:#232E28;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px -14px rgba(0,0,0,.7);
+  --f0:#7BA3DE; --f1:#3FBCA8; --f2:#E0A253; --f3:#DE7BA1; --f4:#A292DC; --f5:#E5765C;
+}
+
+*{box-sizing:border-box}
+/* ★`hidden` 属性必须真能藏住东西。UA 的 [hidden]{display:none} 只是普通声明级，
+   作者样式里任何一条 display 都压得过它 —— `.empty{display:flex}` 就把占位提示顶了回来，
+   于是点开词条后它照旧杵在面板里，还把解释挤到一屏之外（点开像没反应）。
+   JS 用 el.hidden 表达"藏起来"，这条保证那句话有 CSS 撑腰。 */
+[hidden]{display:none !important}
+html{height:100%}
+body{
+  display:flex; flex-direction:column;
+  /* ★height 不能只写 min-height：min-height 给的是下限，容器高度仍是"看内容"，
+     而 flex 只有在容器高度确定时才谈得上"把子项压到剩余空间"。写成 min-height:100dvh
+     时，面板里的长解释会把 main 撑到 1337px —— 整页 1446px，图被顶出屏幕、
+     面板自己不滚（点开一个词看着像什么都没发生）。 */
+  height:100dvh;
+  margin:0; background:var(--paper); color:var(--ink);
+  font:400 15px/1.7 -apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB",
+       "Microsoft YaHei","Source Han Sans SC","Noto Sans CJK SC",sans-serif;
+  -webkit-font-smoothing:antialiased;
+  padding-block:0; padding-inline:0;
+}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+
+/* ── 页头 ── */
+header{
+  position:sticky; top:env(safe-area-inset-top,0px); z-index:30;
+  background:color-mix(in srgb,var(--paper) 88%,transparent);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--rule);
+  padding:12px 18px 0;
+}
+.bar{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+h1{
+  font:600 19px/1.2 var(--serif); margin:0; letter-spacing:.01em;
+  white-space:nowrap;
+}
+h1 .sub{font:400 12px/1 inherit;color:var(--ink-3);letter-spacing:.06em;margin-left:9px;
+  font-family:inherit;vertical-align:2px}
+#q{
+  flex:1 1 200px; max-width:330px; min-width:0;
+  padding:8px 13px; border:1px solid var(--rule); border-radius:3px;
+  background:var(--card); color:var(--ink); font-size:14px;
+}
+#q:focus-visible{outline:2px solid var(--accent);outline-offset:1px;border-color:transparent}
+#hits{
+  position:absolute; z-index:40; margin-top:5px; max-height:290px; overflow-y:auto;
+  background:var(--card); border:1px solid var(--rule); border-radius:4px;
+  box-shadow:var(--shadow); min-width:230px;
+}
+#hits button{display:block;width:100%;text-align:left;padding:7px 13px;font-size:14px}
+#hits button:hover,#hits button:focus-visible{background:var(--card-2)}
+#hits .m{color:var(--ink-3);font-size:12px;margin-left:7px}
+#hits .none{padding:9px 13px;color:var(--ink-3);font-size:13px}
+
+/* ── 图例：兼作色族筛选 ── */
+.legend{display:flex;gap:6px;overflow-x:auto;padding:11px 0 12px;scrollbar-width:none}
+.legend::-webkit-scrollbar{display:none}
+.chip{
+  display:inline-flex;align-items:center;gap:7px;white-space:nowrap;
+  padding:5px 11px 5px 9px;border:1px solid var(--rule);border-radius:2px;
+  font-size:12.5px;color:var(--ink-2);background:var(--card);
+  transition:border-color .12s,color .12s;
+}
+.chip:hover{border-color:var(--ink-3);color:var(--ink)}
+.chip[aria-pressed="true"]{border-color:currentColor;color:var(--ink);
+  box-shadow:inset 0 -2px 0 currentColor}
+.chip .sw{width:9px;height:9px;border-radius:50%;flex:none}
+.chip .n{font-variant-numeric:tabular-nums;color:var(--ink-3);font-size:11.5px}
+
+/* ── 主体：图 + 面板 ── */
+/* 高度用 flex 撑出来，不写死 calc(100dvh - 108px)：页头会换行，写死的高度在
+   窄屏上要么把图压扁要么把页头顶出屏幕外。
+   ★但 flex 要能撑出高度，前提是 body 自己有确定的高度 —— 见上面 body 的 height:100dvh。
+   只有 min-height 的话，flex 容器的高度是"由内容决定"的，此时 flex:1/min-height:0
+   全部失效：面板里那段长解释把栅格行顶到 1337px，整页 1446px，于是图、页头一起被
+   顶出屏幕，而面板自己没有滚动条（看着就像"点开没反应"）。 */
+main{flex:1 1 auto;min-height:0;display:grid;
+  grid-template-columns:minmax(0,1fr) 400px;gap:0}
+#stage{position:relative;overflow:hidden;
+  background:radial-gradient(circle at center,var(--dot) 1px,transparent 1px) 0 0/22px 22px}
+#net{width:100%;height:100%;display:block;cursor:grab;touch-action:none}
+#net.drag{cursor:grabbing}
+
+/* 关系：属于=细实线（骨架）／前提=带箭头／对比=虚线 */
+.link{stroke-linecap:round;fill:none}
+.link.belong{stroke:var(--rule);stroke-width:1}
+.link.prereq{stroke:color-mix(in srgb,var(--accent) 34%,transparent);stroke-width:1.2}
+.link.contrast{stroke:color-mix(in srgb,var(--f2) 40%,transparent);stroke-width:1.2;stroke-dasharray:3 4}
+.link.on{stroke-width:2.2;stroke:var(--accent);stroke-dasharray:none;opacity:1}
+.link.contrast.on{stroke:var(--f2)}
+#dim .link:not(.on){opacity:.07}
+#dim .node:not(.on){opacity:.13}
+/* 标签不在这里写 dim 规则：标签透明度全由 JS 按「是不是选中项的邻居」逐个算，
+   行内样式本来就压得住这条选择器，写了等于一条永不生效的死规则。 */
+
+.node{cursor:pointer}
+.node circle{stroke:var(--card);stroke-width:1.5;transition:stroke-width .1s}
+.node.cat circle{stroke-dasharray:2.5 2}
+.node:hover circle{stroke-width:3}
+.node.on circle{stroke:var(--ink);stroke-width:2.6}
+.node text{pointer-events:none}
+.lbl{
+  font-size:10.5px;fill:var(--ink-2);text-anchor:middle;
+  paint-order:stroke;stroke:var(--paper);stroke-width:3px;stroke-linejoin:round;
+  transition:opacity .12s;
+}
+.lbl.big{font-size:12px;font-weight:600;fill:var(--ink)}
+.lbl.on{font-size:12.5px;font-weight:600;fill:var(--ink)}
+
+/* 图上角的提示与复位 */
+#hint{
+  position:absolute;left:16px;bottom:14px;font-size:12px;color:var(--ink-3);
+  pointer-events:none;max-width:60%
+}
+#reset{
+  position:absolute;right:14px;bottom:13px;font-size:12.5px;
+  padding:5px 11px;border:1px solid var(--rule);border-radius:3px;
+  background:var(--card);color:var(--ink-2);box-shadow:var(--shadow)
+}
+#reset:hover{color:var(--ink);border-color:var(--ink-3)}
+
+/* ── 解释面板 ── */
+#panel{
+  border-left:1px solid var(--rule);background:var(--card);
+  overflow-y:auto;overscroll-behavior:contain;position:relative;
+  /* ★min-height:0 不能省：栅格行高默认按内容的 min-content 撑，词条解释又长，
+     于是行高被撑到 1579px、整个页面纵向溢出 738px —— 面板自己不滚，
+     反倒把图和页头一起顶出屏幕。归零之后行高由容器决定，滚动条才落在面板里。 */
+  min-height:0;
+}
+.empty{
+  display:flex;flex-direction:column;justify-content:center;height:100%;
+  padding:34px 30px;color:var(--ink-3);gap:11px
+}
+.empty strong{color:var(--ink-2);font-weight:600}
+.empty .eg{font-size:13px;line-height:1.9}
+.empty kbd{
+  font:inherit;font-size:12px;padding:1px 6px;border:1px solid var(--rule);
+  border-bottom-width:2px;border-radius:3px;color:var(--ink-2);background:var(--card-2)
+}
+.head{padding:22px 26px 15px;border-bottom:1px solid var(--rule-2)}
+.eyebrow{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--ink-3);
+  letter-spacing:.1em;margin-bottom:9px}
+.eyebrow .sw{width:9px;height:9px;border-radius:50%;flex:none}
+.eyebrow .tag{border:1px solid var(--rule);padding:1px 7px;border-radius:2px;letter-spacing:.04em}
+.head h2{font:600 27px/1.25 var(--serif);margin:0;letter-spacing:.02em;word-break:break-word}
+.head .why{color:var(--ink-2);font-size:13.5px;margin-top:9px}
+.meta{display:flex;gap:16px;margin-top:13px;font-size:12px;color:var(--ink-3);
+  font-variant-numeric:tabular-nums;flex-wrap:wrap}
+
+.body{padding:6px 26px 30px}
+.field{padding:15px 0;border-bottom:1px solid var(--rule-2)}
+.field:last-child{border-bottom:0}
+.field .k{
+  display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;
+  letter-spacing:.11em;color:var(--ink-3);margin-bottom:6px
+}
+.field .k::before{content:"";width:3px;height:11px;border-radius:1px;background:currentColor}
+.f-one .k{color:var(--accent)}
+.f-eg .k{color:var(--f1)}
+.f-wrong .k{color:var(--f5)}
+.f-vs .k{color:var(--f2)}
+.f-note .k{color:var(--f4)}
+.field .v{color:var(--ink);font-size:15px}
+.f-one .v{font-size:17px;line-height:1.65}
+.f-wrong .v,.f-vs .v{color:var(--ink-2);font-size:14.5px}
+strong{font-weight:600;color:var(--ink)}
+.f-wrong strong,.f-vs strong{color:var(--ink)}
+.f-note .v{font-size:14.5px;color:var(--ink-2)}
+
+/* 关系跳转 —— 点一下走到图上的另一个词 */
+.rel{margin-top:19px;padding-top:15px;border-top:1px solid var(--rule)}
+.rel h3{font-size:11.5px;letter-spacing:.11em;color:var(--ink-3);font-weight:600;margin:0 0 9px}
+.rel .row{display:flex;gap:7px;align-items:baseline;margin-bottom:10px}
+.rel .rt{font-size:11.5px;color:var(--ink-3);width:34px;flex:none;padding-top:2px}
+.rel .items{display:flex;flex-wrap:wrap;gap:6px}
+.rel button{
+  font-size:13px;padding:3.5px 10px;border:1px solid var(--rule);border-radius:2px;
+  background:var(--card-2);color:var(--ink-2);transition:.12s
+}
+.rel button:hover{border-color:var(--accent);color:var(--accent)}
+.rel .rt-belong{color:var(--ink-3)}
+.catlist{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.catlist button{font-size:13px;padding:4px 10px;border:1px solid var(--rule);
+  border-radius:2px;background:var(--card-2);color:var(--ink-2)}
+.catlist button:hover{border-color:var(--accent);color:var(--accent)}
+
+#close{position:absolute;top:15px;right:17px;width:30px;height:30px;border-radius:3px;
+  display:none;align-items:center;justify-content:center;color:var(--ink-3);font-size:19px;line-height:1}
+#close:hover{background:var(--card-2);color:var(--ink)}
+
+/* ── 窄屏：图在上，解释从下方升起 ── */
+@media(max-width:860px){
+  main{grid-template-columns:1fr;min-height:420px}
+  #panel{
+    position:fixed;left:0;right:0;bottom:0;top:auto;max-height:76dvh;
+    border-left:0;border-top:1px solid var(--rule);border-radius:12px 12px 0 0;
+    box-shadow:0 -14px 40px -18px rgba(0,0,0,.4);
+    transform:translateY(101%);transition:transform .26s cubic-bezier(.32,.72,0,1);
+    z-index:50;padding-bottom:env(safe-area-inset-bottom,0px)
+  }
+  #panel.up{transform:none}
+  #close{display:flex}
+  .head{padding:20px 20px 14px}.body{padding:4px 20px 26px}
+  #hint{max-width:52%}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<header>
+  <div class="bar">
+    <h1>理财词图<span class="sub">217 个词 · 289 个节点</span></h1>
+    <div style="position:relative;flex:1 1 200px;max-width:330px">
+      <input id="q" type="search" placeholder="搜一个词，比如「夏普比率」" autocomplete="off"
+             aria-label="搜索词条" role="combobox" aria-expanded="false" aria-controls="hits">
+      <div id="hits" hidden></div>
+    </div>
+  </div>
+  <div class="legend" id="legend" role="group" aria-label="按类别筛选"></div>
+</header>
+
+<main>
+  <div id="stage">
+    <svg id="net" role="img" aria-label="理财词条关系图"></svg>
+    <div id="hint">点任意一个节点看解释 · 滚轮缩放 · 拖动平移</div>
+    <button id="reset">看全图</button>
+  </div>
+  <aside id="panel" aria-live="polite">
+    <button id="close" aria-label="关闭">×</button>
+    <div class="empty" id="empty">
+      <strong>点图上的任意一个词</strong>
+      <div>解释会在这里展开——一句话、例子、最容易踩的误区，<br>以及它和哪个词最容易搞混。</div>
+      <div class="eg">不知道从哪开始？搜 <kbd>复利</kbd>、<kbd>夏普比率</kbd>、<kbd>可转债</kbd>…<br>
+      或者点图上最大的那个圈——「基金」，它连着 52 个词。</div>
+    </div>
+    <div id="detail"></div>
+  </aside>
+</main>
+
+<script>
+const D = /*__DATA__*/;
+const FAM = ['var(--f0)','var(--f1)','var(--f2)','var(--f3)','var(--f4)','var(--f5)'];
+/* 关系名直接用中文：graph_data.json 里的 r 就是「属于/前提/对比」（跟 md 同源），
+   别在这里转成 CSS 名再比 —— 转过一次，filter 永远空，217 个词条的"它连着谁"全是"没有连线"。 */
+const REL_ORDER = ['属于', '前提', '对比'];
+const byId = new Map(D.nodes.map(n => [n.id, n]));
+
+/* md 里只有 **粗体** 一种标记，转义在前、替换在后 */
+const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const md = s => esc(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+const color = n => n.kind === 'cat' ? 'var(--ink-3)' : FAM[n.fam];
+
+/* ── 建图：先算每个节点的半径与邻接表 ── */
+const NB = new Map(D.nodes.map(n => [n.id, []]));   // id -> [{other, rel}]
+for (const l of D.links) {
+  NB.get(l.s).push({other: l.t, rel: l.r});
+  NB.get(l.t).push({other: l.s, rel: l.r});
+}
+const weight = n => n.kind === 'cat' ? 6 + 3.6 * Math.sqrt(n.refs) : 4.2 + 2.3 * Math.sqrt(n.deg);
+
+const svg = document.getElementById('net');
+const NS = 'http://www.w3.org/2000/svg';
+const el = (t, a) => { const e = document.createElementNS(NS, t);
+  for (const k in a) e.setAttribute(k, a[k]); return e; };
+
+const gLink = el('g', {}), gNode = el('g', {});
+const gDim = el('g', {id: 'dim'});
+gDim.append(gLink, gNode); svg.append(gDim);
+
+/* ★坐标（n.x / n.y）是 build_graph.py 离线算好的，只在建元素时写一次；
+   写在这里而不是 render() 里，是因为 render() 每点一次都要跑 289 个节点，
+   而位置从不变化。
+   ★少了这一句的后果不是"布局难看"，而是"整张图消失"：289 个节点、625 条边
+   全落在 SVG 用户坐标的原点，fit() 一把视图居中，屏幕上只剩中心一个墨点
+   —— 页头、图例、解释面板全都正常，所以从外观看像"页面好了、就是没有节点"。 */
+const linkEls = D.links.map(l => {
+  const a = byId.get(l.s), b = byId.get(l.t);
+  const e = el('line', {class: 'link ' + (l.r === '属于' ? 'belong' : l.r === '前提' ? 'prereq' : 'contrast'),
+                        x1: a.x, y1: a.y, x2: b.x, y2: b.y});
+  e.__a = a; e.__b = b;
+  gLink.append(e); return e;
+});
+
+const nodeEls = D.nodes.map(n => {
+  const g = el('g', {class: 'node' + (n.kind === 'cat' ? ' cat' : ''), tabindex: 0,
+                     role: 'button', 'aria-label': n.id});
+  const c = el('circle', {cx: n.x, cy: n.y, r: weight(n), fill: color(n),
+                          'fill-opacity': n.kind === 'cat' ? .1 : .92});
+  const t = el('text', {class: 'lbl' + (n.deg >= 11 || n.kind === 'cat' ? ' big' : ''),
+                        x: n.x, y: n.y, dy: weight(n) + 12});
+  t.textContent = n.id;
+  g.append(c, t);
+  g.__n = n; g.__t = t;
+  gNode.append(g); return g;
+});
+
+/* ── 视图变换：直接改 viewBox，比 transform 好写命中测试 ──
+   ★单位就是屏幕像素：view.w == 画布像素宽 时 1 用户单位 = 1 像素，CSS 里写的
+   10.5px 字号、1px 线宽、stroke 宽度才是它们字面上的尺寸。
+   整张图有 5340 单位宽，缩进一屏只剩 0.13 像素/单位 —— 字会被压成 1.7px 的墨点
+   （曾经的"看全图"就是这样，满屏灰糊看着像没有节点）。所以打开时先给 1:1 的那一屏。 */
+const bb = (() => {
+  const xs = D.nodes.map(n => n.x), ys = D.nodes.map(n => n.y);
+  return {x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys)};
+})();
+const HOME = D.nodes.reduce((a, b) => weight(b) > weight(a) ? b : a);   // 最粗的那个圈：基金
+let view = {x: 0, y: 0, w: 1, h: 1};
+const PAD = 40;                                    // 「看全图」时四周留的屏幕像素
+const applyView = () => svg.setAttribute('viewBox', `${view.x} ${view.y} ${view.w} ${view.h}`);
+const scale = () => svg.clientWidth / view.w;      // 屏幕像素 / 用户单位
+/* 最近一次的缩放比例。拖窗口时要按它重铺 —— 那时候 clientWidth 已经是新值，
+   现算 scale() 会拿新的画布宽去配旧的 view.w，结果是窗口一变窄字就变小。 */
+let pxPerUnit = 1;
+
+/* 视图 = 以 (cx,cy) 为中心、每用户单位 s 像素铺满画布。viewBox 与画布永远同比例，
+   所以图不会被拉变形，也不需要旧版那种"撑到同比例"的补丁。 */
+function setView(cx, cy, s) {
+  const cw = svg.clientWidth, ch = svg.clientHeight;
+  if (!cw || !ch) return;
+  view = {x: cx - cw / 2 / s, y: cy - ch / 2 / s, w: cw / s, h: ch / s};
+  pxPerUnit = s;
+  applyView(); render();
+}
+
+function home() { setView(HOME.x, HOME.y, 1); }    // 打开：真尺寸，落在「基金」上
+
+function fit() {                                   // 看全图：整张图缩进一屏
+  const cw = svg.clientWidth, ch = svg.clientHeight;
+  if (!cw || !ch) return;
+  const s = Math.min((cw - 2 * PAD) / (bb.x1 - bb.x0), (ch - 2 * PAD) / (bb.y1 - bb.y0));
+  setView((bb.x0 + bb.x1) / 2, (bb.y0 + bb.y1) / 2, s);
+}
+
+/* ── 交互状态 ── */
+let sel = null, famFilter = null;
+
+const isFiltered = n => famFilter !== null && n.kind === 'term' && n.fam !== famFilter;
+/* 这个圈上的字在屏幕上真有 8px 高吗。低于 8px 的中文就是一坨墨点，画出来只是噪声
+   —— 全图缩略时整张图因此是干净的点阵，而不是一片灰糊。 */
+function legible(n) {
+  return (n.deg >= 11 || n.kind === 'cat' ? 12 : 10.5) * scale() >= 8;
+}
+/* 在眼前吗（按当前视图裁，不是按整张图）。 */
+function onScreen(n) {
+  return n.x >= view.x && n.x <= view.x + view.w && n.y >= view.y && n.y <= view.y + view.h;
+}
+/* 标签显隐的唯一判据。悬停处理器也用这一条算默认值，两处共用一个函数才不会各自漂移。
+   ★"能读"是两件事：字够大（legible）**且**在眼前（onScreen）。
+   只按 legible 放行的话，1:1 停在「基金」上时第一屏只有两个标签 —— 因为旧规则只放
+   全局枢纽词（deg>=11），而基金旁边那些词恰恰度数都很小。可放大之后看的正是它们，
+   它们反倒没名字，屏幕上就只剩线和点了（用户看到的就是这个）。
+   反过来，看全图时 scale 小到 0.05，放开的标签全被 8px 那道闸拦下，缩略图照旧是
+   干净的点阵 —— 两条闸各管一头，不会互相漏。 */
+const lblShow = n => legible(n) && !isFiltered(n) && onScreen(n);
+
+/* 三层明暗：选中的邻居全亮 → 其余压到 .13（由 CSS 的 #dim 规则兜底）→ 色族筛掉的压到 .1。
+   标签全部由 JS 控制，所以 CSS 里不给 .lbl 写 dim 规则（行内样式本来也会赢）。 */
+function render() {
+  const nb = sel ? new Set([sel, ...NB.get(sel).map(x => x.other)]) : null;
+  for (const e of linkEls) e.classList.toggle('on', !!sel && (e.__a.id === sel || e.__b.id === sel));
+  for (const g of nodeEls) {
+    const n = g.__n;
+    const linked = !sel || nb.has(n.id);
+    g.classList.toggle('on', sel === n.id);
+    g.style.opacity = isFiltered(n) ? .1 : (linked ? 1 : '');
+    g.__t.style.opacity = lblShow(n) ? (linked ? 1 : .12) : 0;
+  }
+  gDim.id = sel ? 'dim' : 'nodim';
+}
+
+function select(id, scroll) {
+  sel = id;
+  render();
+  const p = document.getElementById('panel'), d = document.getElementById('detail');
+  if (!id) {
+    d.innerHTML = ''; document.getElementById('empty').hidden = false;
+    p.classList.remove('up'); return;
+  }
+  document.getElementById('empty').hidden = true;
+  d.innerHTML = panelHTML(byId.get(id));
+  p.classList.add('up');
+  if (scroll !== false) p.scrollTop = 0;
+  const g = nodeEls.find(x => x.__n.id === id);
+  if (g) g.parentNode.appendChild(g);          // 选中的节点提到最上层
+}
+
+function panelHTML(n) {
+  if (n.kind === 'cat') {
+    const ms = n.members.slice().sort((a, b) => byId.get(b).deg - byId.get(a).deg);
+    return `<div class="head">
+        <div class="eyebrow"><span class="sw" style="background:var(--ink-3)"></span>
+          <span class="tag">分类</span><span>骨架节点</span></div>
+        <h2>${esc(n.id)}</h2>
+        <div class="why">这不是一个词条，而是一类东西的名字——图上 ${n.refs} 个词条挂在它下面。</div>
+      </div>
+      <div class="body"><div class="rel"><h3>属于它的词条（${n.refs}）</h3>
+        <div class="catlist">${ms.map(m =>
+          `<button data-go="${esc(m)}">${esc(m)}</button>`).join('')}</div></div></div>`;
+  }
+
+  const F = n.f;
+  const field = (cls, k, v) => v ? `<div class="field ${cls}"><div class="k">${k}</div>
+      <div class="v">${md(v)}</div></div>` : '';
+  const rows = REL_ORDER.map(rel => {
+    const list = NB.get(n.id).filter(x => x.rel === rel);
+    if (!list.length) return '';
+    const seen = new Set();
+    const btns = list.filter(x => !seen.has(x.other) && seen.add(x.other))
+      .map(x => `<button data-go="${esc(x.other)}">${esc(x.other)}</button>`).join('');
+    return `<div class="row"><div class="rt">${rel}</div><div class="items">${btns}</div></div>`;
+  }).join('');
+
+  return `<div class="head">
+      <div class="eyebrow"><span class="sw" style="background:${color(n)}"></span>
+        <span class="tag">${n.cat}</span><span>${esc(n.catName)}</span>
+        ${n.root ? '<span class="tag" title="没有前提，可以从它开始学">起点</span>' : ''}</div>
+      <h2>${esc(n.id)}</h2>
+      <div class="meta"><span>连接 ${n.deg} 个词</span>
+        ${n.vs.length ? `<span>最易混：${esc(n.vs.join('、'))}</span>` : ''}</div>
+    </div>
+    <div class="body">
+      ${field('f-one', '一句话', F['一句话'])}
+      ${field('f-eg', '例子', F['例子'])}
+      ${field('f-wrong', '误区', F['误区'])}
+      ${field('f-vs', n.vs.length ? `辨析 · vs ${esc(n.vs.join('、'))}` : '辨析', F['辨析'])}
+      ${field('f-note', '提醒', F['提醒'])}
+      <div class="rel"><h3>它连着谁</h3>${rows || '<div class="v" style="color:var(--ink-3)">没有连线</div>'}</div>
+    </div>`;
+}
+
+/* ── 事件 ── */
+gNode.addEventListener('click', e => {
+  const g = e.target.closest('.node'); if (g) select(g.__n.id);
+});
+gNode.addEventListener('keydown', e => {
+  const g = e.target.closest('.node');
+  if (g && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); select(g.__n.id); }
+});
+/* 悬停时标签的默认显隐要和 render() 用同一套判据（lblShow），
+   否则开着色族筛选时鼠标一扫，被筛掉的标签会赖着亮、该亮的反而灭掉。 */
+gNode.addEventListener('mouseover', e => {
+  const g = e.target.closest('.node');
+  if (g && !sel && legible(g.__n)) g.__t.style.opacity = 1;
+});
+gNode.addEventListener('mouseout', e => {
+  const g = e.target.closest('.node');
+  if (g && !sel) g.__t.style.opacity = lblShow(g.__n) ? 1 : 0;
+});
+
+document.getElementById('detail').addEventListener('click', e => {
+  const b = e.target.closest('[data-go]');
+  if (b) select(b.dataset.go);
+});
+document.getElementById('close').onclick = () => select(null);
+document.getElementById('reset').onclick = () => { fit(); select(null); };
+
+/* 拖动平移 */
+let drag = null;
+svg.addEventListener('pointerdown', e => {
+  if (e.target.closest('.node')) return;
+  drag = {x: e.clientX, y: e.clientY, vx: view.x, vy: view.y};
+  svg.classList.add('drag'); svg.setPointerCapture(e.pointerId);
+});
+svg.addEventListener('pointermove', e => {
+  if (!drag) return;
+  const s = view.w / svg.clientWidth;
+  view.x = drag.vx - (e.clientX - drag.x) * s;
+  view.y = drag.vy - (e.clientY - drag.y) * s;
+  applyView();
+});
+const endDrag = e => {
+  if (!drag) return;
+  const moved = Math.abs(e.clientX - drag.x) + Math.abs(e.clientY - drag.y);
+  drag = null; svg.classList.remove('drag');
+  if (moved < 4 && !e.target.closest('.node')) select(null);   // 空白处轻点 = 取消选中
+};
+svg.addEventListener('pointerup', endDrag);
+svg.addEventListener('pointercancel', () => { drag = null; svg.classList.remove('drag'); });
+
+/* 滚轮缩放（以指针为中心）。缩放会改 scale()，标签的可读性跟着变，
+   所以要重算一次 render() —— 放大到 10.5px 以上，词才浮出来。 */
+svg.addEventListener('wheel', e => {
+  e.preventDefault();
+  const r = svg.getBoundingClientRect();
+  const px = view.x + (e.clientX - r.left) / r.width * view.w;
+  const py = view.y + (e.clientY - r.top) / r.height * view.h;
+  const k = Math.exp(e.deltaY * 0.0013);
+  view.w *= k; view.h *= k;
+  view.x = px - (px - view.x) * k;
+  view.y = py - (py - view.y) * k;
+  applyView(); render();
+}, {passive: false});
+
+/* ── 图例 / 筛选 ── */
+const legend = document.getElementById('legend');
+const counts = D.families.map((f, i) => D.nodes.filter(n => n.kind === 'term' && n.fam === i).length);
+D.families.forEach((f, i) => {
+  const b = document.createElement('button');
+  b.className = 'chip'; b.setAttribute('aria-pressed', 'false');
+  b.innerHTML = `<span class="sw" style="background:${FAM[i]}"></span>${esc(f.name)}
+                 <span class="n">${counts[i]}</span>`;
+  b.onclick = () => {
+    famFilter = famFilter === i ? null : i;
+    [...legend.children].forEach((c, j) =>
+      c.setAttribute('aria-pressed', String(famFilter === j)));
+    render();
+  };
+  legend.append(b);
+});
+
+/* ── 搜索 ── */
+const q = document.getElementById('q'), hits = document.getElementById('hits');
+function search() {
+  const s = q.value.trim().toLowerCase();
+  if (!s) { hits.hidden = true; q.setAttribute('aria-expanded', 'false'); return; }
+  const found = D.nodes.filter(n =>
+    n.id.toLowerCase().includes(s) ||
+    (n.kind === 'term' && (n.f['一句话'] || '').toLowerCase().includes(s)))
+    .sort((a, b) => (a.id.toLowerCase().indexOf(s) - b.id.toLowerCase().indexOf(s))
+                 || (b.deg - a.deg)).slice(0, 9);
+  hits.innerHTML = found.length
+    ? found.map(n => `<button data-go="${esc(n.id)}">${esc(n.id)}
+        <span class="m">${n.kind === 'cat' ? '分类 ' + n.refs + ' 个词条' : esc(n.catName)}</span>
+        </button>`).join('')
+    : '<div class="none">没找到——试试更短的关键词</div>';
+  hits.hidden = false; q.setAttribute('aria-expanded', 'true');
+}
+q.addEventListener('input', search);
+q.addEventListener('focus', search);
+hits.addEventListener('click', e => {
+  const b = e.target.closest('[data-go]');
+  if (b) { select(b.dataset.go); hits.hidden = true; q.value = ''; }
+});
+document.addEventListener('click', e => { if (!e.target.closest('#hits, #q')) hits.hidden = true; });
+q.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { hits.hidden = true; q.blur(); }
+  if (e.key === 'Enter') { const b = hits.querySelector('[data-go]'); if (b) { select(b.dataset.go); hits.hidden = true; } }
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') select(null); });
+
+/* 窗口尺寸变了：保住缩放比例和中心（字的大小不该被拖窗口改掉），
+   只把 viewBox 重新铺满新的画布。 */
+window.addEventListener('resize', () =>
+  setView(view.x + view.w / 2, view.y + view.h / 2, pxPerUnit));
+home();
+</script>
