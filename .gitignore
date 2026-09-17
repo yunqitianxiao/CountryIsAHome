@@ -4,3 +4,6 @@ __pycache__/
 
 # 截图与调试产物一律不入库 —— 交付面只留「可重建的文本」
 *.png
+
+# 模型权重不入库（Kronos-small 99 MB，已贴近 GitHub 单文件 100 MB 硬上限）
+models/
