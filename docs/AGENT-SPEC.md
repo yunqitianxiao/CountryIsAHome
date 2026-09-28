@@ -287,10 +287,15 @@ def ring(limit=120) -> list[dict]  # 最近的快照索引
 ### 3.6 前端（A6/A7 负责）
 
 - 新增页面路由：`/agents`（多智能体博弈）、`/intraday`（分钟策略）、`/linkage`（关联检测）、`/collect`（采集监视）、`/psych`（心理）
-- **双主题**：默认深色，可切浅色。所有颜色走 CSS 变量/design token，**不许在组件里写死色值**。
+- **双主题**：默认**亮色**（2026-09-28 由深色翻过来的，别照旧文档写"默认深色"），可切暗色。
+  ★这个决定散在**五处载体**上，改它必须一起动：`theme.ts` 的 `DEFAULT_THEME`／`web/index.html`
+  <head> 里的防闪脚本／`dark-first-theme.css` 的 `:root { color-scheme }`／
+  `graph_template.html` 的根元素 `data-theme`／`verify_agent.py` 的判据 ③④⑧与两条注入的锚点。
+  所有颜色走 CSS 变量/design token，**不许在组件里写死色值**。
 - 必须用到的 skill：`frontend-ui-engineering`、`tremor-design-system`、`tailwind-4-docs`、`dataviz`。
 - ★已知坑（务必读）：Tremor 的 `AreaChart` 包在 `ResponsiveContainer` 里时**同步 tick 出不了图**（ResizeObserver 异步）—— 需要"定尺寸分支"。已有先例在 `web/src/utils/ChartSizer.tsx`。
-- ★`graph.html` 是**硬钉深色**的（已知取舍），不要动它的主题。
+- ★`graph.html` 是**硬钉一套主题**的（现在是亮色，2026-09-28 跟着 SPA 翻的），不要单独动它的主题。
+  已知取舍是它**不跟随**用户在站内切的主题 —— 见 `graph_template.html` 顶部注释的「★代价」。
 - ★改 `web/src/**` 之后必须 `cd web && npm run build`（产物入库，`run.sh` 会检查 dist 是否比 src 新）。
 
 ---

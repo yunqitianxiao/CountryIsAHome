@@ -1,6 +1,10 @@
-/* ── 「默认深色」的落地层 ──────────────────────────────────────────────
-   这个文件由 `web/index.html:93` 的 `<link>` 引入，构建后排在 `app.css` 的**最前面**
-   （在 `index.css` 之前）。名字说的是它的职责：**默认深色**这件事的落地。
+/* ── 默认主题的落地层（token 层装不下的那一小撮）────────────────────────
+   这个文件由 `web/index.html` 的 `<link>` 引入，构建后排在 `app.css` 的**最前面**
+   （在 `index.css` 之前）。
+   ★**文件名是历史遗留**：原来叫"深色优先"是因为这个站当时默认深色，而 2026-09-28
+     默认翻成了亮色。文件里剩下的东西（`color-scheme` 与选中高亮）跟"哪个色优先"
+     其实无关，是「token 层装不下的原生控件配色」。改名要同时动 `web/index.html` 的
+     `<link>`，收益不抵风险就没改 —— **别再照文件名推断默认主题是哪个**。
    ★它**不是**色板的第二出处 —— 所有设计 token 只有一个出处，就是 `index.css`。
      这里有第二份色板的时候，改 `index.css` 会被它静默压掉（它的选择器特异性更高），
      而页面上看不出任何异常。见下面「这一版删掉了什么」。
@@ -42,26 +46,31 @@
    原生控件（滚动条、`<select>` 下拉、自动填充）的配色。
    `color-scheme` 是唯一能让这些东西跟着主题走的开关 —— 之前没有任何地方设它，
    所以暗色站上滚动条一直是系统亮色那条白槽，而这类"不报错的丑"没人会来报。
-   ★`color-scheme` 的**默认值**故意留成 `dark`：这个站默认深色
-     （`theme.ts: DEFAULT_THEME`，以及 `index.html` <head> 里那段防闪脚本），
-     首帧还没有 `data-theme` 的时候，滚动条就应该是深的。
-   ★`[data-theme="light"]` 那条必须**显式写出来**：`color-scheme` 不是继承的 token，
-     它吃的是"元素自己的计算值"，`[data-theme=light]` 那套 token 换不动它。 */
+   ★`color-scheme` 的**默认值**跟着默认主题走（`theme.ts: DEFAULT_THEME`，以及
+     `index.html` <head> 里那段防闪脚本）：首帧还没有 `data-theme` 的时候，
+     滚动条就应该是默认主题那一档的。**2026-09-28 默认主题翻成亮色，这里跟着翻。**
+   ★显式那条必须**写出来**：`color-scheme` 不是继承的 token，它吃的是"元素自己的
+     计算值"，token 层换不动它。
+   ★★默认值翻转时**下面三条都要动**，只改 `:root` 是不行的：显式那条从
+     `[data-theme="light"]` 换成 `[data-theme="dark"]`，而 `@media` 那条要从
+     `light` 换成 `dark` —— 少了它，**跟随系统 + 系统暗色会掉进缝里**（`:root` 给亮，
+     没有任何一条规则把它压回暗），而页面上看不出来，只是滚动条白了一条。
+     （原来只有 `@media light` 一条半臂，是因为默认深色时 `:root` 正好兜住了另一半。） */
 
 :root {
-  color-scheme: dark;
-}
-
-:root[data-theme="light"] {
   color-scheme: light;
 }
 
-/* 系统偏好亮色、且用户没手动选过（`跟随系统`）⇒ 跟着系统走亮色。
-   ★负向条件 `:not([data-theme="dark"])` 不能省：手动选了暗色时，系统亮色不该盖过来。
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+/* 系统偏好暗色、且用户没手动选过（`跟随系统`）⇒ 跟着系统走暗色。
+   ★负向条件 `:not([data-theme="light"])` 不能省：手动选了亮色时，系统暗色不该盖过来。
      这与 `index.css` 里 `@custom-variant dark` 的**两条来源**是同一个形状。 */
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme="dark"]) {
-    color-scheme: light;
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
   }
 }
 

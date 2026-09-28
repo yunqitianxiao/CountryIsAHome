@@ -6,6 +6,7 @@ import { readAccBoot } from "../../chrome"
 import { Spark } from "../Spark/Spark"
 import { loadDash, type DashRow } from "../../dash"
 import { dirClass, pct, price } from "../../format"
+import { loadRural, type RuralGroup } from "../../rural"
 
 /**
  * 主页（`/`）—— **导航层**，不再是那个单页智能体。
@@ -43,7 +44,15 @@ import { dirClass, pct, price } from "../../format"
  *   ★行情条（下面那个 `<DataStrip/>`）**仍然不是入口**：它一个链接都没有，
  *     只是读数的地方。入口是导航区里那张卡，两件事别混。
  */
-export function Home({ probe = false, initial }: { probe?: boolean; initial?: DashRow[] }) {
+export function Home({ probe = false, initial, initialRural }: {
+  probe?: boolean
+  initial?: DashRow[]
+  /** 「县乡村」那两类词。★探针那条路**同步**取好了传进来（照 `initial` 的先例，
+   *  见 `rural.ts` 顶部）：异步渲染出来的卡，同步探针量到的是一张空卡 ——
+   *  那不是判据变红，是判据**消失**，而消失掉的恰好是"33 个词会不会撑破卡"这一条。
+   *  ★`null` = 取不到，`undefined` = 还没开始取（用户那条路）。两者不是一回事。 */
+  initialRural?: RuralGroup[] | null
+}) {
   const [rows, setRows] = React.useState<DashRow[]>(() => initial ?? [])
   React.useEffect(() => {
     // ★探针那条路是**同步**取好了再渲染的（`initial`，见 main.tsx 那段）：
@@ -87,6 +96,19 @@ export function Home({ probe = false, initial }: { probe?: boolean; initial?: Da
                 <b>不替你判"这是不是诈骗"</b> —— 判定走<b>规则</b>，每条都能追到词条原文。
               </p>
             </section>
+
+            {/* ── 这里原来有一块 `<section id="nianhua">`（2026-09-28 撤掉）────
+                撤它的原因（用户看过页面之后给的原话）：
+                「主页是在**空白的地方**添加乡村元素，而不是在各个元素间**穿插**
+                  乡村元素，而且现在并不是每个页面都有乡村元素」。
+                那一块是**真内容块**，插在 `#siteLead` 与 `#agentCard` 之间，
+                把下面七张卡整体推下一屏 —— 正是"穿插"那个词描述的东西。
+
+                ★年画这套插画语言**没废**，是从"内容流中间的一大块"**搬到不占内容位
+                  的地方**：`Shell` 的全站底纹（卡片后面的留白里）+ 每页页脚那条宣纸横带。
+                  两处都在 `Shell` 里 ⇒ 十七个路由页一次全有（用户第二句要的就是这个）。
+                ★★**不要再往这个文件里加回来。** 要加乡村元素，加到 `Shell.tsx` 那两处；
+                  加在这个文件里就又是一块"插在元素之间"的东西。 */}
 
             {/* ★主入口：智能体。
                 原来五张卡是**同一个模子**（`p-4` + `text-base` 标题 + 同样的底），
@@ -211,6 +233,18 @@ export function Home({ probe = false, initial }: { probe?: boolean; initial?: Da
                 只要有一张卡不肯收缩就会红 —— 而"卡不肯收缩"最常见的成因
                 正是卡里有个不肯换行的长串。 */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {/* ★「县乡村」场景入口卡（2026-09-28 加）。放在这一组的第一张。
+                  为什么是这里 —— 三个坑一次躲开：
+                  · `cardRects` 只量 DOM 顺序**前 5 张** `.card` 的几何
+                    （= 定位条 + 行情条 + 主入口 + agents + intraday），
+                    这一张是本文件里第 7 张 ⇒ 不进那个名单。
+                  · `check_ripple` 点的是 `els(".card")[0]`（今天 = `SiteBanner`），
+                    只要不在 `SiteBanner` **之前**插 `.card` 就不影响它。
+                  · `.card` 计数判据只有下界 `>= 3`。
+                  ★它横跨整行（`md:col-span-2 lg:col-span-4`）：这是"场景入口"，
+                    不是第 N 个功能入口，占一整行才立得住。 */}
+              <RuralCard probe={probe} initial={initialRural} />
+
               <a className="card linkcard block rounded-lg border border-[var(--rule)] bg-[var(--card)] p-4 no-underline"
                  href="/onboarding" id="guideCard">
                 <span className="kicker">新手引导</span>
@@ -424,6 +458,95 @@ function ProfileCard() {
             还没填，去填 →　填了之后智能体回答会带上你的情况，模拟投资也会按你的兴趣推荐标的。
           </p>
         )}
+      </div>
+    </a>
+  )
+}
+
+/** 「县乡村」场景入口卡：把词表里 O 类「家庭财务场景」和 P 类「县域与乡村」两组词
+ *  摆到首页上，让人一眼看出**这个站是按农村家庭的过法组织的**，而不是通用理财站。
+ *
+ *  ★★`className` 必须以 `card linkcard block` 开头 —— 这不是风格问题。
+ *    `verify_agent.py` 有一条故障注入拿这个前缀做**全文替换**（把全站卡片削平成
+ *    `card block`）来验"卡片样式没了会不会红"。新卡不以此前缀开头 ⇒ 注入**够不着它**
+ *    ⇒ 那条判据在它身上一直是绿的，`--selftest` 读起来像"判据坏了"，实际是
+ *    "注入被跑赢了"。三处先例（agentCard/agentsCard/…）都在注释里记过这一条。
+ *
+ *  ★数据**不硬编码**：词名从 `graph_data.json` 取（词表唯一真源），理由见 `rural.ts`。
+ *    这里只管三态渲染，分组逻辑在那一层。
+ *
+ *  ★**空态是三句不同的话**，不是一个"暂无数据"：正在取 / 取不到 / 词表里真没有。
+ *    本项目铁律 —— "空"与"坏"必须是两句不同的话（`agentui/State.tsx` 的 `Empty` 与
+ *    `Degraded` 就是这么分的）。把"取不到"说成"没有"是**替用户下了一个假的结论**：
+ *    他会以为这两类词不存在。
+ *
+ *  ★整张卡是一个 `<a>` ⇒ 里面的词条 chips **必须是 `<span>`**：`<a>` 里嵌 `<a>`
+ *    是非法 HTML（浏览器会把它们拆开，DOM 结构跟写的不一样）。
+ *    点 chip 不做定位，整卡跳 `graph.html`（词表页）。
+ *
+ *  ★金色（`--rural`）在这里**只做一条左色条**，不做文字 ——
+ *    理由见 `index.css` 的 `--rural` 那段（没人守它的对比度，就不给自己挖坑）。
+ *
+ *  ★★这里原来还挂着**一枚稻穗插画**（放在一块宣纸底上），2026-09-28 撤掉了：
+ *    它是"一棵插画，插在这张卡的内容里"，与用户说的"不要在各元素间穿插乡村元素"
+ *    是同一件事（只不过尺度小一号）。**装饰性的年画现在只在 `Shell` 那两处**：
+ *    全站底纹 + 页脚横带，都不占内容位。
+ *    ⇒ 这张卡留下的"乡村"全在**内容**上（县乡村 kicker + O/P 两组的词条本身），
+ *      不在装饰上。 */
+function RuralCard({ probe, initial }: { probe: boolean; initial?: RuralGroup[] | null }) {
+  const [groups, setGroups] = React.useState<RuralGroup[] | null | undefined>(initial)
+  React.useEffect(() => {
+    /* ★探针那条路的数据已经在**同一个 tick** 里取好传进来了（`main.tsx` 调
+       `loadRuralSync()`）。这里若再发一次异步请求，同步探针量到的就是"正在取词表…"
+       那张空卡 —— 那不是判据变红，是判据**消失**，而且消失掉的恰恰是最该量的那一版
+       （33 个词会不会把卡撑破）。空卡当然撑不破。
+       ★`undefined` 与 `null` 是两件事：前者"还没开始取"（用户那条路），
+       后者"取不到"（已经问过了，没问着）。 */
+    if (probe || initial !== undefined) return
+    let alive = true
+    loadRural()
+      .then((g) => { if (alive) setGroups(g) })
+      .catch(() => { if (alive) setGroups(null) })
+    return () => { alive = false }
+  }, [probe, initial])
+
+  const total = groups?.reduce((a, g) => a + g.terms.length, 0)
+  return (
+    <a className="card linkcard block rounded-lg border border-[var(--rule)] bg-[var(--card)] p-4 no-underline md:col-span-2 lg:col-span-4"
+       href="graph.html" id="ruralCard">
+      <div className="flex gap-3">
+        {/* 左色条：稻穗金。`self-stretch` 是 flex 默认值 ⇒ 不用写，高度自然撑满。 */}
+        <span aria-hidden="true" className="w-1 shrink-0 rounded-full" style={{ background: "var(--rural)" }} />
+        <div className="min-w-0 flex-1">
+          <span className="kicker">县乡村</span>
+          <h2 className="mt-1 text-base font-semibold text-[var(--ink)]">家里的账，县里的事</h2>
+
+          {groups === undefined ? (
+            <p className="mt-1 text-sm text-[var(--ink-2)]">正在取词表…</p>
+          ) : groups === null ? (
+            <p className="mt-1 text-sm text-[var(--ink-2)]">
+              词表没取到 —— 这不代表这两类没有词，是这份名单没读到，刷新一下再试。
+            </p>
+          ) : total === 0 ? (
+            <p className="mt-1 text-sm text-[var(--ink-2)]">
+              词表读到了，但这两类现在一个词都没有。
+            </p>
+          ) : (
+            <div className="mt-2 flex flex-col gap-2">
+              {groups.map((g) => (
+                <div key={g.code} className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                  <span className="kicker shrink-0">{g.name}</span>
+                  {g.terms.map((t) => (
+                    <span key={t}
+                          className="rounded border border-[var(--rule)] px-1.5 py-0.5 text-xs text-[var(--ink-2)]">
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </a>
   )

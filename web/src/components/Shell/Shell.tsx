@@ -1,8 +1,30 @@
 import * as React from "react"
 import { Badges, FeatureNav, MarketSwitch, ThemeSwitch } from "../../chrome"
+import { ChanZhiLian, DaoSui, HuiWen, JiShi, LiangCang, TongQian, WaFang } from "../Nianhua/Nianhua"
 
 /**
- * 站点外壳：页头 + 主栏容器。**每一页都走它**。
+ * 站点外壳：年画底纹 + 页头 + 主栏容器 + 年画页脚。**每一页都走它**。
+ *
+ * ★★**动这个文件前先看这一段**（2026-09-28 补）：外壳里有**三处是故障注入的
+ *   逐字锚点**，改一个字符就有两条判据变成装饰（`check_fault_anchors` 会报红）：
+ *     ① 页头那排的宽度类 —— `max-w` 后面那个 clamp 宽度
+ *     ② 主栏 `<main>` 上的**同一个**宽度类
+ *        （这两条是「只把宽度写死回 1180px」那对注入的落点，用来验
+ *         「内容跟着屏幕长」和「页头与主栏逐像素对齐」两条判据）
+ *     ③ 回主页那个链接的 `href` 与 `id`（主页自己不渲染它，见下面 `back` 那段）
+ *   **往后接新类名是安全的**（锚点比的是前缀），**改中间那一段不是**。
+ *   底纹与页脚都是**新增的兄弟节点**，一条锚点都没碰到。
+ *
+ *   ★★**上面 ①②③ 是描述、不是原文，这是有意的**：这一段注释的**第一版**
+ *      把三条锚点逐字抄了进来，于是锚点在文件里各出现 **2 次**（注释一次、
+ *      真代码一次）⇒ `check_fault_anchors` 当场报红「锚点在 Shell.tsx 里
+ *      出现 2 次（注入只替换第一处，而"第一处"取决于文件里的先后顺序）」。
+ *      —— 那段提醒**自己破坏了它要提醒的东西**。
+ *      ⇒ 纪律（与 `graph_template.html` 顶部那段同一条）：**harness 是按文本
+ *        正则读的，注释对它不透明**。要指认锚点就**指到 `verify_agent.py`
+ *        里那几条 `fault(...)` 的 `old` 值**，**不要在本文件里复述它**。
+ *      ★想改宽度的话，先 `grep -n 'clamp(1180px' verify_agent.py` 看那两条
+ *        注入的原文，再决定怎么改；改完必须重跑 `verify_agent.py --no-render`。
  *
  * ★为什么非要抽出来，而不是每页各写一遍：
  *   `verify_agent.py` 里有两条判据量的是**页头和主栏的距离关系** ——
@@ -28,7 +50,35 @@ export function Shell({ probe, back = false, children }: {
     //   都是 `var(--…)`），换的理由是**命名层**：`--paper` 是个色板位置，
     //   而"这一页的底"是个角色；角色名才能在别处复用（同一个 `--paper`
     //   在别的地方可能是"凹槽"`--well`）。见 `index.css` 的语义层那段。
-    <div className="min-h-screen bg-canvas">
+    <div className="relative isolate min-h-screen bg-canvas">
+      {/* ── 年画底纹（2026-09-28 加）──────────────────────────────────────
+          用户的原话：「主页是在**空白的地方**添加乡村元素，而不是在各个元素间穿插
+          乡村元素，而且现在并不是每个页面都有乡村元素」。
+
+          ⇒ 乡村视觉**从内容流里搬出来**，落到两处**不占内容位**的地方：
+             (1) 这一层 —— 坐在 `bg-canvas` 之上、所有卡片之下，只从留白里透出来；
+             (2) 每页的 `<footer>`（见文件末尾那段）。
+          两处都在 `Shell` 里 ⇒ 十七个路由页一次全有（这就是第二句要的那件事）。
+          ★原来主页上那一整块 `<section id="nianhua">` 已经删掉：它是一个真内容块，
+            插在两张卡**之间**，把下面的卡全推下一屏 —— 正是"穿插"。
+
+          ★`relative isolate` 是**这一层能看见的前提**，两个类缺一不可：
+            `isolate` 让这层 div 自己成为一个层叠上下文，`-z-10` 于是只在它内部
+            与兄弟比大小 —— 上色顺序变成「父底色 → 负 z 的装饰 → 正文」。
+            少了 `isolate`，`-z-10` 会跑到**根**层叠上下文里跟 `.bg-canvas` 比，
+            结果是**装饰被底色盖住、整层声明了等于没声明**（页面照常、什么都不报）。
+          ★`absolute` 不是 `fixed`：它跟着页面走，是"纸的底"而不是"贴在屏幕上的 HUD"。
+          ★`overflow-hidden` + `inset-0`：纹样一律用负偏移探到画面外，
+            没有它 420px 那两档的 `scrollWidth ≤ clientWidth` 判据会被这层顶红。
+          ★整层 `aria-hidden` + `pointer-events-none`：纯装饰，不进无障碍树、
+            也不吃点击（卡片上的按钮照常点得到）。 */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+        <DaoSui size={560} className="absolute -left-28 top-[7%] opacity-[0.10]" />
+        <ChanZhiLian size={340} className="absolute -right-20 top-[34%] opacity-[0.09]" />
+        <TongQian size={360} className="absolute -left-24 top-[62%] opacity-[0.09]" />
+        <DaoSui size={420} className="absolute -right-24 top-[82%] opacity-[0.10]" />
+      </div>
+
       <header className="sticky top-0 z-30 border-b border-line bg-surface">
         <div className="bar mx-auto flex max-w-[clamp(1180px,78vw,2200px)] flex-wrap items-center gap-2.5 px-5 py-2.5">
           <h1 className="text-lg font-semibold text-fg">
@@ -113,6 +163,54 @@ export function Shell({ probe, back = false, children }: {
       <main className="mx-auto max-w-[clamp(1180px,78vw,2200px)] p-5">
         {children}
       </main>
+
+      {/* ── 年画页脚（2026-09-28 加）──────────────────────────────────────
+          「每页都有一处乡村元素」靠它兜底：底纹（上面那层）在窄屏与普通笔记本上
+          会被卡片压得几乎看不见 —— 两侧留白要到 **≥1600px** 才够宽
+          （主栏 `clamp(1180px,78vw,2200px)` 在 1400px 视口下已经是 1180，
+          两边各只剩 110px），而 1180px 以下根本没有留白。
+          这一条横带**任何宽度下都在**（窄屏只是折行），所以"每页都有"这句话
+          由它承载力，底纹只负责在大屏上加一层氛围。
+
+          ★它是在**空白的地方**：`<footer>` 排在 `main` 之后，不占任何一个内容位、
+            不把任何一张卡往下推 —— 与上一版那块插在卡与卡之间的年画区正相反。
+
+          ★`--nh-paper`（宣纸暖白）**两套主题下都不翻转**，理由写在 `index.css`
+            的 `--nh-*` 那段：年画离开纸白底就不是年画了，视觉上就是
+            「贴在墙上的一张宣纸」。所以这带的字色写死 `--nh-ink`（墨色），
+            那一对 ≈13.5:1，两套主题同值（`verify_page.py` 的 4f 会逐张表算它）。
+          ★回纹条**通栏**（`preserveAspectRatio="none"`，见 `Nianhua.tsx`）：
+            单元数给到 64 是因为这条带最宽能到 2200px，单元太少会被横向拉扁。
+          ★整带 `overflow-hidden`：回纹是撑满容器的，圆角与出界靠它裁。
+          ★这里的入口用**绝对路径** `/graph.html`：路由表允许尾斜杠
+            （`/^\/dash\/?$/`），相对写法 `graph.html` 在 `/dash/` 上会解析成
+            `/dash/graph.html` 而 404。主页那张 `#graphCard` 用的是相对写法，
+            那是 `check_links` 的锚（`HOME_LINKS` 里期望值就是 `graph.html`），
+            两者**不是同一个链接，别去改那一张**。 */}
+      <footer className="relative mt-8" aria-label="县乡村">
+        <div className="overflow-hidden border-t border-[var(--nh-gold-2)]"
+             style={{ background: "var(--nh-paper)", color: "var(--nh-ink)" }}>
+          <HuiWen n={64} h={10} />
+          <div className="mx-auto flex max-w-[clamp(1180px,78vw,2200px)] flex-wrap items-center gap-x-6 gap-y-3 px-5 py-4">
+            <span aria-hidden="true" className="flex shrink-0 items-end gap-2">
+              <DaoSui size={44} />
+              <WaFang size={38} />
+              <JiShi size={42} />
+              <LiangCang size={36} />
+              <TongQian size={28} />
+            </span>
+            <p className="min-w-0 grow basis-72 text-xs leading-relaxed">
+              <b>乡e家</b>是按<b>县乡村家庭</b>的过法编的 —— 地里的收成、打工的汇款、
+              孩子的学费、老人的药钱、村里的人情往来，都在那 255 个词条和那张图里。
+            </p>
+            <a href="/graph.html"
+               className="shrink-0 rounded border px-3 py-1 text-xs no-underline"
+               style={{ borderColor: "var(--nh-gold-2)", color: "var(--nh-ink)" }}>
+              看图谱 →
+            </a>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }

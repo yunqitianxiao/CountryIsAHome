@@ -1,7 +1,10 @@
-<!-- ★默认深色。这与 SPA 是**同一个产品决定**（web/src/theme.ts 的 DEFAULT_THEME='dark'：
-     "专业 + 深色金融终端"），不是本页单独的配色偏好。以前这一页根本没有根元素标签、
-     也没有任何 JS 设 data-theme ⇒ 主题只由 @media (prefers-color-scheme) 说了算，
-     系统是亮色就满屏账本纸 #F2F5F2，而同一个站里其它页面全是深色（图谱页是唯一掉队的那个）。
+<!-- ★默认**亮色**（2026-09-28 跟着 SPA 翻的）。这一行原来钉的是深色，理由写的是
+     「与 SPA 是**同一个产品决定**（web/src/theme.ts 的 DEFAULT_THEME='dark'：
+     "专业 + 深色金融终端"）」—— 那个决定 2026-09-28 翻成了亮色，本页跟着翻。
+     ★钉的仍然是一个**静态属性**，不是"跟随 SPA 开关"：本页**不跟随**用户在站内切的主题
+       （见下面「★代价」那段）。以前这一页根本没有根元素标签、也没有任何 JS 设
+       data-theme ⇒ 主题只由 @media (prefers-color-scheme) 说了算，系统说什么色就是
+       什么色，而同一个站里其它页面当时是有主的（图谱页是唯一掉队的那个）。
 
      ★为什么写成**静态属性**、而不是照 SPA 那样加一段内联 boot 脚本：
        verify_page.py 的 script_body() 取的是**第一个**脚本块（下标 `[0]`），而本页那唯一一个
@@ -18,15 +21,15 @@
      ★顺带补 lang：以前没有根元素标签也就没有 lang，读屏软件只能用默认语音念中文。
 
      ★代价（写下来，别让人以为是漏了）：这一页从此**不跟随** SPA 的主题开关 ——
-       用户在站内切到亮色，图谱页仍是深色。要恢复跟随，得同时把 script_body() 改成
+       用户在站内切到暗色，图谱页仍是亮色。要恢复跟随，得同时把 script_body() 改成
        "按标记或长度挑主块"，那是一次单独的判据改动，不该混在这一行里。
      ★判据侧为什么安全：verify_page.py 的 4c/4d 是**两套主题各验一遍**对比度、4e 验两张
        暗色表同值，没有一条钉"默认必须是亮色"；改默认值不动任何 token，那些判据原样成立。 -->
-<html lang="zh-CN" data-theme="dark">
+<html lang="zh-CN" data-theme="light">
 <title>家庭财富管理词图 · 乡e家</title>
 <style>
-/* ── 配色：账本纸 + 墨。三张表声明同一批 token；**页面实际启动成暗色**（<html data-theme="dark">，
-      理由见文件顶部那段注释），亮色那张仍然留着、并且仍然被对比度判据验，但它现在没有 UI 入口。 ── */
+/* ── 配色：账本纸 + 墨。三张表声明同一批 token；**页面实际启动成亮色**（<html data-theme="light">，
+      理由见文件顶部那段注释），暗色那张仍然留着、并且仍然被对比度判据验，但它现在没有 UI 入口。 ── */
 /* ★不引任何外部资源（没有 Google Fonts CDN）。字体全部走系统栈：本机有 Noto Serif SC /
    宋体就用，没有就落到 Georgia/serif。单文件页要能断网、内网、file:// 打开都一个样，
    引一个 CDN 就等于"网不通时这个页面是另一副样子"（而且是静默的、看不出来的那种）。
@@ -36,34 +39,52 @@
      再往上加就开始吃掉它跟 --ink-2 的层级，那三档就分不出来了。
    ★改这几个 token 里任何一个的值都要重跑 verify_page.py：那条判据会当场指出哪一对掉到线下了。 */
 :root{
-  --paper:#F2F5F2; --card:#FFFFFF; --card-2:#F7F9F7;
-  --ink:#141C18; --ink-2:#4A5751; --ink-3:#646F6A;
-  --rule:#DDE3DE; --rule-2:#EAEFEA;
+  --paper:#F0E0B0; --card:#FFFAF0; --card-2:#F8F0DA;
+  --ink:#141C18; --ink-2:#4A5751; --ink-3:#596760;
+  --rule:#D9C58E; --rule-2:#E8DCB8;
   --accent:#1B6B4C;
   --dot:#D7DED8;
   --shadow:0 1px 2px rgba(20,28,24,.06),0 8px 28px -12px rgba(20,28,24,.22);
   --f0:#3D6FB4; --f1:#12897A; --f2:#C4761A; --f3:#B44A73; --f4:#6E5AA8; --f5:#BF452F; --f6:#6E7F17;
   --serif:"Noto Serif SC",Georgia,"Songti SC",serif;
+  /* ── 年画颜料（`--nh-` = nianhua）2026-09-28 加 ──────────────────────
+     页头那条回纹与稻穗用的**插画语言**，不动本页任何既有 token。
+     ★`--nh-paper` 在三张表里**同值、不随主题翻转** —— 本页是**钉死一套主题**的
+       （见文件开头那段），所以它读起来就是「贴在墙上的一张宣纸」。
+       谁把它"修"成跟着主题走，那一块就变成一坨灰。
+     ★金色（`--nh-gold`）只做 `fill`/`stroke`，**不做文字**：它跟浅底配成字色
+       过不了 AA，而本页的对比度判据（verify_page.py 4f）会把每一对
+       「同时声明了 background 和 color」的规则拉出来算 —— 用它当字色会当场红。
+     ★本页的年画**一处 CSS `background` 都没加**（宣纸底是画在 SVG 里的 `<rect>`）
+       ⇒ 不需要往 BG_EXC 里加任何例外。 */
+  --nh-paper:#f5efe0; --nh-ink:#2a2320; --nh-red:#c4342b; --nh-pink:#de6b84;
+  --nh-green:#4e8f6b; --nh-blue:#2f5c9e; --nh-gold:#c8912a; --nh-gold-2:#8a6d1a;
 }
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
-    --paper:#101512; --card:#171E1A; --card-2:#1D2620;
+    --paper:#1A1406; --card:#241C09; --card-2:#2A2109;
     --ink:#E8EEE9; --ink-2:#A9B7B0; --ink-3:#85918B;
-    --rule:#27322C; --rule-2:#1F2A24;
+    --rule:#453718; --rule-2:#3A2D14;
     --accent:#5CC79A;
     --dot:#232E28;
     --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px -14px rgba(0,0,0,.7);
     --f0:#7BA3DE; --f1:#3FBCA8; --f2:#E0A253; --f3:#DE7BA1; --f4:#A292DC; --f5:#E5765C; --f6:#B8CC4E;
+    /* 年画颜料：与另两张表**同值**（宣纸底不翻转，理由见浅色块那段） */
+    --nh-paper:#f5efe0; --nh-ink:#2a2320; --nh-red:#c4342b; --nh-pink:#de6b84;
+    --nh-green:#4e8f6b; --nh-blue:#2f5c9e; --nh-gold:#c8912a; --nh-gold-2:#8a6d1a;
   }
 }
 :root[data-theme="dark"]{
-  --paper:#101512; --card:#171E1A; --card-2:#1D2620;
+  --paper:#1A1406; --card:#241C09; --card-2:#2A2109;
   --ink:#E8EEE9; --ink-2:#A9B7B0; --ink-3:#85918B;
-  --rule:#27322C; --rule-2:#1F2A24;
+  --rule:#453718; --rule-2:#3A2D14;
   --accent:#5CC79A;
   --dot:#232E28;
   --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px -14px rgba(0,0,0,.7);
   --f0:#7BA3DE; --f1:#3FBCA8; --f2:#E0A253; --f3:#DE7BA1; --f4:#A292DC; --f5:#E5765C; --f6:#B8CC4E;
+  /* 年画颜料：与另两张表**同值**（宣纸底不翻转，理由见浅色块那段） */
+  --nh-paper:#f5efe0; --nh-ink:#2a2320; --nh-red:#c4342b; --nh-pink:#de6b84;
+  --nh-green:#4e8f6b; --nh-blue:#2f5c9e; --nh-gold:#c8912a; --nh-gold-2:#8a6d1a;
 }
 
 *{box-sizing:border-box}
@@ -186,6 +207,23 @@ main{flex:1 1 auto;min-height:0;display:grid;
 }
 #reset:hover{color:var(--ink);border-color:var(--ink-3)}
 
+/* ── 年画：页头回纹 + 稻穗金铜钱徽章（2026-09-28 加）──────────────────
+   ★**一处 CSS `background` 都没加** —— 徽章那块宣纸底是画在 SVG 里的 `<rect>`。
+     本页的 4f 判据会把每一个 CSS 底拿去核对"在不在三张底或例外表（BG_EXC）里"，
+     走 SVG 矩形就没有那个面，也就不必往判据里加例外条目。
+   ★上色一律走类、不写 `fill="var(--…)"`：表现属性里的 `var()` 支持面比 CSS 声明窄。
+   ★`--nh-ink` 描边画在深色页头（`--paper`）上本来读不出来，所以图形都坐在
+     自己的宣纸底上：`--nh-paper` 与 `--nh-ink` 是同一对，13.5:1，不随主题变。 */
+.nh-band{display:block;width:100%;height:11px}
+.nh-band path{fill:none;stroke:var(--nh-ink);stroke-width:1.2}
+.nh-note{margin:9px 0 0;font-size:12.5px;line-height:1.6;color:var(--ink-3)}
+.nh-note b{color:var(--ink-2);font-weight:600}
+.nh-badge{display:inline-block;vertical-align:-5px;margin-right:9px;line-height:0}
+.nh-badge svg{display:block;width:23px;height:auto}
+.nhp{fill:var(--nh-paper)}
+.nhg{fill:var(--nh-gold);stroke:var(--nh-ink)}
+.nhl{fill:none;stroke:var(--nh-ink);stroke-linecap:round}
+
 /* ── 解释面板 ── */
 #panel{
   border-left:1px solid var(--rule);background:var(--card);
@@ -276,7 +314,7 @@ strong{font-weight:600;color:var(--ink)}
 
 <header>
   <div class="bar">
-    <h1>家庭财富管理词图<span class="sub">255 个词 · 328 个节点</span></h1>
+    <h1><span class="nh-badge" aria-hidden="true"><svg viewBox="0 0 40 40" focusable="false"><rect class="nhp" width="40" height="40" rx="4"/><path class="nhg" stroke-width="2.2" fill-rule="evenodd" d="M20 6 a14 14 0 1 0 0.01 0 Z M14.5 14.5 h11 v11 h-11 Z"/><path class="nhl" stroke-width="2.2" d="M20 14.5 V8 M25.5 20 H32 M20 25.5 V32 M14.5 20 H8"/></svg></span>家庭财富管理词图<span class="sub">255 个词 · 328 个节点</span></h1>
     <div style="position:relative;flex:1 1 200px;max-width:330px">
       <input id="q" type="search" placeholder="搜一个词，比如「夏普比率」" autocomplete="off"
              aria-label="搜索词条" role="combobox" aria-expanded="false" aria-controls="hits">
@@ -284,6 +322,21 @@ strong{font-weight:600;color:var(--ink)}
     </div>
   </div>
   <div class="legend" id="legend" role="group" aria-label="按类别筛选"></div>
+  <!-- 年画元素（2026-09-28 加）：先说清这张图是按谁编的，再用一条回纹压住页头。
+       ★h1 里那枚徽章是**铜钱**（外圆内方），坐在自己那块宣纸底上 ——
+         年画的墨线画在深色页头上读不出来，必须给它一块纸。
+       ★回纹是 `<pattern>` 平铺的（本页只有这一条，id 唯一，不存在两处争一个定义）；
+         底下那条 `<rect>` 的 `fill="url(#nh-hw)"` 是**引用**不是 `var()`，
+         所以可以用表现属性 —— 染色仍然由 CSS 类负责。 -->
+  <p class="nh-note">这张图是按<b>县乡村家庭</b>的过法编的 —— 地里的收成、打工的汇款、老人的药钱、村里的人情往来，都在里面。</p>
+  <svg class="nh-band" viewBox="0 0 560 11" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+    <defs>
+      <pattern id="nh-hw" width="11" height="11" patternUnits="userSpaceOnUse">
+        <path d="M1.55 9.45 V1.55 H9.45 V6.6 H4.2 V4.1 H6.8"/>
+      </pattern>
+    </defs>
+    <rect width="560" height="11" fill="url(#nh-hw)"/>
+  </svg>
 </header>
 
 <main>

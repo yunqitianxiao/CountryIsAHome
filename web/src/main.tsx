@@ -24,6 +24,7 @@ import { Assess } from "./pages/Assess/Assess"
 import { Research } from "./pages/Research/Research"
 import { Inspect } from "./pages/Inspect/Inspect"
 import { loadDashSync } from "./dash"
+import { loadRuralSync } from "./rural"
 import { loadPortfolioSync, readWeights } from "./portfolio"
 import { loadLedgerSync } from "./ledger"
 import {
@@ -175,7 +176,8 @@ function view(probe: boolean) {
     case "inspect": return <Inspect probe={probe} />
     // ★主页那一块行情条也要**同步**取好了再渲染（照 `/dash` 那条），
     //   否则同 tick 量的探针量到的是"正在取行情…" —— 判据**消失**而不是变红。
-    default: return <Home probe={probe} initial={probe ? loadDashSync() : undefined} />
+    default: return <Home probe={probe} initial={probe ? loadDashSync() : undefined}
+                          initialRural={probe ? loadRuralSync() : undefined} />
   }
 }
 
