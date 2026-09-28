@@ -28,7 +28,7 @@ FIELD_RE = re.compile(r'^- \*\*(一句话|例子|误区|辨析|提醒)\*\*\s*(�
 VS_RE = re.compile(r'^- \*\*辨析\*\*\s*（vs\s*(.+?)）')
 HEAD_RE = re.compile(r'^### (.+?)\s*$')
 
-# 14 个二级类 → 6 个色族。14 种颜色人眼分不开，6 种可以；
+# 16 个二级类 → 7 个色族。16 种颜色人眼分不开，7 种可以；
 # 具体类别仍然逐个用字母标在节点和面板上，颜色只负责"一眼看出这是哪一大片"。
 FAMILY = {
     'A': 0, 'B': 0,                    # 地基与指标
@@ -37,8 +37,9 @@ FAMILY = {
     'H': 3, 'I': 3,                    # 保险与养老
     'J': 4, 'K': 4, 'M': 4,            # 负债·税·机构
     'L': 5, 'N': 5,                    # 策略与防坑
+    'O': 6, 'P': 6,                    # 家庭与县域
 }
-FAMILY_NAME = ['地基与指标', '存款与理财', '基金与股票', '保险与养老', '负债·税·机构', '策略与防坑']
+FAMILY_NAME = ['地基与指标', '存款与理财', '基金与股票', '保险与养老', '负债·税·机构', '策略与防坑', '家庭与县域']
 
 # 三种关系的期望边长（乘在理想边长 K 上）和画法
 REL = {
@@ -238,15 +239,29 @@ def main():
                 continue
             (intra if fam_of[a] == fam_of[b] else inter).append(d[a, b])
     w, h = np.ptp(pos[:, 0]), np.ptp(pos[:, 1])
+    # ★退化输入（坐标里有 NaN/Inf）必须单独认出来，别让它伪装成"有节点叠在一起"：
+    #   NaN 让**所有比较返回 False**，于是上面那两行打印（写成"以好为真"）会印 ★，
+    #   而下面那道闸若写成"以坏为真"（`if nn.min() <= 8 or ... : return 1`）读到的也是 False
+    #   ⇒ **闸门 fail-open**：打印说"不合格、不输出"，它却照常输出。
+    #   同一份数据、同一处代码，闸门与打印给出相反结论（实测：`nn.min() <= 8` 与
+    #   `nn.min() > 8` 在 NaN 上**同时为 False**）。⇒ 判别法一行：**打印说 ★ ≠ 闸门拦住了。**
+    #   ⇒ 闸门一律写成"以好为真"，并显式要求三个统计量都是有限数。
+    #   （阈值一个没动 —— 这不是改尺子，是让尺子在退化输入上别与自己的打印打架。）
+    finite = bool(np.isfinite(nn.min()) and np.isfinite(np.mean(intra))
+                  and np.isfinite(np.mean(inter)))
     print(f'\n布局自检（{len(pos)} 个节点，{len(edges)} 条边）')
-    print(f'  包围盒            {w:.0f} × {h:.0f}   宽高比 {w / h:.2f}')
+    print(f'  包围盒            {w:.0f} × {h:.0f}   宽高比 {w / h:.2f}   （只打印，不是闸）')
     print(f'  最近邻距离        中位 {np.median(nn):.1f}   最小 {nn.min():.1f}'
-          f'   {"✓ 无重叠" if nn.min() > 8 else "★ 有节点叠在一起"}')
+          + ('   ★ 不是有限数（坐标里有 NaN/Inf）' if not finite
+             else '   ✓ 无重叠' if nn.min() > 8 else '   ★ 有节点叠在一起'))
     print(f'  同族平均距离      {np.mean(intra):.0f}')
     print(f'  异族平均距离      {np.mean(inter):.0f}'
-          f'   {"✓ 同类更近" if np.mean(intra) < np.mean(inter) else "★ 没有聚成簇"}')
-    if nn.min() <= 8 or np.mean(intra) >= np.mean(inter):
-        print('  ★ 布局不合格，不输出')
+          + ('   ★ 不是有限数' if not finite
+             else '   ✓ 同类更近' if np.mean(intra) < np.mean(inter) else '   ★ 没有聚成簇'))
+    # ── 闸门：只有下面这两条。上面那个宽高比、以及"中位最近邻"都**只是读数**，不是闸。──
+    if not (finite and nn.min() > 8 and np.mean(intra) < np.mean(inter)):
+        print('  ★ 布局不合格，不输出'
+              + ('' if finite else '（最近邻/同异族距离不是有限数 —— 先查坐标里有没有 NaN/Inf）'))
         return 1
 
     nodes = []

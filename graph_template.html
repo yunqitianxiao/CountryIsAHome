@@ -1,36 +1,69 @@
-<title>理财词图</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700&display=swap">
+<!-- ★默认深色。这与 SPA 是**同一个产品决定**（web/src/theme.ts 的 DEFAULT_THEME='dark'：
+     "专业 + 深色金融终端"），不是本页单独的配色偏好。以前这一页根本没有根元素标签、
+     也没有任何 JS 设 data-theme ⇒ 主题只由 @media (prefers-color-scheme) 说了算，
+     系统是亮色就满屏账本纸 #F2F5F2，而同一个站里其它页面全是深色（图谱页是唯一掉队的那个）。
+
+     ★为什么写成**静态属性**、而不是照 SPA 那样加一段内联 boot 脚本：
+       verify_page.py 的 script_body() 取的是**第一个**脚本块（下标 `[0]`），而本页那唯一一个
+       装着整张图的建图/渲染逻辑，被 [3] 桩层与自测共三处调用（1340/1345/1981）。在它前面
+       再插一个脚本块，那三处就会改去跑十几行的主题代码 —— 判据不会报"我测错了对象"，
+       只会安静地量一个空壳。⇒ 这里不新增块，直接把属性钉在标签上：零闪、零桩影响。
+     ★★**这条不是纸上推演，是刚踩的**：本注释第一版在这里写了尖括号形式的"脚本块"三个字
+       （形如小于号 + script + 大于号），`script_body()` 的正则当场把它认成真块的起点、
+       一路非贪婪吞到真块的结尾 ⇒ [2] 层 node --check 直接 SyntaxError，红字里印的
+       是本注释的中文。⇒ **纪律：本文件里连注释都不能出现那个尖括号 token** ——
+       harness 是按文本正则读的，注释对它不透明（"读产物不读输入"的反面教材）。
+     ★**不加 doctype 声明**：加了会从 quirks 切到 standards 模式，而本页的 height:100dvh /
+       弹性盒布局是在 quirks 下调通、并被渲染层判据钉住的，换模式等于换掉一套布局前提。
+     ★顺带补 lang：以前没有根元素标签也就没有 lang，读屏软件只能用默认语音念中文。
+
+     ★代价（写下来，别让人以为是漏了）：这一页从此**不跟随** SPA 的主题开关 ——
+       用户在站内切到亮色，图谱页仍是深色。要恢复跟随，得同时把 script_body() 改成
+       "按标记或长度挑主块"，那是一次单独的判据改动，不该混在这一行里。
+     ★判据侧为什么安全：verify_page.py 的 4c/4d 是**两套主题各验一遍**对比度、4e 验两张
+       暗色表同值，没有一条钉"默认必须是亮色"；改默认值不动任何 token，那些判据原样成立。 -->
+<html lang="zh-CN" data-theme="dark">
+<title>家庭财富管理词图 · 乡e家</title>
 <style>
-/* ── 配色：账本纸 + 墨。浅色是默认，深色是重定义同一批 token ── */
+/* ── 配色：账本纸 + 墨。三张表声明同一批 token；**页面实际启动成暗色**（<html data-theme="dark">，
+      理由见文件顶部那段注释），亮色那张仍然留着、并且仍然被对比度判据验，但它现在没有 UI 入口。 ── */
+/* ★不引任何外部资源（没有 Google Fonts CDN）。字体全部走系统栈：本机有 Noto Serif SC /
+   宋体就用，没有就落到 Georgia/serif。单文件页要能断网、内网、file:// 打开都一个样，
+   引一个 CDN 就等于"网不通时这个页面是另一副样子"（而且是静默的、看不出来的那种）。
+   ★三档文字色 --ink/--ink-2/--ink-3 对三张底 --paper/--card/--card-2 的对比度，
+     一律不低于 WCAG 2.1 AA 的 4.5:1（verify_page.py 的 [4] 静态内容判据守着，两套主题各验一遍）。
+     亮色 --ink-3 与暗色 --ink-3 就是为了过线才调过值的，过线只留 0.25 余量 ——
+     再往上加就开始吃掉它跟 --ink-2 的层级，那三档就分不出来了。
+   ★改这几个 token 里任何一个的值都要重跑 verify_page.py：那条判据会当场指出哪一对掉到线下了。 */
 :root{
   --paper:#F2F5F2; --card:#FFFFFF; --card-2:#F7F9F7;
-  --ink:#141C18; --ink-2:#4A5751; --ink-3:#7C8A83;
+  --ink:#141C18; --ink-2:#4A5751; --ink-3:#646F6A;
   --rule:#DDE3DE; --rule-2:#EAEFEA;
   --accent:#1B6B4C;
   --dot:#D7DED8;
   --shadow:0 1px 2px rgba(20,28,24,.06),0 8px 28px -12px rgba(20,28,24,.22);
-  --f0:#3D6FB4; --f1:#12897A; --f2:#C4761A; --f3:#B44A73; --f4:#6E5AA8; --f5:#BF452F;
+  --f0:#3D6FB4; --f1:#12897A; --f2:#C4761A; --f3:#B44A73; --f4:#6E5AA8; --f5:#BF452F; --f6:#6E7F17;
   --serif:"Noto Serif SC",Georgia,"Songti SC",serif;
 }
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
     --paper:#101512; --card:#171E1A; --card-2:#1D2620;
-    --ink:#E8EEE9; --ink-2:#A9B7B0; --ink-3:#7A8881;
+    --ink:#E8EEE9; --ink-2:#A9B7B0; --ink-3:#85918B;
     --rule:#27322C; --rule-2:#1F2A24;
     --accent:#5CC79A;
     --dot:#232E28;
     --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px -14px rgba(0,0,0,.7);
-    --f0:#7BA3DE; --f1:#3FBCA8; --f2:#E0A253; --f3:#DE7BA1; --f4:#A292DC; --f5:#E5765C;
+    --f0:#7BA3DE; --f1:#3FBCA8; --f2:#E0A253; --f3:#DE7BA1; --f4:#A292DC; --f5:#E5765C; --f6:#B8CC4E;
   }
 }
 :root[data-theme="dark"]{
   --paper:#101512; --card:#171E1A; --card-2:#1D2620;
-  --ink:#E8EEE9; --ink-2:#A9B7B0; --ink-3:#7A8881;
+  --ink:#E8EEE9; --ink-2:#A9B7B0; --ink-3:#85918B;
   --rule:#27322C; --rule-2:#1F2A24;
   --accent:#5CC79A;
   --dot:#232E28;
   --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px -14px rgba(0,0,0,.7);
-  --f0:#7BA3DE; --f1:#3FBCA8; --f2:#E0A253; --f3:#DE7BA1; --f4:#A292DC; --f5:#E5765C;
+  --f0:#7BA3DE; --f1:#3FBCA8; --f2:#E0A253; --f3:#DE7BA1; --f4:#A292DC; --f5:#E5765C; --f6:#B8CC4E;
 }
 
 *{box-sizing:border-box}
@@ -243,7 +276,7 @@ strong{font-weight:600;color:var(--ink)}
 
 <header>
   <div class="bar">
-    <h1>理财词图<span class="sub">217 个词 · 289 个节点</span></h1>
+    <h1>家庭财富管理词图<span class="sub">255 个词 · 328 个节点</span></h1>
     <div style="position:relative;flex:1 1 200px;max-width:330px">
       <input id="q" type="search" placeholder="搜一个词，比如「夏普比率」" autocomplete="off"
              aria-label="搜索词条" role="combobox" aria-expanded="false" aria-controls="hits">
@@ -273,7 +306,7 @@ strong{font-weight:600;color:var(--ink)}
 
 <script>
 const D = /*__DATA__*/;
-const FAM = ['var(--f0)','var(--f1)','var(--f2)','var(--f3)','var(--f4)','var(--f5)'];
+const FAM = ['var(--f0)','var(--f1)','var(--f2)','var(--f3)','var(--f4)','var(--f5)','var(--f6)'];
 /* 关系名直接用中文：graph_data.json 里的 r 就是「属于/前提/对比」（跟 md 同源），
    别在这里转成 CSS 名再比 —— 转过一次，filter 永远空，217 个词条的"它连着谁"全是"没有连线"。 */
 const REL_ORDER = ['属于', '前提', '对比'];
@@ -302,9 +335,9 @@ const gDim = el('g', {id: 'dim'});
 gDim.append(gLink, gNode); svg.append(gDim);
 
 /* ★坐标（n.x / n.y）是 build_graph.py 离线算好的，只在建元素时写一次；
-   写在这里而不是 render() 里，是因为 render() 每点一次都要跑 289 个节点，
+   写在这里而不是 render() 里，是因为 render() 每点一次都要跑 328 个节点，
    而位置从不变化。
-   ★少了这一句的后果不是"布局难看"，而是"整张图消失"：289 个节点、625 条边
+   ★少了这一句的后果不是"布局难看"，而是"整张图消失"：328 个节点、735 条边
    全落在 SVG 用户坐标的原点，fit() 一把视图居中，屏幕上只剩中心一个墨点
    —— 页头、图例、解释面板全都正常，所以从外观看像"页面好了、就是没有节点"。 */
 const linkEls = D.links.map(l => {
@@ -369,10 +402,29 @@ function fit() {                                   // 看全图：整张图缩�
 let sel = null, famFilter = null;
 
 const isFiltered = n => famFilter !== null && n.kind === 'term' && n.fam !== famFilter;
+/* ★字号**从 CSS 现读**，JS 里不留第二份真源（这两行以前写死 `12` 与 `10.5`）。
+   量一次就够：CSS 的字号不随视图变（随视图变的是 `scale()`，那一步照旧在这儿乘）。
+   探针元素只活在这一瞬间，不进最终 DOM（不新增任何结构）。
+   ★为什么不读 CSS 变量声明（`--fs-*`）：**声明 ≠ 生效** —— 层叠、`@media`、行内样式
+     都能让两者分叉，而 `legible()` 要的正是**生效值**。`getComputedStyle` 给的才是生效值。
+   ★失败不静默：CSS 若读不出来（比如选择器被改名），这两个值会是 0 ⇒ 一个字都过不了
+     8px 闸 ⇒ 画面上一个标签都没有。那**不是"看起来还行"**，是渲染层第一屏那两条
+     **形状**下限当场红（居中的「基金」没标签 + 第一屏一个普通档的词都没有 ——
+     这两条即原先那条 "至少 5 个标签" 的替身，见 `verify_page.py` 里那段判定）。 */
+const FS = (() => {
+  const t = document.createElementNS(NS, 'text');
+  const read = cls => { t.setAttribute('class', cls); return parseFloat(getComputedStyle(t).fontSize) || 0; };
+  svg.appendChild(t);
+  const r = {base: read('lbl'), big: read('lbl big')};
+  svg.removeChild(t);
+  return r;
+})();
 /* 这个圈上的字在屏幕上真有 8px 高吗。低于 8px 的中文就是一坨墨点，画出来只是噪声
-   —— 全图缩略时整张图因此是干净的点阵，而不是一片灰糊。 */
+   —— 全图缩略时整张图因此是干净的点阵，而不是一片灰糊。
+   ★留在 JS 的两样都不是版式值：`8` 是**可读性阈值**，那个谓词是**分层规则**
+     （哪些节点算"大圈"）。版式值（两个字号）已经全归 CSS。 */
 function legible(n) {
-  return (n.deg >= 11 || n.kind === 'cat' ? 12 : 10.5) * scale() >= 8;
+  return (n.deg >= 11 || n.kind === 'cat' ? FS.big : FS.base) * scale() >= 8;
 }
 /* 在眼前吗（按当前视图裁，不是按整张图）。 */
 function onScreen(n) {
@@ -578,3 +630,4 @@ window.addEventListener('resize', () =>
   setView(view.x + view.w / 2, view.y + view.h / 2, pxPerUnit));
 home();
 </script>
+</html>

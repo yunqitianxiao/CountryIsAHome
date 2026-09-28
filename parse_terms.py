@@ -22,7 +22,7 @@ import sys
 from collections import defaultdict, Counter
 
 SRC = '词表-v1.md'
-CAT_RE = re.compile(r'^##\s+([A-N])\.\s*(.+?)（(\d+)）\s*$')
+CAT_RE = re.compile(r'^##\s+([A-Z])\.\s*(.+?)（(\d+)）\s*$')
 
 
 def split_cell(c):

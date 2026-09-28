@@ -7,3 +7,28 @@ __pycache__/
 
 # 模型权重不入库（Kronos-small 99 MB，已贴近 GitHub 单文件 100 MB 硬上限）
 models/
+
+# ★前端：**源码和构建产物入库，依赖不入库。**
+#   `web/dist/` 是入库的（跑站的人不需要 npm，见 run.sh），
+#   `web/node_modules/` 是几百 MB 的可重建物 —— 它入库只会让 clone 变慢，
+#   而且平台相关的二进制进去之后还得靠 npm 才能修，等于没省事。
+web/node_modules/
+
+# ★密钥与虚拟环境绝不入库。
+#   .env 里是 DEEPSEEK_API_KEY，一旦提交就是「推上去即泄露」——
+#   而且删掉再提交也没用，历史里还在。所以必须在这里拦住。
+.env
+.env.local
+.venv/
+venv/
+
+
+# ★资讯采集的重依赖层绝不入库（都是可重建物，安装步骤见 README 附录）：
+#   .venv-collector/ = crawl4ai + playwright 的独立 venv（chromium 数百 MB）
+#   third_party/     = MediaCrawler（不在 PyPI，clone 来的整个应用 + 它的 cookies）
+#   data/news_cache/ = 采集缓存（TTL 15 分钟的可重建数据，入库只会天天脏）
+#   data/collect/    = 常驻采集器的追加日志（只追加、天天长，同样是可重建物）
+.venv-collector/
+third_party/
+data/news_cache/
+data/collect/
