@@ -1,0 +1,1687 @@
+@import "tailwindcss";
+
+/* 导入居中和放大样式 */
+@import "./center-large-styles.css";
+
+/* ★把**构建产物自己**排除出 Tailwind 的自动内容探测。
+   不排除的话构建是**不幂等**的：`web/dist/` 没有进 `.gitignore`（它是要入库的，
+   跑站的人不该需要 npm），而 Tailwind v4 扫项目根时只认 `.gitignore` 不认
+   "这是产物" ⇒ 上一次构建出来的 `app.js`/`app.css` 会被当成**输入**再扫一遍。
+   实测后果有两个，都是静默的：
+     · 每构建一次，产物里就多出约 227 字节**只存在于产物里**的"候选类名"
+       （压缩后的 CSS 与 JS 里能扫出像类名的片段）；
+     · 于是 `verify_agent.py` 的 `check_dist_fresh`（重新构建一份逐字节比 dist）
+       会时红时绿 —— 它红的时候看起来像"忘了构建"，其实是构建本身没有不动点。
+       这条我踩了一次：改完源码构建过、判据仍然报"dist 是过期的产物"，
+       而当时的修法是**迭代构建直到收敛**（先把比对产物放回 dist 再来一轮）。
+       迭代能收敛，但那是给一个本可以不存在的反馈环打补丁。
+   ⇒ `@source not` 一句把环切断：产物不再是输入，构建一次就到位。
+   ★路径相对**本文件**（`web/src/index.css`）解析，所以是 `../dist`。 */
+@source not "../dist";
+
+/* ── 暗色：两条来源都要活 ──────────────────────────────────────────────
+   Tailwind v4 的 `dark:` 默认只认 prefers-color-scheme。要让手动开关
+   （[data-theme]）也生效，必须自定义 variant —— 而**这条一写错，跟随系统那半
+   就静默死掉**：`@custom-variant dark (&:where([data-theme=dark], ...))` 这种
+   只覆盖一条来源的写法，加上之后系统暗色就再也不生效了，页面上却看不出任何异常。
+   所以两条来源都显式写，并且**负向条件也要写**（用户手动选亮色时，系统暗色不该盖过来）。
+   ★判据：切到 dark 后 getComputedStyle 的背景色必须真的变（读产物，不读状态位）。 */
+@custom-variant dark {
+  @media (prefers-color-scheme: dark) {
+    &:where(:not([data-theme="light"]):not([data-theme="light"] *)) {
+      @slot;
+    }
+  }
+  &:where([data-theme="dark"], [data-theme="dark"] *) {
+    @slot;
+  }
+}
+
+/* ── 固定中性色阶（★不随主题翻转）─────────────────────────────────────
+   这一块是"全站只有一套配色"的落点，下面 `@theme` 把 Tailwind 的
+   `--color-gray-*` **整条收编**到它上面。
+
+   ★为什么必须"固定"、不能指到会翻转的 `--ink-*`：
+     Tremor 派生组件写的是 `text-gray-900 dark:text-gray-50`
+     （亮色用暗字、暗色用亮字），这依赖 Tailwind 的 gray 是**固定值**。
+     若 `--color-gray-900: var(--ink)` 而 `--ink` 会翻转，那么暗色下
+     `dark:text-gray-50` 取到的也是"翻转后的暗值" ⇒ **深色主题里字和底一样黑**。
+     这条坏法有判据守着（`#predCard .grid .tnum` 的暗色计算色必须与底色不同）。
+
+   ★色阶不是另配一套：11 档里有 **8 档逐字节等于站点自己的 token** ——
+       50 = 浅色 --card-2     100 = 浅色 --rule-2    200 = 浅色 --rule
+      500 = 浅色 --ink-3      600 = 浅色 --ink-2     800 = 暗色 --card-2
+      900 = 浅色 --ink        950 = 暗色 --paper
+     剩下 300 / 400 / 700 按 `--ink` 的色相（150°）插值补空档。
+     ⇒ 亮色下 `text-gray-500` 与 `text-[var(--ink-3)]` 算出来是**同一个色**，
+       这正是"两套配色合一"能拿判据验的形状。
+
+   ★为什么不把站点暗色那三个 ink 也反指过来：它们是**手调过**的
+     （`--ink-3` 暗色 `#7a8881` 实测 4.85:1，是过 AA 的那一半），
+     11 档的固定阶梯装不下它们。色相同族就够了，值各自留着手调的那份。
+
+   ★`--n-500` = `#616f68`：这一档同时是站点浅色 `--ink-3`，也就是**上一轮
+     专门为 AA 调过的那一档**（原 `#7c8a83` 在 `--card` 上只有 3.61:1、
+     在 `--paper` 上 3.28:1，两个底都不达标）。它现在只有一个出处，就是这行。 */
+:root {
+  --n-50: #f7f9f7;
+  --n-100: #eaefea;
+  --n-200: #dde3de;
+  --n-300: #bac3bd;
+  --n-400: #909b95;
+  --n-500: #616f68;
+  --n-600: #4a5751;
+  --n-700: #333e39;
+  --n-800: #1d2620;
+  --n-900: #141c18;
+  --n-950: #0b0f0d;
+}
+
+/* ── token ────────────────────────────────────────────────────────────
+   ★红涨绿跌 —— A 股习惯，与欧美相反。抄欧美配色会让用户把涨看成跌。
+   ★暗色有两处**必须同时改**：下面的 @media 块和 [data-theme=dark] 块。
+     漏一处 = 手动切暗色时颜色不变（或反之），而页面上完全看不出异常。
+     判据：两个块里 --up/--down/--paper/--card 的取值必须逐字相同。 */
+:root {
+  --paper: #f2f5f2;
+  --card: #ffffff;
+  --card-2: var(--n-50);
+  --ink: var(--n-900);
+  --ink-2: var(--n-600);
+  /* ★★浅色的 `--ink-3` 是给**说明文字**用的（`.hint` / `.chart .cap` /
+     `.fcode` / `.frange`），所以它要过 WCAG AA 的正文线 4.5:1 —— 而
+     **大字那条 3.0:1 的线它用不上**（这几个字号全是正文）。
+     原来那个 `#7c8a83` 只有 **3.61:1**（在 `--card` #ffffff 上）/ **3.28:1**
+     （在 `--paper` #f2f5f2 上），**两个底都不达标**。
+     ★★这里曾经写着一句"深色那一份 `#7a8881` 是 4.85:1、是过的，所以只是浅色
+       这一半不合格" —— **那句话是错的**。它只对着 `--card` 量了一个底。
+       这个站有**三个**底色，第三个是 `--card-2`，而 `.msg.ai .body` 用的就是它，
+       ChatCard 里"模型推理中…"和降级说明两段字直接坐在上面。
+       暗色 `#7a8881` 在 `--card-2` 上只有 **4.20:1** ⇒ 暗色那一半同样不合格。
+       教训：**"过了 AA"必须写明是"在哪个底上过的"** —— 少写一个底，就等于
+       给自己发了一张假绿。两半现在都按三个底重校（见暗色块的 `--ink-3`）。
+     ★这站尤其吃这条：`.hint` 里装的正是写给理财小白的解释，字最该看清的地方。
+     `#616f68` = 页面底 4.80:1 / 卡片底 5.27:1，两个底都过，色相仍与 `--ink-2` 同族。
+     ★这个色值现在只有一个出处：上面固定色阶的 `--n-500`（判据比的是**算出来的
+       颜色**，所以指过去和写死在这里，渲染结果逐字节相同）。 */
+  --ink-3: var(--n-500);
+  --rule: var(--n-200);
+  --rule-2: var(--n-100);
+  /* ★2026-09-22：亮色 accent 从 `#1b6b4c` 挪到 `#0b6b5f`。
+     为什么挪：`#1b6b4c` 与亮色的 `--down` **逐字节相同** ⇒ 凡是"用 accent 画的
+     中性量"（分位条那一族的条子、相关性、预测卡）都长得和**下跌**一模一样。
+     A 股绿=跌 ⇒ 用户会把"这只票的 PE 在近 5 年偏低的档位"读成"它在跌"。
+     这不是好不好看的问题，是把中性事实读成了方向。
+     为什么是这个值（**读数按 WCAG 相对亮度公式现算**，不是抄的）：
+       · 色相 **172.5°** vs `--down` 的 **156.8°** ⇒ 差 **15.8°**，与**暗色那一对**
+         （accent `#5cc79a` 154.8° / down `#3fbca8` 170.4° ⇒ 差 15.6°）同档，
+         两套主题的分离度是对齐的；
+       · 白字压底 **6.40:1**、压 `--paper` **5.82:1**（旧值 6.45 / 5.88，同一套算式）
+         ⇒ 观感几乎不变，按钮还是那个分量（`#send/#ksave/#prun`、.msg.me 都吃这个）。
+     ★一处**量不出来**的矛盾，记在这里免得下一个人重新踩：要求里"与 `--down` 明确
+       分开"和"与暗色 accent 同族"**测不出同时成立** —— 暗色 accent 的色相 154.8°
+       比亮色 `--down`（156.8°）还更靠近 `#1b6b4c` 那一档。功能那条判据守得住，
+       审美那条守不住 ⇒ 以功能为准。（暗色 accent 是**亮**薄荷、亮色这套必须是深色
+       才压得住白字，明度本来就是反的。） */
+  --accent: #0b6b5f;
+  --f2: #c4761a;
+  --f5: #bf452f;
+  --shadow: 0 1px 2px rgba(20, 28, 24, 0.06), 0 8px 28px -12px rgba(20, 28, 24, 0.22);
+  --serif: "Noto Serif SC", Georgia, "Songti SC", serif;
+
+  /* ★红涨绿跌（浅色=分析后台） */
+  --up: #c0392b;
+  --down: #1b6b4c;
+  /* ★色相槽位：红/绿**本身**，与"涨/跌"这个**指派**无关。
+     `--up`/`--down` 表达的是"A 股口径下谁是涨"，这两行表达的是"红是什么色"。
+     拆开是因为涨跌方向不是数学事实而是**市场惯例**（A 股红涨绿跌，欧美相反），
+     见文件末尾 `:root[data-market="us"]` 那一段。
+     ★为什么只能另写一份字面值、不能写 `--c-red: var(--up)`：
+       `[data-market=us]` 那条规则要把 `--up` 指到 `--c-green`、`--down` 指到
+       `--c-red` —— 两边一互相引用就**成环**，而成环的自定义属性在
+       computed-value time 双双失效（`var(--up)` 变 unset ⇒ 涨跌色静默透明，
+       页面上只是"颜色没了"，没有任何东西会响）。这条踩过一次，见
+       `dark-first-theme.css` 里那条 `!important` 的注释。
+     ★这三处（本块 + 两个暗色块）的 `--c-red`/`--c-green` 必须与本块的
+       `--up`/`--down` 逐字一致；改 `--up`/`--down` 时三处一起改。
+       ★**没有判据守着这条同步** —— 记在交付说明的"没验的"里。 */
+  --c-red: #c0392b;
+  --c-green: #1b6b4c;
+
+  --warn-bg: #fdf6e7;
+  --warn-rule: #e8d5a8;
+  --warn-ink: #7a5b18;
+
+  /* ── 刻度：圆角 / 间距 / 字号 ────────────────────────────────────────
+     换皮的地基。改之前这个文件是"随手加的"状态，实测：
+       圆角 30 处，取值 3/4/5/6/8(非对称)/50%/999/9999
+       字号 18 种，全是 px，且一半是**半像素**（11.5 出现 14 次、12.5 出现 11 次）
+       间距 17 种，恰好是 1..16 每个整数各来一遍（没有 17，也没有 20/24/32）
+     ⇒ 症状不是"丑"，是**看不出层级**：11.5 和 12 分不出谁更重要，
+       5px 和 6px 的圆角谁也不是"那个圆角"。
+     ★这是"够用就好"的收敛，不是设计系统：字号 8 档、圆角 5 档、间距 6 档。
+       档位再多就会重新变成随手加。 */
+  --r-xs: 4px;      /* 小控件内部、进度条子 */
+  --r-sm: 6px;      /* 输入框、按钮、徽章 */
+  --r-md: 10px;     /* ★卡片。注意：`.card` 原来写 6px，但每张卡在 TSX 里
+                       还写了 `rounded-lg`(8px)，Tailwind 工具类赢 ⇒ 实际渲染是 8px。
+                       现在由这一档说了算。 */
+  --r-lg: 14px;     /* 大容器、主入口卡 */
+  --r-pill: 999px;  /* 胶囊（原来 `999px` 和 `9999px` 两种写法各写了一遍） */
+
+  --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px;
+  --sp-4: 16px; --sp-5: 24px; --sp-6: 32px;
+
+  --fs-cap: 11px;    /* 脚注、单位（原来 10.5 / 11 / 11.5） */
+  --fs-sm: 12px;     /* 次要说明（原来 12 / 12.5） */
+  --fs-base: 13px;   /* 正文（原来 13 / 13.5） */
+  --fs-md: 14px;     /* 强调正文、卡标题（原来 14 / 14.5） */
+  --fs-lg: 16px;     /* 小节标题（原来 15.5 / 16 / 16.5） */
+  --fs-xl: 18px;     /* 大标题（原来 17 / 17.5 / 18） */
+  --fs-num: 24px;    /* ★数字主角（原来全站只有 `.gbig .gv` 一处 19px） */
+  /* ★主角数字。原来的最大字号是 `text-lg`(18px) —— 一个"看行情"的站，
+     数字和正文一样大，等于没有主角。这一档是给行情抬头和三块读数用的。 */
+  --fs-hero: 30px;
+
+  /* ★表面层级：原来只有 `--card` / `--paper` 两级 ⇒ "卡里再套一块"时没有
+     第三级底色可用，只能拿边框硬描。
+     `--well` 是**卡内凹槽**那一级，指 `--paper`。
+     ★为什么不是更顺手的 `--card-2`：`--card-2` 相对 `--card` 的**方向在两套
+       主题里是反的** ——
+         浅色  --paper #f2f5f2 < --card-2 #f7f9f7 < --card #ffffff   ⇒ 卡-2 在卡**下面**（凹）
+         暗色  --paper #0b0f0d < --card #121815 < --card-2 #1d2620   ⇒ 卡-2 在卡**上面**（凸）
+       拿它当凹槽，两套主题给出的立体感是相反的，而"看着不对劲"没人会来报。
+       更要命的是暗色那边还会**把字压到 AA 线下**：`--ink-3` 原值 `#7a8881` 在
+       `--card-2` 上只有 **4.20:1**（正文线 4.5），而在 `--card` 上是 4.85:1。
+       —— 那个洞已经单独修了（见暗色块 `--ink-3` 的注释）。
+     `--paper` 则两套主题都在卡片**下面**，方向一致，且三个底全部过 AA。 */
+  --well: var(--paper);
+  /* 极轻的抬升。`--shadow` 是卡片那一级，这个给卡内的小块用。 */
+  --shadow-1: 0 1px 2px rgba(20, 28, 24, 0.05);
+}
+
+/* ★下面这两个块**必须逐字相同**（除了选择器）：漏一处 = 手动切暗色时颜色只变一半，
+   而页面上完全看不出异常。有一条判据就是拿这两块逐 token 比对的。 */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0b0f0d;
+    --card: #121815;
+    --card-2: #1d2620;
+    --ink: #e8eee9;
+    --ink-2: #a9b7b0;
+    /* ★#86938c（原 #7a8881）。这一档是上一轮**漏掉的暗色那一半**：
+       上一轮把浅色 --ink-3 从 3.61:1 修到 4.80:1，但只对着 `--card` 校的。
+       这个站有**三个**底色，`--card-2` 是第三个 —— 而 `.msg.ai .body` 的底就是它，
+       ChatCard 里"模型推理中…"和降级说明两段字直接坐在上面。
+       暗色 #7a8881 在 --card-2 #1d2620 上只有 **4.20:1**，低于正文线 4.5。
+       现在：--card 5.63 / --paper 5.65 / --card-2 4.86，三个底全过。 */
+    --ink-3: #86938c;
+    --rule: #26302b;
+    --rule-2: #1f2a24;
+    --accent: #5cc79a;
+    --f2: #e0a253;
+    --f5: #e5765c;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 30px -14px rgba(0, 0, 0, 0.7);
+    /* ★红涨绿跌（暗色=行情终端）：不是把浅色那两个调亮，是**重挑**过的 ——
+       暗底上 #C0392B 会糊成一团黑红，读不出是涨还是跌。 */
+    --up: #e5765c;
+    --down: #3fbca8;
+    --warn-bg: #241f14;
+    --warn-rule: #4a3f22;
+    --warn-ink: #d9be7e;
+    /* ★与上面 `@media` 块**逐字相同**，且与本块的 `--up`/`--down` 一致。
+       理由见浅色块里 `--c-red` 那一段。 */
+    --c-red: #e5765c;
+    --c-green: #3fbca8;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0b0f0d;
+  --card: #121815;
+  --card-2: #1d2620;
+  --ink: #e8eee9;
+  --ink-2: #a9b7b0;
+  /* ★与上面 @media 块**逐字相同**（有一条判据逐 token 比这两块）。 */
+  --ink-3: #86938c;
+  --rule: #26302b;
+  --rule-2: #1f2a24;
+  --accent: #5cc79a;
+  --f2: #e0a253;
+  --f5: #e5765c;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 30px -14px rgba(0, 0, 0, 0.7);
+  --up: #e5765c;
+  --down: #3fbca8;
+  --warn-bg: #241f14;
+  --warn-rule: #4a3f22;
+  --warn-ink: #d9be7e;
+  /* ★与上面 `@media` 块**逐字相同**（有一条判据逐 token 比这两块），
+     且与本块的 `--up`/`--down` 一致。 */
+  --c-red: #e5765c;
+  --c-green: #3fbca8;
+}
+
+/* ══ 语义 token 层 ══════════════════════════════════════════════════════
+   上面那两块（`:root` + 两个暗色块）是**色板**：`--paper`/`--card`/`--ink-*`
+   这些名字说的是"哪个色号"，不是"用在哪"。这一块是**语义层**：把色板里的
+   每一档按**用途**再命名一次，组件从此只写用途。
+
+   ★为什么是"别名"而不是"第二份色板"：值全部指过去（`var(--card)`），
+     所以色板改一处、语义名跟着走，不存在"两套配色"的问题。
+     本项目**踩过**"两套配色"那个坑（`index.css` 里 `@theme` 那段注释）：
+     语义 token 和 Tremor 的裸灰并存，同一张卡里混着两种色系，
+     表现是"有些卡像设计过的、有些还是 Tremor 默认灰"。
+     ⇒ 再抄一份色值出来就是把这个坑重新挖一遍。
+
+   ★为什么需要这一层：色板的名字是**结构名**（paper/card/ink/rule），
+     写组件的时候要现想"这个提示框的底该是 card 还是 card-2"。
+     语义名把那个判断**提前做掉一次**，全站只有一个答案：
+       表面 → surface / surface-alt / well / canvas / overlay
+       前景 → fg / heading / muted / faint / on-accent
+       描边 → line / line-subtle / line-strong
+       状态 → status-up / status-down / status-flat / warn-* / info-*
+       图表 → chart-1..chart-6
+     这五组的成员**齐了**，组件里就不该再出现裸色值或裸调色板类名
+     （`bg-slate-800` / `text-gray-400` 这类）。
+
+   ★`--text-*` 这一族名字里带 `text`，但**不是** `text-` 工具类的来源 ——
+     工具类那一层在下面 `@theme` 里用 `--color-*` 另起了名，见那段注释。
+     这里 `--text` / `--text-muted` / `--text-subtle` 只是语义变量的名字。 */
+:root {
+  /* ── 表面层级 ────────────────────────────────────────────────────────
+     `surface-alt`（= `--card-2`）**故意不叫 `surface-raised`**：
+     `--card-2` 相对 `--card` 的方向在两套主题里是**反的**（浅色凹、暗色凸，
+     见上面 `--well` 那段注释）⇒ 叫 raised 在浅色主题下就是一句假话。
+     "卡内凹槽"那一级有独立的名字（`well`），方向两套主题一致。 */
+  --surface-canvas: var(--paper);
+  --surface: var(--card);
+  --surface-alt: var(--card-2);
+  --surface-well: var(--well);
+  /* 浮层（下拉、气泡）。★现在与 `surface` 同色 —— 站上没有别的一级可用，
+     浮层的区分靠 `--shadow` 那一档，**不靠**再造一层底色（造了就没人校 AA）。 */
+  --surface-overlay: var(--card);
+
+  /* ── 前景 ──────────────────────────────────────────────────────────
+     ★`muted`/`faint` 这两档是**过 AA 的那两档**，不是"随便找个灰"：
+       `--ink-2` 与 `--ink-3` 都在三个底色（`--paper`/`--card`/`--card-2`）
+       上校过正文线 4.5:1。换用它们之外的任何灰度都会掉到线下。 */
+  --text: var(--ink);
+  --heading: var(--ink);
+  --text-muted: var(--ink-2);
+  --text-subtle: var(--ink-3);
+  /* ★"压在 accent 上的字" —— 两套主题里 `--accent` 差得最狠
+     （浅色深青绿 `#0b6b5f` / 暗色**亮**绿 `#5cc79a`），所以**一份写死的字色
+     只在其中一套上成立**。`--card` 恰好两套都对（浅 `#ffffff` 6.40:1、
+     暗 `#121815` 8.65:1）。判据在 `verify_agent.py:6162`，两套主题各一条。
+     ★`index.css` 里那三处已经在用 `var(--card)` 的规则**不动**
+       （`#send,#ksave,#prun` 那一条被两条注入逐字锚着，改一个字符就会让
+       那两条判据失去否证能力）；这个新名字是给**新写的组件**用的。 */
+  --on-accent: var(--card);
+
+  /* ── 描边 ──────────────────────────────────────────────────────────
+     `line-strong` 是这一层**唯一派生**出来的色：没有新色号，
+     由 `--rule` 往 `--ink-3` 那边混一点。用 `color-mix` 而不是再定一对
+     浅/暗值，是为了**不引入第三对"两来源"** —— 这个仓库的
+     `@media` 块与 `[data-theme]` 块必须逐字相同（有一条判据逐 token 比），
+     每多一对就多一次"只改一处"的坏法。派生值跟着 `--rule` 自动走。 */
+  --border-subtle: var(--rule-2);
+  --border: var(--rule);
+  --border-strong: color-mix(in srgb, var(--rule) 58%, var(--ink-3));
+
+  /* ── 状态 ──────────────────────────────────────────────────────────
+     ★`status-flat`（走平）**必须**是中性色，不能用涨跌色里的任何一个：
+     跟"分位条不能用涨跌色"是同一个病 —— 0.00% 不是"轻微上涨"也不是
+     "轻微下跌"，给它上色就是让读者从一个中性事实里读出方向。
+     `--ink-3` 是"说明文字"那一档，正是中性色里最不抢眼的一档。 */
+  --status-up: var(--up);
+  --status-down: var(--down);
+  --status-flat: var(--ink-3);
+  --status-danger: var(--f5);
+  --status-notice: var(--f2);
+  /* ★与 `--on-accent` 同一个原因、另一个用途：`--status-danger` 也是
+     **随主题翻转的实心强色**（浅 `#bf452f` / 暗 `#e5765c`），
+     一份写死的白字在暗色下只有 2.97:1（亮色下 5.11:1 才勉强过）。
+     `--card` 两套都对：浅 5.11:1 / 暗 6.06:1。
+     （★读数按 WCAG 相对亮度公式从上面两行的色值**现算**；同一套算式在
+       `--accent` 那一对上复现出本文件既有的 6.40:1 / 8.65:1（accent 本轮从
+       `#1b6b4c` 挪到 `#0b6b5f`，同一套算式复算 ⇒ 6.45 → 6.40），所以这一对
+       也换成算出来的值 —— 改前这里写 4.76:1，而"白字"与"`--card`"在亮色下
+       是**同一个色**（浅 `--card` 就是 `#ffffff`，见本文件那一行），
+       同一个量不可能有两个值：那 4.76 是抄来的、不是量出来的。）
+     ★名字与 `--on-accent` 分开、不用一个"on-solid"统称：两者值相同只是
+     **同一个原因的两个结论**（`--card` 是唯一两套主题都过 AA 的字色），
+     不是一个名字的别名 —— 哪天把 accent 换成浅底，两个名字会各自改。 */
+  --on-danger: var(--card);
+  /* ★信息色：这一层里唯一一处**写死的色相**。
+     站点色板是"绿（品牌）+ 琥珀（提醒）+ 砖红（错误）"，缺一个**中性的
+     非提醒**色 —— 现有的 `--accent` 是品牌绿，拿它当"信息"等于说
+     "这条是重点"，而信息类提示（"数据来自 X、更新时间 Y"）不该有重点感。
+     所以补一个冷色相，其余三档都从它**混出来**，跟着主题走：
+       浅色 → 混 `--ink`（深）⇒ 深青，压在浅底上；
+       暗色 → 混 `--ink`（浅）⇒ 亮青，压在暗底上。
+     这样一处写死、两套主题各自成立，不需要第三对两来源。 */
+  --info-hue: #2f6f8f;
+  --info: color-mix(in srgb, var(--info-hue) 55%, var(--ink));
+  --info-bg: color-mix(in srgb, var(--info-hue) 10%, var(--card-2));
+  --info-rule: color-mix(in srgb, var(--info-hue) 34%, var(--rule));
+
+  /* ── 图表色板 ──────────────────────────────────────────────────────
+     六档**分类**色（`utils/chartColors.ts` 用）。
+     ★这里**故意不含 `--up`/`--down`**：图表的分类色一旦被当成方向色读，
+       整张图的意思就变了 —— 与"分位条不能用涨跌色"是同一条纪律。
+       要画涨跌的地方（走势线、盈亏数字）直接写 `--up`/`--down`，
+       不从这张板子里挑。
+     ★也只有六档：这个站的色板是"绿 + 琥珀 + 砖红 + 冷 + 两档中性"，
+       凑到八档就得开始"差不多是同一个色"，那是**没有色板**的另一种样子。 */
+  --chart-1: var(--accent);
+  --chart-2: var(--f2);
+  --chart-3: var(--f5);
+  --chart-4: var(--info);
+  --chart-5: var(--ink-2);
+  --chart-6: var(--ink-3);
+}
+
+/* ── ★涨跌方向是可配置的（市场惯例，不是数学事实）──────────────────────
+   A 股：红涨绿跌（本文件的默认值）。欧美：绿涨红跌。
+   抄错一边，用户会把涨看成跌 —— 这不是审美问题，是**读错数**。
+   ⇒ 换市场只改一个属性：`document.documentElement.dataset.market = 'us'`。
+     或者调 `theme.ts: applyMarket()`。
+
+   ★为什么这一条写在**所有色板块之后**：它靠**顺序**赢。
+     `--up`/`--down` 在浅色块和两个暗色块里各写了一份字面值，
+     而三个块的特异性分别是 (0,1,0)/(0,2,0)/(0,2,0)。这一条是
+     `:root[data-market="us"]` = (0,2,0)，与两个暗色块**同档** ⇒
+     必须出现在它们后面才能盖住。写在前面的话浅色能翻转、暗色**静默不翻**，
+     而"只有一半主题生效"正是本仓库最怕的那种坏法。
+   ★锚点：`verify_agent.py:10112` 那条注入逐字要求
+     `  --up: #c0392b;\n  --down: #1b6b4c;` 相邻存在（`:10026`/`:10077` 同理
+     锚着两个暗色块里的 `--up: #e5765c;`）⇒ 上面那三处**一个字符都不能改**，
+     所以这里是"另写一对槽位"而不是"把 --up 指到槽位"。 */
+:root[data-market="us"] {
+  --up: var(--c-green);
+  --down: var(--c-red);
+}
+
+/* Tailwind 的工具类指向 token，而不是把色值再抄一遍 ——
+   抄一遍的话暗色切换就只改得动一半（token 变了、工具类没变）。 */
+@theme {
+  --color-up: var(--up);
+  --color-down: var(--down);
+  --color-ink-950: var(--paper);
+  --color-ink-900: var(--card);
+  --color-ink-700: var(--rule);
+  --color-flat: var(--ink-3);
+  --color-up-soft: var(--warn-bg);
+  --color-down-soft: var(--rule-2);
+  /* ★下面这四个是给 Tremor 派生件（Badge / Callout / ProgressBar）收编用的：
+     它们原来是 blue/emerald/red/yellow 的 raw 调色板，现在指向站点语义。
+     `--accent` 尤其是——站点的强调色是**绿**的，而 Tremor 的 default 是**蓝**的。 */
+  --color-accent: var(--accent);
+  --color-warn-bg: var(--warn-bg);
+  --color-warn-rule: var(--warn-rule);
+  --color-warn-ink: var(--warn-ink);
+  /* 图表调色板的两个补充色（`utils/chartColors.ts` 用）——
+     站点原有的 `--f2`/`--f5`，之前没有桥接，所以只有写 `var(--f2)` 才用得上。 */
+  --color-f2: var(--f2);
+  --color-f5: var(--f5);
+
+  /* ── ★语义 token → Tailwind 工具类 ────────────────────────────────────
+     上面 `:root` 里那一段语义 token 到这里才有**工具类**可用：
+       `bg-surface` / `bg-canvas` / `bg-well` / `bg-surface-alt`
+       `text-fg` / `text-muted` / `text-faint` / `text-heading`
+       `border-line` / `border-line-subtle` / `border-line-strong`
+       `bg-status-up` / `text-status-down` / `text-status-flat`
+       `bg-warn-bg` / `border-warn-rule` / `text-info` / `bg-info-bg`
+       `text-chart-1` … `bg-chart-6` / `stroke-chart-3` / `fill-chart-3`
+     Tailwind v4 的语法是"`<utility>-<--color-后面的名字>`"，所以这里的
+     每一个键名都直接决定类名 —— 键名=类名，改名等于改全站的类名。
+
+     ★三个命名上的取舍，都是被语法逼的、不是随意起的：
+       1. 页面底色那一档叫 **`canvas`** 不叫 `base`：
+          写 `--color-base` 会造出 `text-base`，而 `text-base` 在 Tailwind 里
+          已经是**字号**那一档（1rem）。同名会让"字号"和"颜色"撞在一个类名上，
+          而 CSS 里 `text-base` 只能有一个意思 ⇒ 谁后生成谁赢、静默。
+       2. 描边一族叫 **`line-*`** 不叫 `border-*`：
+          想要 `border-subtle` 这个类名，键名就得是 `--color-subtle`，
+          而 `--color-subtle` **同时**会生成 `text-subtle` 与 `bg-subtle` ——
+          一个名字同时是"文字色"和"描边色"，是两件事挤进一个词。
+          `border-line-subtle` 长一点，但它只有一个意思。
+       3. `muted` / `faint` 沿用 Tailwind 生态里最通用的那两个词
+          （`text-muted` / `text-faint`），一眼知道是哪一档。
+       ★`bg-status-up/10` 这种**带透明度的写法**在这里是通的：Tailwind 4
+         对 `var()` 色值用 `color-mix(in oklab, …, 10%, transparent)` 算，
+         `Badge.tsx` 里 `bg-up/10 text-up` 已经这么用了好几个版本。 */
+  --color-canvas: var(--surface-canvas);
+  --color-surface: var(--surface);
+  --color-surface-alt: var(--surface-alt);
+  --color-well: var(--surface-well);
+  --color-overlay: var(--surface-overlay);
+  --color-fg: var(--text);
+  --color-heading: var(--heading);
+  --color-muted: var(--text-muted);
+  --color-faint: var(--text-subtle);
+  --color-on-accent: var(--on-accent);
+  --color-on-danger: var(--on-danger);
+  --color-line: var(--border);
+  --color-line-subtle: var(--border-subtle);
+  --color-line-strong: var(--border-strong);
+  --color-status-up: var(--status-up);
+  --color-status-down: var(--status-down);
+  --color-status-flat: var(--status-flat);
+  --color-status-danger: var(--status-danger);
+  --color-status-notice: var(--status-notice);
+  --color-info: var(--info);
+  --color-info-bg: var(--info-bg);
+  --color-info-rule: var(--info-rule);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-chart-6: var(--chart-6);
+
+  /* ★整条收编 Tailwind 的 gray-*（11 档）到上面那条**固定**色阶。
+     这一步替代的是 418 处裸调色板用法 —— `text-gray-900 dark:text-gray-50`、
+     `bg-gray-100 dark:bg-gray-800`、`border-gray-200 dark:border-gray-800` 之类，
+     一个类名都不用改，它们从此跟着站点配色走。
+     ⇒ 收编之前，这个站是**两套配色**：站点语义 token（`text-[var(--ink-2)]`）
+       和 Tremor 的裸灰（`text-gray-500 dark:text-gray-400`），而且同一张卡里混用
+       （`PredCard` 全文 0 处 `var(--…)`，只有 `text-up` 一处是 token）。
+       表现是"有些卡像设计过的、有些还是 Tremor 默认灰"。
+     ★注意这 11 行指向的是 `--n-*`（固定），**不是** `--ink-*`（翻转）——
+       理由见上面固定色阶那段的说明。 */
+  --color-gray-50: var(--n-50);
+  --color-gray-100: var(--n-100);
+  --color-gray-200: var(--n-200);
+  --color-gray-300: var(--n-300);
+  --color-gray-400: var(--n-400);
+  --color-gray-500: var(--n-500);
+  --color-gray-600: var(--n-600);
+  --color-gray-700: var(--n-700);
+  --color-gray-800: var(--n-800);
+  --color-gray-900: var(--n-900);
+  --color-gray-950: var(--n-950);
+
+  /* ★同样地，把 Tailwind 的**圆角**收编到站点那三档刻度上。
+     起因：`.card` 自己写的是 `border-radius: var(--r-md)`（10px），
+     而 TSX 上普遍还有一枚 `rounded-lg` —— Tailwind 默认 `--radius-lg: 0.5rem` = **8px**。
+     utilities 层在 `@layer components` 之后 ⇒ 那枚 8px **压掉**了 `.card` 的 10px。
+     于是全站能数出 4px（`rounded-sm`）/ 6px（`rounded-md`）/ 8px（`rounded-lg`）/
+     12px（`rounded-xl`）四种"差不多圆"的角，而且**没有一个是站点刻度上的**。
+     收编之后 33 处 `rounded-sm|md|lg` 一个类名都不用改，自动落到 6 / 10 / 14。
+     ★`--radius-sm` 和 `--radius-md` 都指 `--r-sm`（6px）：Tailwind 那两档
+       本来就是 4px 和 6px，站点刻度上没有 4px 这一档，合并掉。
+       名字不同的两档合并成同一个值**不是**漏改 —— 是刻度只有三档。 */
+  --radius-sm: var(--r-sm);
+  --radius-md: var(--r-sm);
+  --radius-lg: var(--r-md);
+  --radius-xl: var(--r-lg);
+  --radius-2xl: var(--r-lg);
+  --radius-3xl: var(--r-lg);
+}
+
+html {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+/* 数字一律等宽对齐 —— 行情表里跳动的小数点不对齐是最刺眼的"不像金融产品" */
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* ── ★数字当主角：三档读数 + 一档标签 ────────────────────────────────────
+   换皮之前全站最大的字是 `text-lg`(18px) —— 一个"看行情"的站，数字和正文
+   一样大，等于没有主角。这三档是给"一眼就要看到"的数字用的
+   （行情抬头、总收益、完成度），配一档 `.kicker` 说"这数字是什么"。
+   ★一律带 `tabular-nums`：`.tnum` 那条纪律在这一族里照旧生效。
+   ★行高**写死** 1.1，不继承正文：这几档是正文的 2 倍上下，继承正文行高
+     会在数字上下各空出一大块，读数看着"飘"。收紧了数字才抱团。
+   ★字距收 `-0.01em`：大字号用正文的字距会偏松，这是排版常识，不是调参。 */
+.num-hero, .num-lg, .num-md {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+.num-hero { font-size: var(--fs-hero); font-weight: 700; }
+.num-lg { font-size: var(--fs-num); font-weight: 700; }
+.num-md { font-size: var(--fs-xl); font-weight: 600; }
+
+/* 给数字配的那行"这是什么"。字号压到最小、字距略放开、颜色退后一档 ——
+   它和数字的关系是**从属**，所以不许和数字抢字号。 */
+.kicker {
+  font-size: var(--fs-cap);
+  color: var(--ink-3);
+  letter-spacing: 0.06em;
+  font-weight: 600;
+}
+
+/* ── K 线图（手写 SVG，index.html:189-211 的等价迁移）──────────────────
+   ★颜色**只在 CSS 里给**：JSX 只输出 `up`/`dn` 类名。写进 fill 属性的话
+     两套主题就得在 JS 里各写一遍，暗色必然漏。 */
+.chart {
+  margin-top: var(--sp-2);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md);
+  background: var(--card);
+  padding: var(--sp-2) var(--sp-2) var(--sp-2);
+}
+/* 图跟着卡片变宽，但不许长成半屏高：viewBox 是 660×300，
+   1551px 的列宽算下来有 705px 高。封顶之后 preserveAspectRatio 默认居中留白，
+   不会拉变形。 */
+.chart svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 460px;
+}
+/* ★说明条是 .chart 的**最后一个子节点**，不是它的兄弟 —— 探针的选择器是
+   `#msgs .chart .cap`，层级错了 repairNote 那条判据就变空转。 */
+.chart .cap {
+  font-size: var(--fs-cap);
+  color: var(--ink-3);
+  padding: var(--sp-1) var(--sp-2) 2px;
+  display: flex;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+.chart .cap b {
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+/* ── 估值分位卡（get_fundamentals 走数据通道画出来的那张）────────────────
+   ★这张卡**一个涨跌色都不用**（`--up`/`--down` 是 K 线的高低开收用的）。
+   分位不是"涨/跌"：PE 在 3% 分位既不红也不绿，它只说"跟它自己过去比偏便宜"。
+   用涨跌色就是替用户下结论 —— 而"不替用户下结论"是这个项目的定位。
+   所以条子一律 `--accent`，判据会去量**算出来的颜色**，改这里会被抓住。 */
+.fundcard { padding: var(--sp-2) var(--sp-2) var(--sp-2); }
+
+.fhead {
+  display: flex; align-items: baseline; gap: var(--sp-2); flex-wrap: wrap;
+  padding: 0 2px var(--sp-2);
+}
+.fname { font-size: var(--fs-md); color: var(--ink); }
+.fcode { font-size: var(--fs-cap); color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.find, .fcap2 {
+  font-size: var(--fs-cap); color: var(--ink-3);
+  border-left: 1px solid var(--rule); padding-left: var(--sp-2);
+}
+
+/* 一行 = 名 / 值 / 条 / 分位 / 区间。★用 grid 而不是 flex：
+   两行的条子要**左右对齐**，flex 会因为值那一列宽度不同而错开。 */
+.frow {
+  display: grid;
+  grid-template-columns: 5.2rem 4.4rem minmax(40px, 1fr) 3.4rem auto;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-1) 2px;
+  font-variant-numeric: tabular-nums;
+}
+.flabel { font-size: var(--fs-sm); color: var(--ink-2); }
+.fval { font-size: var(--fs-base); color: var(--ink); text-align: right; }
+.fbar {
+  position: relative;
+  height: 10px;
+  border-radius: var(--r-xs);
+  background: var(--rule-2);
+  overflow: hidden;
+}
+/* ★宽度**由 JS 给**（= 分位值本身）。CSS 里不许出现任何具体宽度 ——
+   写死一个宽度的话，条子看着还在，但它跟数字已经没关系了。
+   ★★填充色**必须是中性的**，不能用 `--accent`。这里踩过一个**真的上线过**的坑：
+   2026-09-22 之前浅色主题的 `--accent` 是 `#1b6b4c`，和浅色主题的 `--down`
+   **逐字节相同** —— 于是"分位条"看起来和"下跌"是同一个颜色。而 A 股是**绿=跌**，
+   用户扫一眼会把"这只票的 PE 在近 5 年偏低的档位"读成"它在跌"。
+   （那一版是把条子填 `--accent` 写的，故障注入就是把 `--ink-3` 换回 `var(--down)`。）
+   分位只是"跟它自己过去比站在哪"，**不是涨跌，不该有涨跌色**。
+   ★accent 已经挪到 `#0b6b5f`（见文件开头那一行）、不再等于 `--down`；但**这一条
+     不变**：accent 是**品牌强调色**，画在条子上读起来是"这条被特别标出来了"，
+     仍然不是中性。中性那一档在本文件里只有一个：`--ink-3`（说明文字那一档）。
+   判据（`★分位卡一个涨跌色都没用`）比的是**算出来的 rgb**，不是源码里写了什么。 */
+.fbar-fill { display: block; height: 100%; border-radius: var(--r-xs); background: var(--ink-3); }
+/* 取不到：空槽 + 虚线边。**不是** 0% 宽的实心条 —— 那看起来像"史上最便宜"。 */
+.fbar.none { background: transparent; box-shadow: inset 0 0 0 1px var(--rule); }
+.fbar.none .fbar-fill { display: none; }
+.fpct { font-size: var(--fs-sm); color: var(--ink-2); text-align: right; }
+.fpct.none { color: var(--ink-3); }
+.frange { font-size: var(--fs-cap); color: var(--ink-3); white-space: nowrap; }
+.fnone { font-size: var(--fs-cap); color: var(--ink-3); margin: var(--sp-2) 2px 0; }
+
+/* ★窄屏：区间那一列**换行**到下面去，而不是把整行挤出视口。
+   五个格子加起来最小 419px（5.2+4.4+2.5+3.4rem + 区间 ~140px + 间隙），
+   420px 的视口减去内边距只剩 ~340px —— 不换行就横向溢出，
+   而"无横向溢出"是既有判据，会红。 */
+@media (max-width: 560px) {
+  .frow { grid-template-columns: 4.6rem 4rem minmax(30px, 1fr) 3.2rem; }
+  .frange { grid-column: 1 / -1; }
+}
+
+/* 走势线：横向拉满、纵向定高（preserveAspectRatio="none"），
+   所以描边必须 non-scaling-stroke，否则线宽跟着横向拉伸一起变粗。 */
+.fundcard .fspark { height: 96px; max-height: 96px; margin-top: var(--sp-2); }
+.fspark-line {
+  fill: none; stroke: var(--accent); stroke-width: 1.6;
+  vector-effect: non-scaling-stroke;
+}
+.fspark-now {
+  fill: none; stroke: var(--ink-3); stroke-width: 1;
+  stroke-dasharray: 3 3; vector-effect: non-scaling-stroke;
+}
+.fspark-legend {
+  display: flex; gap: var(--sp-2); flex-wrap: wrap;
+  font-size: var(--fs-cap); color: var(--ink-3);
+  padding: 2px 2px 0;
+}
+
+.k-grid { stroke: var(--rule); stroke-width: 1; }
+.k-axis { fill: var(--ink-3); font-size: var(--fs-cap); }
+.k-base { stroke: var(--ink-3); stroke-width: 1; stroke-dasharray: 4 4; }
+.k-split { stroke: var(--f2); stroke-width: 1; stroke-dasharray: 4 4; }
+.k-split-l { fill: var(--f2); font-size: var(--fs-cap); }
+.k-wick { stroke-width: 1; }
+.k-body { stroke-width: 1; }
+.up .k-wick, .up .k-body { stroke: var(--up); }
+.up .k-body { fill: var(--up); }
+.dn .k-wick, .dn .k-body { stroke: var(--down); }
+.dn .k-body { fill: var(--down); }
+g.pred { opacity: 0.62; }
+g.pred .k-body { fill-opacity: 0.35; }
+g.pred .k-wick { stroke-dasharray: 2 2; }
+
+/* ★区间带用**中性色**（跟坐标轴同一个 token），绝不用 --up/--down：
+   带子的宽窄是"模型有多不确定"，不是"涨/跌"。染成涨跌色等于替用户
+   把区间读成方向 —— 跟"分位条不许用涨跌色"是同一条纪律。
+   它跟着主题翻转（--ink-3 明暗两套都给过），所以暗色下不会黑压黑。 */
+.k-band { fill: var(--ink-3); fill-opacity: 0.16; stroke: none; }
+
+/* ── 风险提示块：判据要量它的**高度**，所以不许藏 ───────────────────── */
+.disclaim {
+  margin-top: var(--sp-2);
+  font-size: var(--fs-sm);
+  line-height: 1.6;
+  color: var(--warn-ink);
+  background: var(--warn-bg);
+  border: 1px solid var(--warn-rule);
+  border-radius: var(--r-md);
+  padding: var(--sp-2) var(--sp-2);
+}
+/* 实测数字那一行：比免责正文再压一档，但**不许藏**（判据会量它的高度）。 */
+.disclaim .acc-line {
+  margin-top: var(--sp-2);
+  padding-top: var(--sp-2);
+  border-top: 1px dashed var(--warn-rule);
+  font-size: var(--fs-cap);
+}
+.disclaim .acc-line b { color: var(--ink); }
+
+/* ── ★大屏：宽度已经跟着屏幕长了，字还停在 15px 就会又小又稀 ──────────
+   用户的原话就是"太小了"。用两档而不是流体字号：流体字号下"哪里看着不对"
+   没法复现，也没法钉判据。
+   ★这两块**故意写在 `@layer` 外面**：它们要盖过组件层里的基准字号，
+   而 utilities 层的工具类（`text-xs` 之类）也在更后面 —— 写在层外才稳。 */
+@media (min-width: 1700px) {
+  body { font-size: 16px; }
+  h1 { font-size: 21px; }
+  /* ★`.card h2` 这一档**故意缺席**：它基础档就已经落在 `--fs-lg`（下面 `.card h2`
+     那条），再写一遍是同值空转。它真正长大是 2100 那一档（→ `--fs-xl`）。
+     卡标题要守的是"比同一行的 `.tag` 大一档"，而 `.tag` 在这个档位是 12px。 */
+  .msg { font-size: var(--fs-lg); }
+  #q, #psym { font-size: var(--fs-lg); }
+  a.linkcard p { font-size: var(--fs-md); }
+  .disclaim { font-size: var(--fs-base); }
+  .hint, .chart .cap { font-size: var(--fs-sm); }
+  .predmark, .msg.ai .who, .pred .reading { font-size: var(--fs-sm); }
+}
+@media (min-width: 2100px) {
+  body { font-size: 17px; }
+  h1 { font-size: 23px; }
+  .card h2 { font-size: var(--fs-xl); }
+  .msg { font-size: var(--fs-xl); }
+  #q, #psym { font-size: var(--fs-xl); }
+  a.linkcard p { font-size: var(--fs-lg); }
+  .disclaim { font-size: var(--fs-md); }
+  .hint, .chart .cap { font-size: var(--fs-base); }
+  .predmark, .msg.ai .who, .pred .reading { font-size: var(--fs-base); }
+}
+
+/* ── 「走了小模型的那条回答」的标 ──────────────────────────────────────
+   ★为什么非打不可：大模型的话和模型的输出在**同一个气泡里、同一套字号、
+   同一个颜色**，不打个标就分不出哪句是模型采出来的、哪句是大模型编的人话。 */
+.predmark {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  font-size: var(--fs-cap);
+  color: var(--warn-ink);
+  background: var(--warn-bg);
+  border: 1px solid var(--warn-rule);
+  border-radius: var(--r-xs);
+  padding: 2px var(--sp-2);
+  letter-spacing: 0;
+  font-weight: 600;
+}
+
+/* ── 卡片 / 对话 / Key 卡 ────────────────────────────────────────────────
+   ★整段放在 `@layer components` 里：Tailwind 的 utilities 层在它之后，
+   于是 JSX 上写的 `p-3` / `rounded-lg` 这些**覆盖得动**这里的默认值。
+   不放进 layer 的话（裸写）优先级反而高于 utilities，"utility 改不动组件样式"
+   是那种改半天没反应、最后发现是 CSS 顺序问题的坑。 */
+@layer components {
+  .card {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .card h2 {
+    /* ★原来是 `font: 600 15px / 1.3 var(--serif)` 简写。拆开的两条理由：
+       一是那个 15px 不在字号刻度上（刻度是 14/16），二是简写裹 `var()` 的
+       合法性要等 computed-value time 才判 —— 写错了整条**静默失效**，
+       字会回落成继承值，而卡片标题"看着还行"，不会有人来报。 */
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: var(--fs-lg);
+    line-height: 1.3;
+    margin: 0;
+    letter-spacing: 0.01em;
+  }
+  /* ★两张卡共用一条页眉规则：分开写迟早会有一边忘了改 */
+  .card .chd {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    padding: var(--sp-3) var(--sp-4);
+    border-bottom: 1px solid var(--rule-2);
+    flex: none;
+  }
+  .card .chd .tag {
+    font-size: var(--fs-cap);
+    color: var(--ink-3);
+    margin-left: auto;
+    white-space: nowrap;
+  }
+  a.linkcard {
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.15s;
+  }
+  a.linkcard:hover {
+    border-color: var(--accent);
+  }
+
+  /* ── ① 对话卡 ──
+     高度兜底：JS 没跑起来时至少有内容高度，不至于变成一条缝
+     （真变成缝的话渲染层那条 chatH 判据会立刻发现）。 */
+  .chat {
+    display: flex;
+    flex-direction: column;
+    min-height: 440px;
+  }
+  #msgs {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: 62vh;
+    overflow-y: auto;
+    padding: var(--sp-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-3);
+    scroll-behavior: smooth;
+  }
+  .msg {
+    max-width: 88%;
+    font-size: var(--fs-md);
+    line-height: 1.72;
+  }
+  .msg.me {
+    align-self: flex-end;
+    /* ★★**别在这里写死 `#fff`** —— 暗色主题下 `--accent` 是 `#5cc79a`
+       （一枚**亮**绿），白字落在它上面只有 **2.08:1**，连 3:1 都不到，
+       而亮色主题下 `--accent` 是 `#0b6b5f`（深青绿），白字 6.40:1 是好的。
+       ⇒ 一份写死的白字，**只在两套主题里的一套上成立**。
+       `--card` 两套都对：亮色 `#ffffff` ⇒ 6.40:1；暗色 `#121815` ⇒ **8.65:1**。
+       （比值是 `verify_agent.py` 那条「accent 底上的字两套主题都过 AA」现算的，
+        不是手抄的；本文件里同一形状的写死白字一共 5 处，全在本轮改成 `--card`——
+        其中 `#send, #ksave, #prun` 那条是**三个选择器共用一条声明**。） */
+    background: var(--accent);
+    color: var(--card);
+    border-radius: 8px 8px 2px 8px;
+    padding: var(--sp-2) var(--sp-3);
+  }
+  .msg.ai {
+    align-self: flex-start;
+    width: 88%;
+    max-width: 88%;
+  }
+  .msg.ai .who {
+    font-size: var(--fs-cap);
+    color: var(--ink-3);
+    margin-bottom: var(--sp-1);
+    letter-spacing: 0.04em;
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    flex-wrap: wrap;
+  }
+  .msg.ai .body {
+    background: var(--card-2);
+    border: 1px solid var(--rule-2);
+    border-radius: 8px 8px 8px 2px;
+    padding: var(--sp-2) var(--sp-3);
+  }
+  .msg.ai .body p {
+    margin: 0 0 var(--sp-2);
+  }
+  .msg.ai .body p:last-child {
+    margin-bottom: 0;
+  }
+  .msg.ai.err .body {
+    background: var(--warn-bg);
+    border-color: var(--warn-rule);
+    color: var(--warn-ink);
+  }
+  .msg.ai.err .body code {
+    background: transparent;
+    border: 0;
+    padding: 0;
+    color: inherit;
+    font-size: var(--fs-cap);
+    word-break: break-all;
+  }
+
+  .trace {
+    margin-top: var(--sp-2);
+    border: 1px solid var(--rule-2);
+    border-radius: var(--r-xs);
+    /* ★`--well`（卡内凹槽）在这里的第一个用处。原来写的是 `var(--card)` ——
+       而它坐在 `.msg.ai .body` 里，那个气泡的底是 `--card-2`。
+       于是层级是「白卡 → 灰气泡 → **白**工具盒」：凹进去又**凸出来**，
+       工具盒跟最外层那张卡一个色，看着像漏了底色。
+       改成凹槽后是「白卡 → 灰气泡 → 更深的工具盒」，三层的方向一致。
+       盒内文字（`--ink-2`/`--ink-3`/`--f5`）在 `--well` 上两套主题全部过 AA。 */
+    background: var(--well);
+  }
+  .trace > summary {
+    cursor: pointer;
+    padding: var(--sp-2) var(--sp-3);
+    color: var(--ink-3);
+    font-size: var(--fs-cap);
+    list-style: none;
+  }
+  .trace > summary::-webkit-details-marker {
+    display: none;
+  }
+  .trace > summary::before {
+    content: "▸";
+    display: inline-block;
+    margin-right: var(--sp-2);
+    transition: transform 0.15s;
+    color: var(--ink-3);
+  }
+  .trace[open] > summary::before {
+    transform: rotate(90deg);
+  }
+  /* ── 工具轨迹（`.trace`）：终端风的时间线 ─────────────────────────────
+     ★**一个 class 名都没改、一处 DOM 都没动** —— 判据数的是 `.msg` / `.trace` /
+       `.tchip` 的**个数**，改结构等于让判据空转（`ChatCard.tsx` 头上那条硬约束）。
+       所以竖轨与站点全部用伪元素画，不新增节点。
+     ★横线换成竖轨不只是好看：这一列**本来就是有序的**（第几步调了哪个工具），
+       横线把它画成表格，竖轨才画得出"同一件事的若干步"。
+     ★伪元素**量不到 `getBoundingClientRect()`** —— 探针那一侧只能走
+       `getComputedStyle(el, '::before')`，`content` 要与 `'none'` 比：
+       `content: none`（或压根没写这条规则）时**不生成盒子**，那时
+       `width`/`height` 报的是 `auto`，说"轨宽 1px"就是在编。 */
+  .trace .rows {
+    position: relative;
+    /* 左边留出竖轨的位置：轨在 11px，内容从 28px 起 */
+    padding: 2px var(--sp-3) var(--sp-2) 28px;
+    border-top: 1px solid var(--rule-2);
+  }
+  /* 竖轨：**一条**线贯穿整段轨迹。逐行画的话相邻两行之间会有 1px 的缝，
+     放大看是一串虚线而不是一条轨。 */
+  .trace .rows::before {
+    content: "";
+    position: absolute;
+    left: 11px;
+    top: 8px;
+    bottom: 10px;
+    width: 1px;
+    background: var(--rule-2);
+  }
+  .trace .row {
+    position: relative;
+    display: flex;
+    gap: var(--sp-2);
+    align-items: baseline;
+    padding: 4px 0;
+    /* 横线去掉：时间线不该长得像表格。★写 `none` 不写 `0` —— 下面那条
+       `.row:last-child` 用的是 `0`，两个值分开写，注入的锚点才各自唯一。 */
+    border-bottom: none;
+    font-size: var(--fs-cap);
+    font-variant-numeric: tabular-nums;
+  }
+  /* 每一站一个点，坐在竖轨上。`box-shadow` 用凹槽色在点周围"挖"一圈，
+     让点看着压在轨上而不是浮在轨旁边 —— 用 border 会改变盒子尺寸，
+     点在窄屏上会跟着抖。
+     ★`--ink-3` 而不是某个"轨道色"：**这个 token 必须真的存在**。写一个不存在的
+       变量名（比如 `--rule-3`）不会报错，它会让 `background` 在 computed-value
+       time 变成 unset ⇒ 点**静默透明** ⇒ 页面上只是"没那么好看"，没人会来报。
+       所以有一条判据量的是**点的背景色是不是真的不透明**。 */
+  .trace .row::before {
+    content: "";
+    position: absolute;
+    left: -19px;
+    top: 9px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--ink-3);
+    box-shadow: 0 0 0 3px var(--well);
+  }
+  .trace .row:last-child {
+    border-bottom: 0;
+  }
+  .trace .nm {
+    /* ★原来是 `font:` 简写。拆成长写：简写里塞 `var()` 的合法性要等
+       computed-value time 才判，一处写错整条声明**静默失效**（回落成继承值），
+       而这里全是工具名的等宽字，失效了只是"看着有点不对"，没人会来报。 */
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: var(--fs-sm);
+    line-height: 1.5;
+    /* ★工具名提亮到 `--ink`：这一行的层次是「名字最亮 → 参数最暗 → 状态带色」。
+       原来名字和参数都是 `--ink-2`/`--ink-3`，整行读起来是一坨灰。
+       和 `--ink-3` 的差值就是"等宽字 + tabular-nums 那一列"的**可读性**本身。 */
+    color: var(--ink);
+    flex: none;
+  }
+  .trace .ar {
+    color: var(--ink-3);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
+  .trace .st {
+    flex: none;
+    margin-left: auto;
+    /* 状态做成小胶囊：横线拿掉之后，这一列里"成功/失败"是**扫一眼**要分出来的
+       东西，得有个自己的形状。★底色**透明**、只留描边 —— 这个盒子坐在 `--well`
+       里，给它填 `--card` 会让它又"凸"出来（`.trace` 那条注释讲的正是这个坑）。
+       ★`padding`/`border` 只会让行更高，而轨迹的高度没有上限判据，往大里调是安全方向。 */
+    padding: 1px 7px;
+    border: 1px solid var(--rule-2);
+    border-radius: 999px;
+    font-size: calc(var(--fs-cap) - 1px);
+    letter-spacing: 0.02em;
+    color: var(--accent);
+  }
+  .trace .st.bad {
+    color: var(--f5);
+  }
+
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+    margin-top: var(--sp-2);
+  }
+  .tchip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-1);
+    font-size: var(--fs-sm);
+    color: var(--ink-2);
+    border: 1px solid var(--rule);
+    border-radius: var(--r-pill);
+    padding: 3px var(--sp-2);
+    background: var(--card);
+    text-decoration: none;
+  }
+  .tchip:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .tchip::after {
+    content: "↗";
+    font-size: var(--fs-cap);
+    color: var(--ink-3);
+  }
+
+  .cfoot {
+    flex: none;
+    border-top: 1px solid var(--rule-2);
+    padding: var(--sp-3) var(--sp-3);
+    background: var(--card);
+  }
+  .qs {
+    display: flex;
+    gap: var(--sp-2);
+    flex-wrap: wrap;
+    margin-bottom: var(--sp-2);
+  }
+  .qs button {
+    font-size: var(--fs-sm);
+    color: var(--ink-2);
+    border: 1px solid var(--rule);
+    border-radius: var(--r-pill);
+    padding: var(--sp-1) var(--sp-3);
+    background: var(--card);
+  }
+  .qs button:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .inrow {
+    display: flex;
+    gap: var(--sp-2);
+    align-items: flex-end;
+  }
+  #q {
+    flex: 1;
+    min-width: 0;
+    resize: none;
+    padding: var(--sp-2) var(--sp-3);
+    border: 1px solid var(--rule);
+    border-radius: var(--r-sm);
+    background: var(--card-2);
+    color: var(--ink);
+    font: inherit;
+    font-size: var(--fs-md);
+    max-height: 140px;
+  }
+  #send,
+  #ksave,
+  #prun {
+    flex: none;
+    padding: 0 var(--sp-4);
+    height: 42px;
+    border-radius: var(--r-sm);
+    background: var(--accent);
+    color: var(--card);
+    font-weight: 600;
+  }
+  #send:disabled,
+  #ksave:disabled,
+  #prun:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+  .hint {
+    font-size: var(--fs-sm);
+    color: var(--ink-3);
+    margin-top: var(--sp-2);
+  }
+
+  /* ── ② 预测卡 ──
+     ★#pout 的子节点顺序是判据的契约：.reading → .chart（svg + .cap）→ .disclaim */
+  /* 抬头：左边"预测的是谁"，右边"那个最重要的数"。
+     ★用 `flex-wrap` + `justify-content: space-between` 而不是固定两列：
+       420px 那一档两边都必须能折成上下两行，否则左边那条
+       "名称 + 代码"会被挤成竖排单字。 */
+  .phead {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--sp-2) var(--sp-4);
+    padding-bottom: var(--sp-2);
+    margin-bottom: var(--sp-3);
+    border-bottom: 1px solid var(--rule-2);
+  }
+  .phead-name {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: var(--fs-lg);
+    line-height: 1.3;
+    margin: var(--sp-1) 0 0;
+    color: var(--ink);
+  }
+  /* 代码用等宽：`600519` 和 `sh000300` 并排时，等宽体才能一眼看出是"代码"
+     而不是又一个词。颜色退到三级，别和名称抢。 */
+  .phead-code {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: var(--fs-sm);
+    color: var(--ink-3);
+    letter-spacing: 0.02em;
+  }
+  .phead-chg {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+    margin-left: auto;
+  }
+  .pred .pbody {
+    padding: var(--sp-3) var(--sp-3);
+  }
+  #psym {
+    flex: 1;
+    min-width: 0;
+    height: 42px;
+    padding: 0 var(--sp-3);
+    border: 1px solid var(--rule);
+    border-radius: var(--r-sm);
+    background: var(--card-2);
+    color: var(--ink);
+    font: inherit;
+    font-size: var(--fs-md);
+  }
+  #prun {
+    background: var(--card);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+  }
+  #prun:hover:not(:disabled) {
+    background: var(--accent);
+    color: var(--card);
+  }
+  #pout {
+    margin-top: var(--sp-2);
+  }
+  #pout:empty {
+    margin-top: 0;
+  }
+  .pred .reading {
+    font-size: var(--fs-sm);
+    color: var(--ink-2);
+    margin: 0 2px;
+  }
+  .pred .reading b {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── 多采样区间块 ─────────────────────────────────────────────────────
+     ★它在 `#pout` **外面**（在四格读数下面），所以没有动
+       `.reading → .chart → .disclaim` 那条子节点顺序的契约。
+     ★整块**中性色**：区间宽窄是"模型有多不确定"，不是"涨/跌"。
+       套 --up/--down 等于替用户把区间读成方向（跟"分位条不许用涨跌色"同一条）。
+     ★`.off`（方向弃答）比正常态**更重**、不是更淡：它是要说在前面的那句话。 */
+  .spread {
+    margin-top: var(--sp-3);
+    padding: var(--sp-2) var(--sp-3);
+    border: 1px solid var(--rule-2);
+    border-left: 3px solid var(--rule);
+    border-radius: var(--r-sm);
+    background: var(--card-2);
+  }
+  .spread-band {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--sp-1) var(--sp-2);
+  }
+  .spread-range {
+    font-size: var(--fs-md);
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .spread-pct {
+    font-size: var(--fs-sm);
+    color: var(--ink-3);
+  }
+  .spread-votes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-1) var(--sp-3);
+    margin-top: 2px;
+    font-size: var(--fs-sm);
+    color: var(--ink-2);
+  }
+  .spread-hist {
+    color: var(--ink-3);
+  }
+  .spread-verdict {
+    margin-top: var(--sp-1);
+    font-size: var(--fs-sm);
+    line-height: 1.5;
+    color: var(--ink-2);
+  }
+  .spread-verdict b {
+    color: var(--ink);
+  }
+  .spread-verdict.off {
+    color: var(--ink);
+  }
+
+  /* ── ③ Key 卡 ── */
+  .kbody {
+    padding: var(--sp-3) var(--sp-4);
+  }
+  .kstate {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    flex-wrap: wrap;
+    font-size: var(--fs-sm);
+    color: var(--ink-2);
+    margin-bottom: var(--sp-2);
+  }
+  .kstate .kd {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--ink-3);
+    flex: none;
+  }
+  .kstate.on .kd {
+    background: var(--accent);
+  }
+  .kstate.off .kd {
+    background: var(--f2);
+  }
+  .kstate code {
+    font-variant-numeric: tabular-nums;
+    background: var(--card-2);
+    border: 1px solid var(--rule-2);
+    border-radius: var(--r-xs);
+    padding: 1px var(--sp-1);
+  }
+  .keycard .inrow {
+    gap: var(--sp-2);
+    align-items: flex-end;
+  }
+  #kinput {
+    flex: 1;
+    min-width: 0;
+    height: 38px;
+    padding: 0 var(--sp-3);
+    border: 1px solid var(--rule);
+    border-radius: var(--r-sm);
+    background: var(--card-2);
+    color: var(--ink);
+    font: inherit;
+    font-size: var(--fs-base);
+  }
+  #ksave,
+  #kclear {
+    height: 38px;
+  }
+  #ksave {
+    padding: 0 var(--sp-3);
+  }
+  #kclear {
+    flex: none;
+    padding: 0 var(--sp-3);
+    border-radius: var(--r-sm);
+    border: 1px solid var(--rule);
+    color: var(--ink-3);
+    background: var(--card);
+  }
+  #kclear:hover {
+    border-color: var(--f5);
+    color: var(--f5);
+  }
+  .kwarn {
+    margin-top: var(--sp-2);
+    font-size: var(--fs-sm);
+    line-height: 1.65;
+    color: var(--warn-ink);
+    background: var(--warn-bg);
+    border: 1px solid var(--warn-rule);
+    border-radius: var(--r-sm);
+    padding: var(--sp-2) var(--sp-2);
+  }
+  .ksay {
+    margin-top: var(--sp-2);
+    font-size: var(--fs-sm);
+    color: var(--ink-2);
+  }
+  .ksay.bad {
+    color: var(--f5);
+  }
+
+  /* ── 投资画像表单（引导最后一步 / `/profile` 共用）────────────────────
+     ★放在 `@layer components` 里，理由同上面那段：utilities 层在它之后，
+     JSX 上的 `mt-3` / `flex` 这些**覆盖得动**这里的默认值。 */
+  .pfrow {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2);
+  }
+  .pflabel {
+    font-size: var(--fs-base);
+    font-weight: 600;
+    color: var(--ink);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--sp-2);
+  }
+  .pfhint {
+    font-size: var(--fs-cap);
+    font-weight: 400;
+    color: var(--ink-3);
+  }
+  .pfopts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+  }
+  /* ★选项卡：`aria-pressed` 由 React 写，**选中态在视觉上必须与它一致** ——
+     写成"看起来选中了、但 aria-pressed 是 false"的话，
+     读屏用户听到的和别人看到的是两件事，而截图上看不出区别。 */
+  .cchip {
+    font: inherit;
+    font-size: var(--fs-sm);
+    line-height: 1;
+    padding: var(--sp-2) var(--sp-3);
+    border-radius: var(--r-pill);
+    border: 1px solid var(--rule);
+    background: var(--card);
+    color: var(--ink-2);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: border-color 0.12s, color 0.12s, background 0.12s;
+  }
+  .cchip:hover { border-color: var(--accent); color: var(--ink); }
+  .cchip.on {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 12%, var(--card));
+    font-weight: 600;
+  }
+  .pfinput {
+    font: inherit;
+    font-size: var(--fs-base);
+    width: 100%;
+    padding: var(--sp-2) var(--sp-2);
+    border-radius: var(--r-sm);
+    border: 1px solid var(--rule);
+    background: var(--paper);
+    color: var(--ink);
+  }
+  .pfinput:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .pfbtn {
+    display: inline-block;
+    font: inherit;
+    font-size: var(--fs-base);
+    font-weight: 600;
+    padding: var(--sp-2) var(--sp-3);
+    border-radius: var(--r-sm);
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: var(--card);
+    text-decoration: none;
+    cursor: pointer;
+  }
+  /* ★`--card` 当字色而不是写死 `#fff`：暗色主题下卡片底色是深的，
+     写死的白字在浅色按钮上还行、在暗色按钮上就没对比度了。 */
+  .pfbtn.ghost {
+    background: transparent;
+    color: var(--accent);
+  }
+  .pfbtn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+  .pferr {
+    font-size: var(--fs-sm);
+    color: var(--f5);
+    min-height: 0;
+    margin: 0;
+  }
+  .obskip {
+    font-size: var(--fs-sm);
+    color: var(--ink-3);
+    text-decoration: underline;
+    cursor: pointer;
+    background: none;
+    border: 0;
+    padding: 0;
+    font-family: inherit;
+  }
+  /* ★自制进度条（不用 Tremor 的 ProgressBar —— 它的配色写死成 Tailwind 色阶，
+     不跟 `--accent` 走，暗色主题下是一根刺眼的蓝条）。 */
+  .stepbar {
+    height: 6px;
+    border-radius: var(--r-pill);
+    background: var(--rule-2);
+    overflow: hidden;
+  }
+  .stepbar > i {
+    display: block;
+    height: 100%;
+    border-radius: var(--r-pill);
+    background: var(--accent);
+    transition: width 0.2s;
+  }
+}
+
+/* ── 圈状波纹（点击反馈）─────────────────────────────────────────────────
+   ★**故意不放进 `@layer components`**：不放进任何 layer 的规则，在层叠里
+   优先于所有 layer 里的规则。波纹要是被某条组件规则盖掉（比如某个 `.card > span`
+   的 width/height），症状是"点了没反应"——而这类选择器冲突查起来很费劲。
+   这条规则要的正是"谁都盖不动它"。
+   ★`position: fixed` + `pointer-events: none`：这是"零布局影响"的实现方式
+   （见 ripple.ts 顶部那段）。**别改成 absolute/static** ——
+   判据里有一条量的是"点击前后被点元素逐像素不动"。 */
+@keyframes licai-ripple {
+  from { transform: translate(-50%, -50%) scale(0.18); opacity: 0.55; }
+  to   { transform: translate(-50%, -50%) scale(1);    opacity: 0; }
+}
+.ripple {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  width: 190px;
+  height: 190px;
+  border-radius: 9999px;
+  border: 2px solid var(--accent);
+  background: radial-gradient(circle,
+              color-mix(in srgb, var(--accent) 30%, transparent) 0%,
+              transparent 70%);
+  animation: licai-ripple 0.55s cubic-bezier(0.2, 0.6, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+@media (prefers-reduced-motion: reduce) {
+  /* ripple.ts 在 reduced 下压根不生成元素；这条是第二道闸 ——
+     样式表被别人改回动画时，这里仍然让它什么都看不见。 */
+  .ripple { display: none; }
+}
+
+/* ── 模拟投资游戏（/game）───────────────────────────────────────────────
+   ★这一块里唯一有"对错"的一条是 `.gbig .gv` 的颜色走 `dirClass()`
+   （红涨绿跌），其余都只是版式。
+   ★`.gnums` / `.grow` 这些**不是**给探针数数用的 —— 探针读的是 id 和文本。
+     判据里那条"失败那一屏上一个数字都不许有"读的是 `#gOut` 的文本，
+     所以这里的版式怎么改都不会让那条判据变绿或变红。 */
+.gform {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  align-items: flex-end;
+}
+.gf {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  flex: 1 1 150px;
+  min-width: 0;
+}
+.gf > span {
+  font-size: var(--fs-cap);
+  color: var(--ink-3);
+}
+#gStake,
+#gSym,
+#gAmt,
+#gDate {
+  height: 38px;
+  padding: 0 var(--sp-3);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-sm);
+  background: var(--card-2);
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--fs-md);
+  min-width: 0;
+}
+#gGo,
+#gHold {
+  flex: none;
+  height: 38px;
+  padding: 0 var(--sp-4);
+  border-radius: var(--r-sm);
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: var(--card);
+  font-weight: 600;
+  font-size: var(--fs-base);
+}
+#gHold {
+  background: var(--card);
+  color: var(--accent);
+}
+#gHold:hover:not(:disabled) {
+  background: var(--accent);
+  color: var(--card);
+}
+#gGo:disabled,
+#gHold:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+#recBox .tchip::after {
+  /* ★推荐那几个是**按钮**（点了把代码填进输入框），不是链接 ——
+     `.tchip` 自带的「↗」会让它看起来像要跳走。 */
+  content: none;
+}
+.gnums {
+  margin-top: var(--sp-3);
+  border: 1px solid var(--rule-2);
+  border-radius: var(--r-md);
+  background: var(--card-2);
+  padding: var(--sp-2) var(--sp-3);
+}
+.grow {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  padding: 3px 0;
+}
+.gk {
+  flex: none;
+  width: 8.5em;
+  font-size: var(--fs-sm);
+  color: var(--ink-3);
+}
+.gv {
+  font-size: var(--fs-md);
+  color: var(--ink);
+}
+.gbig .gv {
+  /* ★这一页的主角数字是「盈亏」——整页就回答"赚了多少"。
+     原来是 24px（`--fs-num`），和 `/agent` 那四格读数平级；
+     抬到 `--fs-hero`(30px) 之后和预测卡的涨跌幅对齐，"数字当主角"这张表
+     在两页上是同一个刻度。 */
+  font-size: var(--fs-hero);
+  font-weight: 700;
+}
+.gsub {
+  margin-left: var(--sp-1);
+  font-size: var(--fs-sm);
+  font-weight: 400;
+}
+.gerr {
+  margin-top: var(--sp-3);
+  border: 1px solid var(--f5);
+  border-left-width: 3px;
+  border-radius: var(--r-sm);
+  background: var(--card-2);
+  padding: var(--sp-2) var(--sp-3);
+  font-size: var(--fs-base);
+  color: var(--ink);
+}
+.gerr b {
+  color: var(--f5);
+}
+.gdel {
+  font-size: var(--fs-sm);
+  color: var(--ink-3);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-sm);
+  padding: 1px var(--sp-2);
+  background: var(--card);
+}
+.gdel:hover {
+  border-color: var(--f5);
+  color: var(--f5);
+}
+#gPos .g-row:hover {
+  background: var(--card-2);
+}
+
+/* ── 持仓表：把 Tremor `Table` 自带的灰边换成站点 token ─────────────────
+   ★为什么要重描一遍：Tremor 那套边是 `border-gray-200 dark:border-gray-800`
+     和 `divide-gray-200 dark:divide-gray-800`。收编之后 `--n-200` 确实是
+     站点浅色的 `--rule`，但**暗色那一端 `--n-800` 是 `--card-2`** ——
+     那是"卡内凹槽"的底色，拿它画分隔线，暗色下的行线基本看不见。
+     固定色阶的优点是不翻转，代价就是两头都得挑对档，而 Tailwind 那套名字
+     是按"另一端"设计的。这里按站点 token 直接重描，两套主题都成立。
+   ★为什么用 `#gPos` 当前缀而不是给 TSX 加类名：这个 id 本来就在
+     （判据 `#gPos tbody tr[data-sym]` 的落点），拿它当作用域**不新增任何契约**，
+     也不会多出一串要在两处同步的类名。
+   ★`border-collapse: collapse`：Tremor 的 `Table` 没写，默认是 `separate`，
+     表头那条 `border-b` 会跟着单元格间距断开。原来手写那张表是 collapse。 */
+#gPos {
+  border-collapse: collapse;
+  border-bottom: 0;
+}
+#gPos th,
+#gPos td {
+  border-color: var(--rule);
+}
+#gPos tbody tr {
+  border-color: var(--rule-2);
+}
+
+/* ── 红涨绿跌：把这三个类**再声明一遍，放在整个文件最末** ──────────────
+   ★这不是重复代码，是**改层叠位置**。原因：
+
+     `@theme` 里那三个 `--color-*` 生成出来的 `.text-up` / `.text-down` /
+     `.text-flat` 落在 Tailwind 的 `@layer utilities` 里；而**本文件里裸写的
+     那些规则（`.gv`、`.gk`、`.fval`、`.fpct` …）根本不在任何一个 layer 里**。
+     按 CSS 层叠层（Cascade Layers）规范，**未分层的普通声明胜过一切分层声明**
+     —— 优先级、特异性都排在后面。
+     于是 `.gv { color: var(--ink) }`（0,1,0、未分层）把 `.text-up`
+     （0,1,0、在 utilities 层里）整个按掉了，**跟特异性无关**。
+
+   ★实测（拿 `web/dist/app.css` 这份真 CSS 在 firefox 里量 `getComputedStyle`，
+     对照组是同一个 `.gnums` 里不带方向类的 `.gv`）：
+
+       `.gv`           → rgb(20,28,24)  = --ink    ← 对照，本来就该是 --ink
+       `.gv.text-up`   → rgb(20,28,24)             ← 本该是 --up   = #c0392b
+       `.gv.text-down` → rgb(20,28,24)             ← 本该是 --down = #1b6b4c
+
+     两者**逐字节相同**。也就是说 `/game` 上「盈亏」那个数字，
+     **赚和亏长得一模一样**。这不是配色偏好问题 —— 这是这一页最要紧的一条
+     信息（赚了还是亏了）根本没传出去，而且它红不了任何一条判据。
+
+   ★修法：同层叠、同优先级（都是 0,1,0），**源码顺序在后的赢** ⇒ 这里赢。
+     为什么不干脆删掉 `@theme` 里那三个：`Badge`/`Callout` 里写着
+     `bg-up/10`、`ring-down/30`、`bg-down`（`Dash` 的对比条），那些 `/透明度`
+     语法要靠 `--color-up` / `--color-down` 这两个 theme 变量才生成得出来。
+     色值仍然只有一个出处（`@theme` → `--up`/`--down`/`--ink-3`），
+     这里改的只是**这三个类名参与的层叠顺序**。
+
+   ★"放在文件最末"是个**脆弱的前提**（谁往后追加一条裸规则、又恰好匹配到
+     带方向类的元素，就会再按掉一次）。所以它现在有判据盯着：探针量
+     `#gPnl` 的计算色，判据要求它 == `--up`/`--down` 的解析值、且和对照组
+     `#gValue` 的颜色**不同**（见 `verify_agent.py` 的「红涨绿跌真的画出来了」）。
+     前提一被破坏就红，不会静默退化。 */
+.text-up {
+  color: var(--up);
+}
+.text-down {
+  color: var(--down);
+}
+.text-flat {
+  color: var(--ink-3);
+}

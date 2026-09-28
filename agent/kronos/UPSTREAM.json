@@ -1,0 +1,16 @@
+{
+  "_why": "这里装的是**上游原样代码**，不是我们的分支。记下哈希是为了两件事：① 换版本时知道拿哪份做 diff；② runner.py 里对 kronos.py 内部做了 trange 猴补丁（为了逐根进度），上游一改这段补丁就可能静默失效 —— 有了哈希就能发现'悄悄变了'。",
+  "repo": "https://github.com/shiyu-coder/Kronos",
+  "ref": "master",
+  "fetched_at": "2026-09-18",
+  "files": {
+    "__init__.py": "f8f856ca3fedadcaac97e196be23d1aeda1c3c9ffe8903d66d43ea3bcac6240c",
+    "kronos.py": "0a5f90282e2039c2de0771473419715c845def154896dbd0f5747837e6241032",
+    "module.py": "a07edbadc0e96804c8158c021bbc6063bb7cc43b34d7fc470d5c8ff2005a409f"
+  },
+  "verified_against_upstream_master": "2026-09-18 —— 三个哈希与 raw.githubusercontent.com 上同时抓的完全一致（前缀 f8f856ca / 0a5f9028 / a07edbad）",
+  "monkeypatch_points": [
+    "kronos.py: auto_regressive_inference 里 `ran = trange if verbose else range` —— runner._patch_trange 替换模块级名 trange 以取得逐根进度。上游若改名/改写成 tqdm(...) 直接调用，补丁会静默失效（进度没了，但推理照常）。"
+  ],
+  "模型权重不在这个目录": "权重在 ../../models/Kronos-small 与 ../../models/Kronos-Tokenizer-base（HF 格式，走本地路径加载，不联网）。models/ 在 .gitignore 里。"
+}

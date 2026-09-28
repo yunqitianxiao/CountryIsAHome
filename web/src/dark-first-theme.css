@@ -1,0 +1,80 @@
+/* ── 「默认深色」的落地层 ──────────────────────────────────────────────
+   这个文件由 `web/index.html:93` 的 `<link>` 引入，构建后排在 `app.css` 的**最前面**
+   （在 `index.css` 之前）。名字说的是它的职责：**默认深色**这件事的落地。
+   ★它**不是**色板的第二出处 —— 所有设计 token 只有一个出处，就是 `index.css`。
+     这里有第二份色板的时候，改 `index.css` 会被它静默压掉（它的选择器特异性更高），
+     而页面上看不出任何异常。见下面「这一版删掉了什么」。
+
+   ── 这一版删掉了什么（2026-09-22，实测）──────────────────────────────
+   删掉之前，这个文件是 276 行，里面按**三份**把整套色板抄了一遍：
+     · `:root`（第 4 行起）= 暗色值；
+     · `:root[data-theme="light"]`（第 40 行起）= 浅色值；
+     · `@media (prefers-color-scheme: light) { :root:not([data-theme=dark]) }`（第 61 行起）
+       = 浅色值再来一份。
+   这三块的特异性都是 (0,2,0)，**高于** `index.css` 里那份 `:root`(0,1,0) ⇒
+   谁才是"真源"取决于特异性而不是"谁更像设计系统"，改 `index.css` 会被静默遮住。
+
+   还删掉了一条把**整个站**拍平的规则（原第 274-277 行）：
+
+       *:not([data-theme="light"]) { color: var(--ink) !important;
+                                     background: var(--paper) !important }
+
+   `:not([data-theme=light])` 对**除 `<html>` 以外的每个元素**都成立
+   （属性只在根上，后代从来不携带它），所以它匹配全站每一个元素、
+   把所有底色刷成 `--paper`、所有文字刷成 `--ink`，两套主题都是。
+   而这恰好砸在探针的取色方式上：`probe.ts: tokenColor()` 是**建一个 span、
+   写内联 `color: var(--x)`、再读 computed color** ——
+   样式表里的 `!important` 压过内联的非 important 声明，
+   于是 `--up` / `--down` / `--ink-3` / `--accent` **全被读成 `--ink`**。
+   一次根因，11 条判据红（536 条里的 11 条，`verify_agent.py` 全量跑）：
+     · `★工具轨迹：站点真的着色了` ×3 个视口 —— 点量到 `--ink-3`，
+       而期望值 `flatCol` 也已经被读成 `--ink` ⇒ 两个数对不上；
+     · `★工具轨迹：工具名比参数亮` ×3 —— 名字和参数都算成 `rgb(232,238,233)`；
+     · `★主题[亮/暗]：accent 底上的字过 AA` ×2 —— `accent` 读成 `--ink`，
+       于是"落在 accent 上的元素"一个都逮不到（对比度判据空转）；
+     · `★行情总览：走势列是真走势` / `★游戏：盈亏按红涨绿跌` /
+       `★组合体检：回撤曲线是真回撤` 各 1 条 —— 期望的涨跌色被读成 `--ink`。
+   ⇒ 一条"看起来只是保险"的兜底规则，把整套**颜色语义**从探针眼里抹掉了。
+     判据红的是"色板"，坏的是"可观测性"。
+
+   ── 现在这里放什么 ─────────────────────────────────────────────────
+   只放**真的和"深色优先"有关、且 `index.css` 的 token 层装不下**的东西：
+   原生控件（滚动条、`<select>` 下拉、自动填充）的配色。
+   `color-scheme` 是唯一能让这些东西跟着主题走的开关 —— 之前没有任何地方设它，
+   所以暗色站上滚动条一直是系统亮色那条白槽，而这类"不报错的丑"没人会来报。
+   ★`color-scheme` 的**默认值**故意留成 `dark`：这个站默认深色
+     （`theme.ts: DEFAULT_THEME`，以及 `index.html` <head> 里那段防闪脚本），
+     首帧还没有 `data-theme` 的时候，滚动条就应该是深的。
+   ★`[data-theme="light"]` 那条必须**显式写出来**：`color-scheme` 不是继承的 token，
+     它吃的是"元素自己的计算值"，`[data-theme=light]` 那套 token 换不动它。 */
+
+:root {
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+/* 系统偏好亮色、且用户没手动选过（`跟随系统`）⇒ 跟着系统走亮色。
+   ★负向条件 `:not([data-theme="dark"])` 不能省：手动选了暗色时，系统亮色不该盖过来。
+     这与 `index.css` 里 `@custom-variant dark` 的**两条来源**是同一个形状。 */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    color-scheme: light;
+  }
+}
+
+/* 拖选高亮走 `--accent` —— 默认那条蓝在深绿站上很扎眼。
+   `color` 一起给：`::selection` 只设背景时，浏览器会自己挑前景色。 */
+::selection {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+/* 正文区的最小高度。原来写在 body 上，现在还在 body 上 ——
+   它保证"内容很少的页面（比如加载中）页脚也在视口底"，与主题无关，
+   只是顺手跟着这个文件一起搬过来，不是新增。 */
+body {
+  min-height: 100vh;
+}

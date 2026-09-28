@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>新手引导 · 乡e家——县乡村家庭财富管理服务平台</title>
+<style>
+:root{
+  --paper:#F2F5F2; --card:#FFFFFF; --card-2:#F7F9F7;
+  --ink:#141C18; --ink-2:#4A5751; --ink-3:#646F6A;
+  --rule:#DDE3DE; --rule-2:#EAEFEA;
+  --accent:#1B6B4C;
+  --dot:#D7DED8;
+  --shadow:0 1px 2px rgba(20,28,24,.06),0 8px 28px -12px rgba(20,28,24,.22);
+  --f0:#3D6FB4; --f1:#12897A; --f2:#C4761A; --f3:#B44A73; --f4:#6E5AA8; --f5:#BF452F;
+  --serif:"Noto Serif SC",Georgia,"Songti SC",serif;
+  --warn-bg:#FDF6E7; --warn-rule:#E8D5A8; --warn-ink:#7A5B18;
+  --ok-bg:#EDF5F0; --ok-rule:#C9DFD3;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#101512; --card:#171E1A; --card-2:#1D2620;
+    --ink:#E8EEE9; --ink-2:#A9B7B0; --ink-3:#85918B;
+    --rule:#27322C; --rule-2:#1F2A24;
+    --accent:#5CC79A; --dot:#232E28;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px -14px rgba(0,0,0,.7);
+    --f0:#7BA3DE; --f1:#3FBCA8; --f2:#E0A253; --f3:#DE7BA1; --f4:#A292DC; --f5:#E5765C;
+    --warn-bg:#241F14; --warn-rule:#4A3F22; --warn-ink:#D9BE7E;
+    --ok-bg:#16211B; --ok-rule:#2C4436;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#101512; --card:#171E1A; --card-2:#1D2620;
+  --ink:#E8EEE9; --ink-2:#A9B7B0; --ink-3:#85918B;
+  --rule:#27322C; --rule-2:#1F2A24;
+  --accent:#5CC79A; --dot:#232E28;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px -14px rgba(0,0,0,.7);
+  --f0:#7BA3DE; --f1:#3FBCA8; --f2:#E0A253; --f3:#DE7BA1; --f4:#A292DC; --f5:#E5765C;
+  --warn-bg:#241F14; --warn-rule:#4A3F22; --warn-ink:#D9BE7E;
+  --ok-bg:#16211B; --ok-rule:#2C4436;
+}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font:400 15px/1.75 -apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB",
+       "Microsoft YaHei","Source Han Sans SC","Noto Sans CJK SC",sans-serif;
+  -webkit-font-smoothing:antialiased; overflow-x:hidden;
+}
+a{color:var(--accent)}
+header{
+  position:sticky; top:0; z-index:20;
+  background:color-mix(in srgb,var(--paper) 90%,transparent);
+  backdrop-filter:blur(12px); border-bottom:1px solid var(--rule);
+  padding:12px 20px;
+}
+.bar{display:flex;align-items:center;gap:12px;max-width:820px;margin:0 auto}
+h1{font:600 19px/1.25 var(--serif);margin:0;white-space:nowrap}
+.back{margin-left:auto;font-size:13.5px;text-decoration:none;white-space:nowrap}
+.back:hover{text-decoration:underline}
+main{max-width:820px;margin:0 auto;padding:20px 20px 60px}
+.card{background:var(--card);border:1px solid var(--rule);border-radius:6px;
+  box-shadow:var(--shadow);padding:18px 20px;margin-bottom:16px}
+h2{font:600 16px/1.35 var(--serif);margin:0 0 10px;letter-spacing:.01em;
+  display:flex;align-items:baseline;gap:9px}
+h2 .n{font:600 12px/1 var(--serif);color:var(--ink-3);letter-spacing:.1em}
+h3{font:600 14px/1.4 inherit;margin:16px 0 6px;color:var(--ink)}
+p{margin:0 0 10px}
+p:last-child{margin-bottom:0}
+ul,ol{margin:0 0 10px;padding-left:20px}
+li{margin-bottom:6px}
+strong{font-weight:600}
+.lead{font-size:15.5px;color:var(--ink-2)}
+.steps{counter-reset:s;list-style:none;padding:0;display:flex;
+  flex-direction:column;gap:11px}
+.steps li{counter-increment:s;position:relative;padding-left:38px;margin:0}
+.steps li::before{
+  content:counter(s);position:absolute;left:0;top:1px;
+  width:25px;height:25px;border-radius:50%;background:var(--accent);color:var(--card);
+  font:600 12.5px/25px var(--serif);text-align:center;
+}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:10px;
+  margin:13px 0 4px}
+.fact{background:var(--card-2);border:1px solid var(--rule-2);border-radius:4px;
+  padding:10px 12px}
+.fact b{display:block;font:600 18px/1.25 var(--serif);color:var(--accent);
+  font-variant-numeric:tabular-nums}
+.fact span{font-size:12px;color:var(--ink-3)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-top:4px}
+.box{border-radius:4px;padding:12px 14px;font-size:14px}
+.box h3{margin:0 0 7px;font-size:13.5px;display:flex;align-items:center;gap:6px}
+.yes{background:var(--ok-bg);border:1px solid var(--ok-rule)}
+.no{background:var(--warn-bg);border:1px solid var(--warn-rule);color:var(--warn-ink)}
+.no h3{color:var(--warn-ink)}
+.box ul{margin:0;padding-left:18px}
+.box li{margin-bottom:4px}
+.warn{background:var(--warn-bg);border:1px solid var(--warn-rule);color:var(--warn-ink);
+  border-radius:4px;padding:13px 15px;font-size:14px}
+.warn h2{color:var(--warn-ink);margin-bottom:8px}
+/* 实测数字那一行 —— 内容由服务端从 kronos_accuracy.json 现读填入（agent/accuracy.py）。
+   ★不许手写数字：写死的那天它就开始烂，而且页面上看不出来。 */
+.warn .acc-line{padding:8px 10px;border:1px dashed var(--warn-rule);border-radius:4px;
+  background:var(--card);font-size:13.5px}
+.warn .acc-line b{color:var(--ink)}
+/* ★「人人可用」定位条：和主页面那条同一个东西，视觉上也该是同一套语言。
+   ★它出现在**页头下面第一屏**，不是页脚 —— "人人可用"要是只写在结尾，
+   那它就只是免责声明的一部分，不是这个站的定位。 */
+.banner{display:flex;align-items:baseline;gap:13px;flex-wrap:wrap;
+  background:var(--card);border:1px solid var(--rule);border-left:3px solid var(--accent);
+  border-radius:6px;box-shadow:var(--shadow);padding:13px 18px;margin-bottom:16px}
+.banner .bl{flex:none;font:600 12.5px/1 var(--serif);letter-spacing:.14em;color:var(--card);
+  background:var(--accent);border-radius:3px;padding:6px 11px}
+.banner p{margin:0;flex:1;min-width:230px;font-size:13.5px;line-height:1.7;color:var(--ink-2)}
+.banner strong{color:var(--ink);font-weight:600}
+.cta{display:inline-flex;align-items:center;gap:7px;margin-top:6px;
+  padding:9px 16px;border-radius:4px;background:var(--accent);color:var(--card);
+  text-decoration:none;font-size:14px;font-weight:500}
+.cta:hover{opacity:.9}
+.cta.ghost{background:var(--card);color:var(--accent);border:1px solid var(--accent)}
+.ctas{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+code{background:var(--card-2);border:1px solid var(--rule-2);border-radius:3px;
+  padding:1px 5px;font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;
+  word-break:break-all}
+footer{max-width:820px;margin:0 auto;padding:0 20px 40px;color:var(--ink-3);font-size:12.5px}
+@media (max-width:700px){
+  header{padding:11px 15px}
+  h1{font-size:17px;white-space:normal}
+  .back{font-size:13px}
+  main{padding:14px 14px 44px}
+  .card{padding:15px 15px}
+  .two{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="bar">
+    <h1>新手引导</h1>
+    <a class="back" href="/">← 回主页</a>
+  </div>
+</header>
+
+<main>
+  <section class="banner" id="siteBanner" aria-label="本站定位">
+    <span class="bl">人人可用</span>
+    <p><strong>打开就能用</strong>：不用注册、不用登录、不用装东西，也不用先懂金融术语。不填 Key 也能查词、看图谱、跑 K 线预测；想要会对话的助手，就在主页面右栏填一把<strong>你自己的</strong> DeepSeek Key —— 它只存在本机，页面上只显示掩码。</p>
+  </section>
+
+  <div class="card">
+    <h2><span class="n">01</span>这是个什么地方</h2>
+    <p class="lead">一句话：<strong>一个只检验建议、不发建议的体检页 + 一个会说话的理财词典 + 一个只看 K 线的预测小模型</strong>。</p>
+    <p><strong>它给所有人用，不要求你先是个懂行的人。</strong>不用注册、不用装东西、
+      不用先学会术语，一个人打开浏览器就能看上图、查上词。这里没有行情推送、没有买卖提醒、
+      不接你的账户，也不会告诉你"现在该不该买"。它的用途是让你把几个理财概念弄明白，
+      并且亲眼看看"一段走势图能被画成什么样" —— 后者恰恰是理解"预测有多不靠谱"最直接的方式。</p>
+    <p>它由三块拼起来：</p>
+    <ul>
+      <li><strong>建议体检</strong>（<a href="/inspect">打开</a>）—— 把别人发给你的那段理财话原文粘进去，
+          它告诉你：哪几句是红旗、每句凭什么、哪几句看着可疑其实不算、你该问什么，
+          以及哪几件事它查不到、判不了。<strong>它不发建议，只检验你收到的那一条</strong>；
+          判定全部由规则算出，所以每条结论都能追到词条原文。</li>
+      <li><strong>知识图谱</strong> —— 255 个理财术语（什么是可转债、基金和股票差在哪、市盈率怎么看），
+          按「属于 / 对比 / 前提」连成一张图。回答概念问题的是它。</li>
+      <li><strong>Kronos 预测模型</strong> —— 一个开源的小模型，专门看 K 线。你问某只标的
+          "接下来会怎么走"，它读完最近一段价格，往后采样出一段走势。回答行情问题的是它。</li>
+    </ul>
+    <p>主页面那个对话框把后两者串起来：<strong>大模型负责听懂你的问题、决定调哪个工具、
+    再把结果讲成人话</strong>。它自己不算价格，数字全部来自上面那两个。
+    <strong>建议体检不走这条路</strong> —— 它的结论必须能被钉住，所以判定全走规则：
+    一个由大模型判定"这是不是骗局"的工具，它的结论本身就没法被钉住。</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">02</span>三步上手</h2>
+    <ol class="steps">
+      <li><strong>问一个概念，先感受一下。</strong>
+          在输入框敲「什么是可转债」回车。这类问题它查的是本地词典，
+          <strong>不联网、不跑模型，一两秒就出</strong>。回答下面会出现几个词条标签，
+          点进去就是知识图谱。</li>
+      <li><strong>再问一只票的行情。</strong>
+          敲「茅台最近走势怎么样」或「<code>600519</code>」。它会去取真实日 K 数据，
+          给你最新价、近 5/20/60 天涨跌、波动率，并画一张图。</li>
+      <li><strong>最后问预测。</strong>
+          敲「沪深300接下来会怎么走」。这一步会跑本地小模型，
+          <strong>要等几十秒</strong>（页面会一直显示"推理中… N 秒"，
+          那不是卡死了）。图表里<strong>虚线那一段就是模型的预测</strong>。</li>
+    </ol>
+    <p style="margin-top:12px;color:var(--ink-3);font-size:13.5px">
+      标的怎么写：A股 <code>600519</code>、指数 <code>sh000300</code>、ETF <code>510300</code>、
+      港股 <code>00700</code>、美股 <code>AAPL</code>、加密货币 <code>BTC</code>。
+      也可以直接打名字（茅台、沪深300）。
+    </p>
+    <p style="margin-top:9px;color:var(--ink-3);font-size:13.5px">
+      不想打一整句话也行：主页面顶上那张<strong>「K线预测」卡</strong>，填个代码点「跑预测」
+      就直接出图。<strong>那条路不经过大模型</strong> —— 它不替你解读，只给图和读数，
+      所以更适合你已经知道自己想看哪只的时候。
+    </p>
+    <div class="ctas">
+      <a class="cta" href="/agent">去问一个试试 →</a>
+      <a class="cta ghost" href="graph.html">先逛逛知识图谱</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">03</span>那个预测模型是什么</h2>
+    <p>叫 <strong>Kronos</strong>，是第一个专门为金融 K 线做的开源基础模型
+    （论文与代码都公开）。这里跑的是它最小的那档：</p>
+    <div class="facts">
+      <div class="fact"><b>24.7M</b><span>参数量（Kronos-small）</span></div>
+      <div class="fact"><b>512</b><span>最多能看多少根 K 线</span></div>
+      <div class="fact"><b>45</b><span>预训练覆盖的交易所</span></div>
+      <div class="fact"><b>120亿</b><span>预训练用掉的 K 线记录</span></div>
+    </div>
+    <p style="margin-top:12px">它的工作方式分两步：先用一个「分词器」把连续的 K 线
+    （开高低收成交量）压成一串离散符号，再用一个 Transformer 像语言模型预测下一个词那样，
+    一个符号一个符号地往后生成。所以它给出的<strong>不是一条确定的线，而是一条采样出来的路径</strong>
+    —— 同样的输入跑两次，结果不会完全一样。</p>
+    <p>这一点很关键：<strong>它不是在做"预测明天涨还是跌"</strong>，
+    它是在回答"按这段走势的样子，接下来可能长成什么样"。</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">04</span>能干什么，不能干什么</h2>
+    <div class="two">
+      <div class="box yes">
+        <h3>✓ 它能帮你的</h3>
+        <ul>
+          <li>把一个不懂的理财词讲明白，还告诉你会混的那些词差在哪</li>
+          <li>快速看一只标的最近的真实行情：涨跌、波动、区间高低点</li>
+          <li>给出一段"如果照现在的形态走下去"的走势参考</li>
+          <li>把上面这些串成一段你能读懂的话</li>
+        </ul>
+      </div>
+      <div class="box no">
+        <h3>✗ 它做不到的</h3>
+        <ul>
+          <li><strong>它不知道公司是干什么的</strong>：财报、盈利、负债、行业地位，一概没输入</li>
+          <li><strong>它不知道新闻和政策</strong>：降息、重组、监管、突发事件，它看不见</li>
+          <li><strong>它不知道你是谁</strong>：你的收入、负债、能扛多大亏损，它无从判断</li>
+          <li><strong>它不对结果负责</strong>：预测错了是常态，不是 bug</li>
+        </ul>
+      </div>
+    </div>
+    <p style="margin-top:13px">说白了：<strong>它只有一张价格走势图，没有别的。</strong>
+    一个只看了价格、没看过基本面的模型，不该被用来决定你的钱去哪儿。</p>
+  </div>
+
+  <div class="card warn">
+    <h2>⚠️ 风险提示</h2>
+    <p><strong>本站所有内容仅供学习参考，不构成任何投资建议。</strong></p>
+    <p class="acc-line"><!--ACCURACY--></p>
+    <p>预测结果来自一个只输入了价格序列的统计模型，<strong>不包含基本面、新闻、政策、
+    资金面等任何其他信息</strong>，也<strong>不构成对未来的承诺</strong>。
+    金融市场价格受大量不可预测因素影响，历史走势与模型输出都不预示未来表现。</p>
+    <p style="margin-bottom:0">据此操作，<strong>盈亏自负</strong>。请勿投入你无法承受损失的资金；
+    涉及具体投资决策，请咨询具备资质的专业人士。</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">05</span>常见问题</h2>
+    <h3>为什么预测要等那么久？</h3>
+    <p>模型生成是一根一根来的，每生成一根都要把前面整段重新跑一遍（没有缓存加速），
+    所以耗时随预测根数线性上涨。这里是本机跑，没有排队，但也没有集群。</p>
+    <h3>为什么它说"数据没取到"？</h3>
+    <p>行情来自公开数据接口，这些接口偶尔会抽风。取不到时它会直说，
+    而<strong>不会编一个数字给你</strong> —— 这是故意的。</p>
+    <h3>这里的数据从哪来？</h3>
+    <p>日 K 行情来自公开行情接口（A股/指数/ETF/港股/美股走新浪与东财，
+    加密货币走 OKX 与 Binance），术语内容来自本站自己的知识图谱词表。</p>
+    <h3>要不要花钱？</h3>
+    <p>预测模型在你本机跑，不花钱。对话那部分调用大模型 API，需要你自己填一个 key ——
+    <strong>在网站右侧栏那张「大模型 Key」卡里直接填就行</strong>，保存后立刻生效，
+    不用重启也不用编辑文件。没填也能用，只是对话会降级成只回答概念。</p>
+    <p style="margin-top:8px;color:var(--ink-3);font-size:13.5px">
+      key 只写进你本机的 <code>.env</code> 文件，页面上<strong>永远只显示掩码</strong>
+      （像 <code>sk-abc…1234</code>），不会回显完整的 key，也不会发到别处去。</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="n">06</span>下一步</h2>
+    <div class="ctas">
+      <a class="cta" href="/agent">回到智能体 →</a>
+      <a class="cta ghost" href="graph.html">打开知识图谱</a>
+      <!-- ★2026-09-22 补：这一块本来就是"接着去哪儿"的去处清单（原来只有
+           智能体与知识图谱两条），`/dash` 此前整个站都点不到，加在这里。
+           用的是现成的 `.cta.ghost`，没新样式；`/dash` 是 app.py 里的真路由，
+           所以 check_guide_links 那条"落点必须是真地址"照样绿。 -->
+      <a class="cta ghost" href="/dash">看看行情总览</a>
+    </div>
+  </div>
+</main>
+
+<footer>
+  乡e家——县乡村家庭财富管理服务平台 · 本地运行。行情数据来自公开接口，术语内容来自本站知识图谱词表。
+  预测由 Kronos-small 在本机推理。本站不提供投资顾问服务。
+</footer>
+
+</body>
+</html>

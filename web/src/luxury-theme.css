@@ -1,0 +1,170 @@
+/* ── 组件增强层（历史类名的收编）─────────────────────────────────────────
+   这个文件由 `web/index.html:95` 的 `<link>` 引入，构建后排在 `app.css` 的
+   `dark-first-theme.css` 之后、`index.css` 之前。**里面的规则是"没进层"的**
+   （既不写 `@layer`、也不在 `index.css` 的 `@layer components` 里）——
+   未分层的规则**优先于所有分层规则**，所以这里的每一条都会盖过 `index.css`。
+   这一条是理解这个文件的关键：它以前正是靠这一点**静默覆盖**了组件层。
+
+   ── 这一版删掉了什么（2026-09-22 实测）───────────────────────────────
+   改之前这个文件 425 行，主体是一套"AI 味"装饰：紫/靛渐变
+   （`#667eea`/`#764ba2`/`#4facfe`/`#00f2fe`）、金色（`#ffd700`）、
+   毛玻璃、shimmer 动效、以及 `background-clip:text` 的渐变标题。
+   它同时**覆盖面**盖到了 `index.css` 已经做好的组件规则上，而这些覆盖
+   在浅色主题下是坏的（暗色写死的半透明白落在白底上等于没有）。删掉的**覆盖**：
+
+     · `.card`            —— 金属边框 + 渐变底 + `position/overflow`。
+       它盖掉 `index.css` 的 `--card`/`--rule`/`--r-md`，于是浅色下卡片
+       边框变成深蓝灰 `#3a4050`、圆角从 10px 变 14px。
+     · `.card h2`         —— `background-clip:text` + `-webkit-text-fill-color:transparent`。
+       **未分层 ⇒ 它压过 `index.css` 的 `.card h2`**，卡片标题真的在渲染渐变字；
+       而渐变字的对比度不是任何一条判据能守住的东西（量到的是"填充色"）。
+     · `.num-hero/.num-lg/.num-md` —— 同一套渐变字。**这三档就是全站的数字主角**，
+       行情抬头、总收益、完成度都在里面。数字是**要读**的，不是装饰。
+     · `.chart` / `.trace` / `.disclaim` —— 渐变底/金边，同样盖掉组件层。
+     · `#q, #psym, #kinput` —— `background: rgba(255,255,255,.05)`：
+       深色的半透明白。浅色主题下就是**白底上的白色输入框**，
+       而它的 `border` 是深蓝灰，看着像"有个框、里面空白"。
+       `:focus` 那条还把 `outline` 撤了换成金色阴影 ⇒ 键盘焦点环也没了。
+     · `#send, #ksave, #prun` —— `background: var(--luxury-gradient-accent)`。
+       ★这一条是有判据的：`verify_agent.py:6162` 的
+       「★主题[亮/暗]：accent 底上的字过 AA」要求**存在**元素的
+       `background-color` 逐字节等于 `--accent`。渐变底 ⇒ `background-color`
+       是 `transparent` ⇒ 那条判据的 `pairs` 为空 ⇒ 它**空转变绿**
+       （这一条在 2026-09-22 的全量跑里是红的，红的正是"逮到 0 个元素"）。
+     · `html` —— `background: var(--luxury-gradient-primary)` + 15s 无限位移动画，
+       `dark-first-theme.css` 那边还有一条 `html, body { background: ... !important }`。
+       两条加起来：整站底色是渐变（`background-color` 透明），
+       `probe.ts: pageBg()` 会落到 html 上量，量到透明 ⇒ 主题判据拿不到底色。
+     · `body::before` —— 一整个视口的 `position: fixed` 暗角。
+     · `.card:hover { transform: translateY(-2px) }` —— 让整张卡片在鼠标扫过时
+       移位。**这个站在探针里量卡片几何**（`cardRects`），任何"鼠标一动几何就变"
+       的东西都会让读数取决于指针当时在哪。删掉。
+
+   ── 现在这里的职责 ──────────────────────────────────────────────────
+   只剩一件事：**把 TSX 里已经在用的历史类名实现出来**，全部走 token。
+   这些类名散在 `LuxuryDashboard.tsx` / `GameSimulation.tsx` /
+   `Charts/InvestmentChart.tsx` 里；删掉它们会让那几个组件**裸奔**
+   （`className` 还在、样式没了），所以不能一删了之 —— 得重新实现。
+   下面每一个都只定义**布局与层级**，颜色一律 `var(--…)`：
+   深色/浅色两套主题由 token 层负责，这里一行写死的色值都没有。
+
+   ★曾经用过、但**全仓库零引用**的类名没有重新实现（删掉它们是安全的）：
+     `glass-effect` / `decorative-divider` / `luxury-badge` /
+     `shimmer-effect` / `three-d-btn` / `.tooltip .tooltip-text`
+     （`tooltip` 这个名字在 8 个 Tremor 图表件里出现，但那些是它们**自带的**
+       `Tooltip` 组件，用的不是 `.tooltip .tooltip-text` 这套后代选择器）。
+     验证方式：`grep -rl '<类名>' --include=*.tsx web/src` 全部为空。 */
+
+/* ── 网格容器 ───────────────────────────────────────────────────────────
+   原来的 `minmax(300px, 1fr)` 在窄视口（判据里有 420px 这一档）会顶出去：
+   `auto-fit` + 300px 最小宽在容器内宽 < 300px 时不再收缩。改成
+   `minmax(min(280px, 100%), 1fr)` —— 内宽不够时轨道自己缩到 100%，
+   横向不溢出（`probe.ts` 的 `overflowX` 是判据之一）。 */
+.luxury-grid {
+  display: grid;
+  gap: var(--sp-4);
+  grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+  padding: var(--sp-4);
+  color: var(--ink);
+}
+
+/* ── 图表容器与标题 ─────────────────────────────────────────────────── */
+.advanced-chart-container {
+  position: relative;
+  padding: var(--sp-4);
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-1);
+  color: var(--ink);
+}
+
+.advanced-chart-title {
+  /* ★不再是 `background-clip:text` 的渐变字：那会把 `color` 变成 `transparent`，
+     而这一行是给"K 线图上面那行标题"用的 —— 标题是要读的。 */
+  color: var(--ink);
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: var(--fs-lg);
+  line-height: 1.3;
+  margin: 0 0 var(--sp-3);
+}
+
+/* ── 环形加载指示器 ───────────────────────────────────────────────────
+   `LuxuryDashboard` 与 `GameSimulation` 的加载态。原来靠
+   `@keyframes luxurySpin` + 金色顶边；现在顶边取 `--accent`（站点强调色），
+   槽取 `--rule-2` —— 两套主题各自成立，不需要第二个色值。
+   ★`prefers-reduced-motion` 那条在文件末尾统一处理（转圈是"一直在动"的东西）。 */
+.luxury-loader {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--rule-2);
+  border-top-color: var(--accent);
+  border-radius: var(--r-pill);
+  animation: luxurySpin 0.9s linear infinite;
+}
+
+@keyframes luxurySpin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── 进度条 ───────────────────────────────────────────────────────────
+   ★注意：**这不是分位条**。分位条（`CategoryBar` 那一族）的填充色必须是
+   **中性色**，不能用涨跌色也不能用 `--accent` —— 见 `index.css` 里
+   「分位条不能用涨跌色」那一段（`--accent` 浅色恰好等于浅色 `--down`，
+   分位高低不是涨跌，用它等于把"位置"说成"方向"）。
+   这里这条是**完成任务用的进度**，用 `--accent` 是对的。 */
+.luxury-progress-bar {
+  height: 8px;
+  background: var(--well);
+  border: 1px solid var(--rule-2);
+  border-radius: var(--r-pill);
+  overflow: hidden;
+}
+
+.luxury-progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: var(--r-pill);
+  transition: width 0.3s ease;
+}
+
+/* ── 注意力环 ─────────────────────────────────────────────────────────
+   `glow-effect` 原来是一圈 blur(5px) 的金/银/绿三色渐变。它在
+   `GameSimulation` / `LuxuryDashboard` 上标的是"这一块要看"。
+   改成一根 token 色的环 + 一层柔光：达到"标出来"的目的，
+   不用三色渐变（三种颜色同时出现，等于没有强调色）。
+   ★用 `box-shadow` 而不是 `::before` 绝对定位：不新增层、不影响布局盒子，
+     `probe.ts` 量的 `getBoundingClientRect` 不会因为这个类名而变。 */
+.glow-effect {
+  box-shadow:
+    0 0 0 1px var(--accent),
+    0 0 0 4px color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+/* ── 描边强调 ─────────────────────────────────────────────────────────
+   原来用 `border-image` 画三色渐变边。`border-image` 会**绕过 `border-radius`**
+   （渐变边框和圆角不能共存），所以那个类名下的元素其实一直是**直角**的。
+   换成 `outline` + `outline-offset`：跟着圆角走，且不占布局尺寸。 */
+.luxury-border {
+  /* ★`--rule-strong` 这个变量**不存在** —— 本文件第一版写错过一次：
+     `var()` 引用一个未定义的属性，整条 `outline` 简写在计算时变成
+     "guaranteed-invalid" ⇒ 三个子属性一起回落到初始值（`outline-style: none`）
+     ⇒ 这个类名**一点边框都不画**，而源码里看着像有。
+     现在用的是 `--rule`（唯一在用的边框色 token）。 */
+  outline: 1px solid var(--rule);
+  outline-offset: -1px;
+}
+
+/* ── 动效闸门 ─────────────────────────────────────────────────────────
+   `index.css` 末尾已经有一条 `prefers-reduced-motion` 的全局闸门，
+   但那条在 `@layer` 之外、且用 `*` 关掉所有 transition/animation ——
+   这里显式再写一遍是**故意的**：`luxury-loader` 是无限循环动画，
+   一个一直在转的圈对前庭敏感的人就是噪音。两处都写，改一处漏一处也能拦住。 */
+@media (prefers-reduced-motion: reduce) {
+  .luxury-loader {
+    animation: none;
+    border-top-color: var(--rule-2);
+  }
+  .luxury-progress-fill { transition: none; }
+}

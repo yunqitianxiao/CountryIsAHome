@@ -1,0 +1,1322 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>理财智能体</title>
+<!-- 视觉语言与 graph.html 同源：同一批 token、同一套深色重定义、同一条
+     `[hidden]{display:none !important}` 纪律。★但这里**不引 Google Fonts**：
+     那个域名在国内是连不上的，引了就是给首屏加几秒白等，而 --serif 的本地回退
+     （Georgia / Songti SC）本来就够用。 -->
+<style>
+:root{
+  --paper:#F2F5F2; --card:#FFFFFF; --card-2:#F7F9F7;
+  --ink:#141C18; --ink-2:#4A5751; --ink-3:#646F6A;
+  --rule:#DDE3DE; --rule-2:#EAEFEA;
+  --accent:#1B6B4C;
+  --dot:#D7DED8;
+  --shadow:0 1px 2px rgba(20,28,24,.06),0 8px 28px -12px rgba(20,28,24,.22);
+  --f0:#3D6FB4; --f1:#12897A; --f2:#C4761A; --f3:#B44A73; --f4:#6E5AA8; --f5:#BF452F;
+  --serif:"Noto Serif SC",Georgia,"Songti SC",serif;
+  /* ★红涨绿跌 —— A 股习惯，与欧美相反。抄欧美配色会让用户把涨看成跌。 */
+  --up:#C0392B; --down:#1B6B4C;
+  --warn-bg:#FDF6E7; --warn-rule:#E8D5A8; --warn-ink:#7A5B18;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#101512; --card:#171E1A; --card-2:#1D2620;
+    --ink:#E8EEE9; --ink-2:#A9B7B0; --ink-3:#85918B;
+    --rule:#27322C; --rule-2:#1F2A24;
+    --accent:#5CC79A;
+    --dot:#232E28;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px -14px rgba(0,0,0,.7);
+    --f0:#7BA3DE; --f1:#3FBCA8; --f2:#E0A253; --f3:#DE7BA1; --f4:#A292DC; --f5:#E5765C;
+    --up:#E5765C; --down:#3FBCA8;
+    --warn-bg:#241F14; --warn-rule:#4A3F22; --warn-ink:#D9BE7E;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#101512; --card:#171E1A; --card-2:#1D2620;
+  --ink:#E8EEE9; --ink-2:#A9B7B0; --ink-3:#85918B;
+  --rule:#27322C; --rule-2:#1F2A24;
+  --accent:#5CC79A; --dot:#232E28;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px -14px rgba(0,0,0,.7);
+  --f0:#7BA3DE; --f1:#3FBCA8; --f2:#E0A253; --f3:#DE7BA1; --f4:#A292DC; --f5:#E5765C;
+  --up:#E5765C; --down:#3FBCA8;
+  --warn-bg:#241F14; --warn-rule:#4A3F22; --warn-ink:#D9BE7E;
+}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font:400 15px/1.7 -apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB",
+       "Microsoft YaHei","Source Han Sans SC","Noto Sans CJK SC",sans-serif;
+  -webkit-font-smoothing:antialiased;
+  min-height:100dvh;
+  overflow-x:hidden;                 /* 窄屏绝不横向滚 */
+}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+a{color:var(--accent)}
+
+/* ── 页头 ── */
+header{
+  position:sticky; top:0; z-index:30;
+  background:color-mix(in srgb,var(--paper) 90%,transparent);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--rule);
+  padding:0;                        /* ★内边距挪到 .bar 上，见下面那条注释 */
+}
+/* ★页头这排必须**和主栏对齐**。
+   原来 header 自己有 20px 内边距、.bar 又写死 max-width:1180px，
+   于是主栏长到 1942 的时候页头还停在 1180 —— 标题和卡片左边差 20px、
+   徽章那排比卡片右边缘多出 20px，一眼看得出是两套宽度。
+   现在把内边距交给 .bar，两边就都是同一个 max-width：
+   `.bar` 的 border box 对齐 `main` 的 border box，内边距也一样宽，
+   于是**内容框逐像素对齐**（判据量的就是内容框的左边和宽度）。
+   ★改这两条要一起改，只改一条会退回到"差 20px"那个状态 —— 有注入钉着。 */
+.bar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:12px 20px;
+  max-width:clamp(1180px,78vw,2200px);margin:0 auto}
+h1{font:600 19px/1.25 var(--serif);margin:0;white-space:nowrap}
+h1 .sub{font:400 12px/1 inherit;color:var(--ink-3);letter-spacing:.05em;
+  margin-left:9px;vertical-align:2px}
+.badges{display:flex;gap:7px;flex-wrap:wrap;margin-left:auto}
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-2);
+  border:1px solid var(--rule);border-radius:2px;padding:4px 9px;background:var(--card);
+  white-space:nowrap}
+.badge .d{width:7px;height:7px;border-radius:50%;background:var(--ink-3);flex:none}
+.badge.ok .d{background:var(--accent)}
+.badge.warn .d{background:var(--f2)}
+.badge.off .d{background:var(--f5)}
+/* ★「K线预测」这枚是**能力标称**，不是状态 —— 所以它不放在 #badges 里。
+   #badges 每次轮询都被 status() 用 innerHTML='' 重建，放进去的话
+   一断网（走 catch 分支只剩"连不上本地服务"）这枚徽章就跟着没了。 */
+.badge.feat{border-color:var(--accent);color:var(--accent);font-weight:600}
+.badge.feat .d{background:var(--accent)}
+
+/* ── 卡式布局 ── */
+/* ★布局跟着屏幕长。原来写死 1180px，用户 2490px 的窗口里内容只占 48%、
+   两边各空 650px —— 他的原话就是"太小了"。78vw 让大屏真的用起来，
+   下限 1180 保证小窗口一行不变（1400px 的探针档位算下来仍是 1180，判据不受影响），
+   上限 2200 防止超宽屏把正文拉成一条读不下去的长线。 */
+main{max-width:clamp(1180px,78vw,2200px);margin:0 auto;padding:20px;
+  display:grid;grid-template-columns:minmax(0,1fr) clamp(320px,15vw,420px);
+  gap:18px;align-items:start}
+/* ★每一块都必须**显式**定位：靠自动排布的话，新加进来的东西会把别的挤到第 2 列去。
+   窄屏那条媒体查询里要一并复位，否则 grid-column:2 会凭空造出第二列。 */
+.banner{grid-column:1 / -1;grid-row:1}
+.pred{grid-column:1;grid-row:2}
+.chat{grid-column:1;grid-row:3}
+.side{grid-column:2;grid-row:2 / span 2}
+
+/* ── ★「人人可用」定位条 ──
+   横跨两列、在主栏最上面，是首屏第一眼看到的东西。放在这里是有判据逼着的：
+   说明如果只是页脚一句小字，那就等于没说 —— 判据量的是它**在折叠线以上**
+   （bannerTop < 视口高），不是"源码里有这句话"。 */
+.banner{
+  display:flex;align-items:baseline;gap:13px;flex-wrap:wrap;
+  background:var(--card);border:1px solid var(--rule);border-left:3px solid var(--accent);
+  border-radius:6px;box-shadow:var(--shadow);padding:13px 18px;
+}
+.banner .bl{flex:none;font:600 12.5px/1 var(--serif);letter-spacing:.14em;color:var(--card);
+  background:var(--accent);border-radius:3px;padding:6px 11px}
+.banner p{margin:0;flex:1;min-width:230px;font-size:13.5px;line-height:1.7;color:var(--ink-2)}
+.banner strong{color:var(--ink);font-weight:600}
+.card{background:var(--card);border:1px solid var(--rule);border-radius:6px;
+  box-shadow:var(--shadow);overflow:hidden}
+.card h2{font:600 15px/1.3 var(--serif);margin:0;letter-spacing:.01em}
+
+/* ① 对话卡：高度由 measure() 按**它自己现在的位置**算出来，写成行内样式。
+   这里只留一个兜底：JS 没跑起来时卡片至少有内容高度，不至于变成一条缝
+   （真变成缝的话渲染层那条 chatH 判据会立刻发现）。 */
+.chat{display:flex;flex-direction:column;min-height:440px}
+
+/* 卡片共用页眉。★两张卡共用一条规则：分开写迟早会有一边忘了改。 */
+.card .chd{display:flex;align-items:center;gap:10px;
+  padding:13px 16px;border-bottom:1px solid var(--rule-2);flex:none}
+.card .chd .tag{font-size:11.5px;color:var(--ink-3);margin-left:auto;white-space:nowrap}
+#msgs{flex:1 1 auto;min-height:0;overflow-y:auto;padding:16px;
+  display:flex;flex-direction:column;gap:12px;scroll-behavior:smooth}
+.msg{max-width:88%;font-size:14.5px;line-height:1.72}
+.msg.me{align-self:flex-end;background:var(--accent);color:var(--card);
+  border-radius:10px 10px 2px 10px;padding:9px 13px;white-space:pre-wrap;word-break:break-word}
+.msg.ai{align-self:flex-start;width:88%;max-width:88%}
+.msg.ai .who{font-size:11.5px;color:var(--ink-3);margin-bottom:4px;letter-spacing:.04em;
+  display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+/* ★走了小模型的那条回答要打标。之前只有看到图、看到虚线才知道"这段是模型给的"，
+   而大模型的话和模型的输出在同一个气泡里、颜色完全一样 —— 分不出来。
+   用 warn 色：这是"不是行情"的信号，跟风险提示同一套语义。 */
+.predmark{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;
+  color:var(--warn-ink);background:var(--warn-bg);border:1px solid var(--warn-rule);
+  border-radius:3px;padding:2px 7px;letter-spacing:0;font-weight:600}
+.msg.ai .body{background:var(--card-2);border:1px solid var(--rule-2);
+  border-radius:10px 10px 10px 2px;padding:10px 13px;word-break:break-word}
+.msg.ai .body p{margin:0 0 8px}
+.msg.ai .body p:last-child{margin-bottom:0}
+.msg.err .body{background:var(--warn-bg);border-color:var(--warn-rule);color:var(--warn-ink)}
+.msg.err .body code{background:transparent;border:0;padding:0;color:inherit;
+  font-weight:600;word-break:break-all}
+code{background:var(--card);border:1px solid var(--rule-2);border-radius:3px;
+  padding:1px 5px;font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace}
+
+/* 工具轨迹：默认折起来 —— 它是"证据"，不是"正文" */
+.trace{margin-top:7px;border:1px solid var(--rule-2);border-radius:4px;
+  background:var(--card);font-size:12.5px;overflow:hidden}
+.trace>summary{cursor:pointer;padding:6px 11px;color:var(--ink-3);
+  list-style:none;display:flex;align-items:center;gap:7px}
+.trace>summary::-webkit-details-marker{display:none}
+.trace>summary::before{content:"▸";transition:transform .15s;color:var(--ink-3)}
+.trace[open]>summary::before{transform:rotate(90deg)}
+.trace .rows{padding:2px 11px 9px;border-top:1px solid var(--rule-2)}
+.trace .row{display:flex;gap:8px;align-items:baseline;padding:3px 0;
+  border-bottom:1px dashed var(--rule-2)}
+.trace .row:last-child{border-bottom:0}
+.trace .nm{font:12px/1.5 ui-monospace,Menlo,monospace;color:var(--ink-2)}
+.trace .ar{color:var(--ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  flex:1;min-width:0}
+.trace .st{flex:none;color:var(--accent)}
+.trace .st.bad{color:var(--f5)}
+
+/* 术语 chip */
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+.tchip{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;color:var(--ink-2);
+  border:1px solid var(--rule);border-radius:2px;padding:4px 9px;background:var(--card);
+  text-decoration:none}
+.tchip:hover{border-color:var(--accent);color:var(--accent)}
+.tchip::after{content:"↗";font-size:11px;color:var(--ink-3)}
+
+/* 图 */
+.chart{margin-top:10px;border:1px solid var(--rule-2);border-radius:4px;
+  background:var(--card);padding:8px 6px 6px}
+/* 图跟着卡片变宽，但**不许长成半屏高**：viewBox 是 660×300，
+   1551px 的列宽算下来有 705px 高。封顶之后 preserveAspectRatio 默认会
+   把它居中留白，不会拉变形。 */
+.chart svg{display:block;width:100%;height:auto;max-height:460px}
+.chart .cap{font-size:11.5px;color:var(--ink-3);padding:4px 7px 2px;
+  display:flex;gap:10px;flex-wrap:wrap}
+.chart .cap b{font-weight:600;color:var(--ink-2)}
+.k-grid{stroke:var(--rule-2);stroke-width:1}
+.k-axis{fill:var(--ink-3);font-size:10.5px}
+.k-base{stroke:var(--ink-3);stroke-width:1;stroke-dasharray:4 4}
+.k-split{stroke:var(--f2);stroke-width:1;stroke-dasharray:4 4}
+.k-split-l{fill:var(--f2);font-size:10.5px}
+.k-wick{stroke-width:1}
+.k-body{stroke-width:1}
+.up .k-wick,.up .k-body{stroke:var(--up)}
+.up .k-body{fill:var(--up)}
+.dn .k-wick,.dn .k-body{stroke:var(--down)}
+.dn .k-body{fill:var(--down)}
+g.pred{opacity:.62}
+g.pred .k-body{fill-opacity:.35}
+g.pred .k-wick{stroke-dasharray:2 2}
+
+/* 输入区 */
+.cfoot{flex:none;border-top:1px solid var(--rule-2);padding:11px 14px;
+  background:var(--card)}
+.qs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:9px}
+.qs button{font-size:12.5px;color:var(--ink-2);border:1px solid var(--rule);
+  border-radius:2px;padding:4px 10px;background:var(--card-2)}
+.qs button:hover{border-color:var(--accent);color:var(--accent)}
+.inrow{display:flex;gap:9px;align-items:flex-end}
+#q{flex:1;min-width:0;resize:none;padding:10px 12px;border:1px solid var(--rule);
+  border-radius:4px;background:var(--card);color:var(--ink);font:inherit;font-size:14.5px;
+  line-height:1.5;max-height:130px;min-height:42px}
+#q:focus-visible{outline:2px solid var(--accent);outline-offset:1px;border-color:transparent}
+#send{flex:none;padding:0 18px;height:42px;border-radius:4px;background:var(--accent);
+  color:var(--card);font-size:14px;font-weight:500}
+#send:disabled{opacity:.45;cursor:default}
+.hint{font-size:11.5px;color:var(--ink-3);margin-top:7px}
+
+/* ② K线预测卡：直接打 /api/predict，**不经过大模型**。
+   默认只有一行输入（不给对话卡抢首屏），跑完才在下面长出图。 */
+.pred .pbody{padding:12px 14px}
+.pred .inrow{display:flex;gap:9px;align-items:flex-end}
+#psym{flex:1;min-width:0;height:42px;padding:0 12px;border:1px solid var(--rule);
+  border-radius:4px;background:var(--card);color:var(--ink);font:inherit;font-size:14.5px}
+#psym:focus-visible{outline:2px solid var(--accent);outline-offset:1px;border-color:transparent}
+/* 次要动作用描边按钮，跟主发送键（实心）分开 —— 两个实心按钮会抢视线 */
+#prun{flex:none;padding:0 18px;height:42px;border-radius:4px;
+  border:1px solid var(--accent);background:var(--card);color:var(--accent);
+  font-size:14px;font-weight:500}
+#prun:hover:not(:disabled){background:var(--accent);color:var(--card)}
+#prun:disabled{opacity:.45;cursor:default}
+#pout{margin-top:10px}
+#pout:empty{margin-top:0}
+.pred .reading{font-size:12.5px;color:var(--ink-2);margin:0 2px}
+.pred .reading b{font-variant-numeric:tabular-nums}
+
+/* ── 大模型 Key 卡（侧栏）──
+   ★常驻可见，**不做折叠**。折叠看着"干净"，但它藏起来的正是用户这一趟
+   专门来干的那件事 —— 而且折叠态是"页面上有个东西、但你看不见"，
+   跟本仓库一路在防的那些假绿是同一个形状。 */
+.kbody{padding:13px 15px}
+.kstate{display:flex;align-items:center;gap:7px;flex-wrap:wrap;
+  font-size:12.5px;line-height:1.6;color:var(--ink-2);margin-bottom:10px}
+.kstate .kd{width:7px;height:7px;border-radius:50%;background:var(--ink-3);flex:none}
+.kstate.on .kd{background:var(--accent)}
+.kstate.off .kd{background:var(--f2)}
+.kstate code{font-variant-numeric:tabular-nums}
+.keycard .inrow{gap:7px;align-items:flex-end}
+#kinput{flex:1;min-width:0;height:38px;padding:0 11px;border:1px solid var(--rule);
+  border-radius:4px;background:var(--card);color:var(--ink);font:inherit;font-size:13.5px}
+#kinput:focus-visible{outline:2px solid var(--accent);outline-offset:1px;border-color:transparent}
+#ksave{flex:none;padding:0 14px;height:38px;border-radius:4px;background:var(--accent);
+  color:var(--card);font-size:13.5px;font-weight:500}
+#ksave:disabled{opacity:.45;cursor:default}
+/* 清除是破坏性动作，给描边 + 悬停变红：两个实心按钮会把"哪个是主操作"搞糊 */
+#kclear{flex:none;padding:0 12px;height:38px;border-radius:4px;border:1px solid var(--rule);
+  background:var(--card);color:var(--ink-3);font-size:13.5px}
+#kclear:hover{border-color:var(--f5);color:var(--f5)}
+.kwarn{margin-top:9px;font-size:11.5px;line-height:1.65;color:var(--warn-ink);
+  background:var(--warn-bg);border:1px solid var(--warn-rule);border-radius:4px;padding:7px 9px}
+.ksay{margin-top:8px;font-size:12px;color:var(--ink-2)}
+.ksay.bad{color:var(--f5)}
+.keycard .hint{margin-top:9px;line-height:1.65}
+
+/* 侧栏两张整卡可点的入口卡 */
+.side{display:flex;flex-direction:column;gap:18px}
+a.linkcard{display:block;padding:16px;text-decoration:none;color:inherit;
+  transition:border-color .14s,transform .14s}
+a.linkcard:hover{border-color:var(--accent);transform:translateY(-1px)}
+a.linkcard h2{display:flex;align-items:center;gap:8px}
+a.linkcard h2::after{content:"→";margin-left:auto;color:var(--ink-3);font-weight:400;
+  transition:transform .14s,color .14s}
+a.linkcard:hover h2::after{transform:translateX(3px);color:var(--accent)}
+a.linkcard p{margin:8px 0 0;font-size:13.5px;color:var(--ink-2);line-height:1.65}
+a.linkcard .num{font:600 12px/1 var(--serif);color:var(--ink-3);letter-spacing:.08em}
+.kv{display:flex;gap:12px;margin-top:11px;font-size:12px;color:var(--ink-3);
+  border-top:1px solid var(--rule-2);padding-top:9px;flex-wrap:wrap}
+.kv b{color:var(--ink-2);font-weight:600;font-variant-numeric:tabular-nums}
+.fam{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px}
+.fam span{font-size:11.5px;color:var(--ink-2);border:1px solid var(--rule-2);
+  border-radius:2px;padding:3px 7px;display:inline-flex;align-items:center;gap:5px}
+.fam i{width:7px;height:7px;border-radius:50%;flex:none}
+
+.disclaim{margin-top:9px;font-size:12px;line-height:1.6;color:var(--warn-ink);
+  background:var(--warn-bg);border:1px solid var(--warn-rule);border-radius:4px;
+  padding:8px 10px}
+/* 实测数字那一行：比免责正文再压一档，但**不许藏**（判据会量它的高度）。 */
+.disclaim .acc-line{margin-top:7px;padding-top:7px;border-top:1px dashed var(--warn-rule)}
+.disclaim .acc-line b{color:var(--ink)}
+
+/* ★大屏：宽度已经跟着屏幕长了，字还停在 15px 就会又小又稀（用户说的"太小了"）。
+   用两档而不是流体字号：流体字号下"哪里看着不对"没法复现，也没法钉判据。 */
+@media (min-width:1700px){
+  body{font-size:16px}
+  h1{font-size:21px}
+  .card h2{font-size:16.5px}
+  .msg{font-size:16px}
+  #q,#psym{font-size:16px}
+  a.linkcard p{font-size:14.5px}
+  .disclaim{font-size:13px}
+  .hint,.chart .cap{font-size:12.5px}
+  .badge,.predmark,.msg.ai .who,.pred .reading{font-size:12.5px}
+}
+@media (min-width:2100px){
+  body{font-size:17px}
+  h1{font-size:23px}
+  .card h2{font-size:18px}
+  .msg{font-size:17.5px}
+  #q,#psym{font-size:17.5px}
+  a.linkcard p{font-size:15.5px}
+  .disclaim{font-size:14px}
+  .hint,.chart .cap{font-size:13.5px}
+  .badge,.predmark,.msg.ai .who,.pred .reading{font-size:13.5px}
+}
+
+@media (max-width:860px){
+  /* ★内边距在 .bar 上（见页头那条注释），所以这里也改 .bar，别改 header */
+  .bar{gap:9px;padding:11px 15px}
+  h1{font-size:17px;white-space:normal}
+  h1 .sub{display:none}
+  .badges{margin-left:0;width:100%}
+  main{grid-template-columns:minmax(0,1fr);padding:13px;gap:13px}
+  /* ★显式定位要在这儿复位：grid-column:2 在单列网格里会凭空造出第二列并横向溢出 */
+  .banner,.pred,.chat,.side{grid-column:1;grid-row:auto}
+  .banner{padding:12px 14px}
+  .banner .bl{font-size:12px}
+  /* 窄屏让页面自己滚：卡内滚动 + 软键盘在手机上体验很糟 */
+  .chat{height:auto;min-height:0}
+  #msgs{max-height:62vh}
+  .msg,.msg.ai{max-width:100%;width:100%}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none !important;scroll-behavior:auto !important}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="bar">
+    <h1>理财智能体<span class="sub">小模型看K线 · 大模型说人话</span></h1>
+    <!-- ★能力标称，**故意放在 #badges 外面**：那个盒子每 30 秒被 status()
+         重建一次，断网时还会整个换成"连不上本地服务"，放进去这枚就没了。
+         title 里那句"没证明它更强"不是修辞，是回测的结论，别删。 -->
+    <span class="badge feat" id="featBadge"
+          title="本地小模型 Kronos 现场采样一段未来K线（几十秒）。回测没能证明它比「无脑喊涨」强，只当形态参考，不是行情。">K线预测</span>
+    <div class="badges" id="badges"></div>
+  </div>
+</header>
+
+<main>
+  <!-- ★「人人可用」定位条：整个站的自我定位，放在首屏最上面、横跨两列。
+       "人人可用"这四个字不能只活在 README 和引导页里 —— 那些都是要**点进去**
+       才看得到的地方，而一个访客判断"这站我用不用得上"只用前几秒。
+       判据量两件事：它在折叠线以上（bannerTop < 视口高），以及这段文字里
+       确实写清了"门槛为零"（不用注册 / 不用装 / 不填 Key 也能用）。
+       ★"不构成投资建议"那句**不在这一条里** —— 它跟着预测走（独立预测卡和对话里
+       每条带价格的回答都自带一条），那才是它该在的地方。 -->
+  <section class="banner" id="siteBanner" aria-label="本站定位">
+    <span class="bl">人人可用</span>
+    <p><strong>打开就能用</strong>：不用注册、不用登录、不用装东西，也不用先懂金融术语。不填 Key 也能查词、看图谱、跑 K 线预测；想要会对话的助手，就在右栏填一把<strong>你自己的</strong> DeepSeek Key —— 它只存在本机，页面上只显示掩码。</p>
+  </section>
+
+  <!-- ② K线预测卡：不进对话，直接调小模型。
+       ★它放在对话卡**上面**，是因为在这之前"这站能预测"只能靠用户自己撞见 ——
+       得先问一句走势，才会看见图。卡片默认只有一行输入，不长个子，不抢首屏。 -->
+  <section class="card pred" id="predCard" aria-label="K线预测">
+    <div class="chd">
+      <h2>K线预测</h2>
+      <span class="tag">本地小模型 Kronos · 不经过大模型</span>
+    </div>
+    <div class="pbody">
+      <div class="inrow">
+        <input id="psym" type="text" autocomplete="off" spellcheck="false"
+               placeholder="标的代码：600519 / sh000300 / 00700 / AAPL / BTC">
+        <button id="prun" type="button">跑预测</button>
+      </div>
+      <div class="hint">直接调本地小模型采样一段未来 K 线，几十秒起步（首次要先加载模型）。
+        它只看了价格序列，不知道公司做什么生意、有没有新闻。</div>
+      <!-- ★结果与**风险提示**都由 predShow() 一起填进来，见下面那段注释 -->
+      <div id="pout" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <!-- ① 智能体对话卡 -->
+  <section class="card chat" id="chatCard" aria-label="智能体对话">
+    <div class="chd">
+      <h2>问问看</h2>
+      <span class="tag" id="engineTag">检查中…</span>
+    </div>
+    <div id="msgs" aria-live="polite"></div>
+    <div class="cfoot">
+      <div class="qs" id="qs">
+        <button data-q="什么是可转债">什么是可转债</button>
+        <button data-q="基金和股票有什么区别">基金和股票的区别</button>
+        <button data-q="茅台最近走势怎么样">茅台最近走势</button>
+        <button data-q="沪深300接下来会怎么走">沪深300接下来会怎么走</button>
+      </div>
+      <div class="inrow">
+        <textarea id="q" rows="1" placeholder="问概念，或问某只标的的走势（600519 / sh000300 / 00700 / AAPL / BTC）"></textarea>
+        <button id="send">发送</button>
+      </div>
+      <div class="hint">预测要跑本地小模型，几十秒起步；这期间页面会显示推理秒数，别当它卡死了。</div>
+    </div>
+  </section>
+
+  <aside class="side">
+    <!-- ③ 大模型 Key 卡：在网页里填，写完立刻生效（不用编辑 .env、不用重启）。
+         ★放在侧栏第一位：它是这一栏里唯一**能操作**的东西，
+         另外两张是导航。而且页头那枚「大模型未配置」徽章会指到这里来 ——
+         "告诉你缺什么"和"让你就地补上"应该是同一个地方。 -->
+    <section class="card keycard" id="keyCard" aria-label="大模型 Key 设置">
+      <div class="chd">
+        <h2>大模型 Key</h2>
+        <span class="tag">存在本机 .env</span>
+      </div>
+      <div class="kbody">
+        <!-- 状态行与警告都由 keyRender() 填（见下面那段注释）。
+             ★这里面**永远只放掩码** —— 判据拿一把哨兵 key 把整张卡的文字扫一遍，
+             找得到就算泄露。 -->
+        <div class="kstate" id="kstate"><i class="kd"></i>检查中…</div>
+        <div class="inrow">
+          <input id="kinput" type="password" autocomplete="off" spellcheck="false"
+                 placeholder="sk-… 填 DeepSeek 的 key">
+          <button id="ksave" type="button">保存</button>
+          <button id="kclear" type="button">清除</button>
+        </div>
+        <div class="hint">只写进本机 <code>.env</code>，页面上永远只显示掩码；
+          保存后<strong>立刻生效</strong>，不用重启。<strong>没有 key 也能用</strong>，
+          只是对话会降级成只答概念。</div>
+        <div id="kwarn"></div>
+        <div id="kout" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- ④ 新手引导卡：整卡可点 -->
+    <a class="card linkcard" href="guide.html" id="guideCard">
+      <span class="num">新手引导</span>
+      <h2>第一次来？先看这页</h2>
+      <p>这个站是干什么的、三步怎么用、Kronos 模型是什么、以及<b>它做不到什么</b>。
+         花两分钟看完，能少踩不少坑。</p>
+    </a>
+
+    <!-- ⑤ 知识图谱入口卡：整卡可点 -->
+    <a class="card linkcard" href="graph.html" id="graphCard">
+      <span class="num">知识图谱</span>
+      <h2>理财词典图谱</h2>
+      <p>217 个理财术语，按「属于 / 对比 / 前提」连成一张图。想知道一个词和别的词什么关系，来这儿。</p>
+      <div class="fam" id="fam"></div>
+      <div class="kv" id="kbkv"></div>
+    </a>
+
+    <div class="disclaim" id="disclaim">
+      <b>风险提示</b>：站内的预测来自只看了价格序列的小模型，不含基本面与新闻；
+      所有内容仅供学习，<b>不构成投资建议</b>。
+      <div class="acc-line"><!--ACCURACY--></div>
+    </div>
+    <!-- ★上面那个 acc-line 里的实测数字**不在这个文件里** —— 服务端每次请求现读
+         kronos_accuracy.json 填进去（agent/accuracy.py 是唯一出口）。
+         不许在这儿手写数字：写死的那天它就开始烂，而且页面上看不出来。
+         verify_agent.py 有两条判据钉着它：一条拿 JSON 对数，一条是**对照组**
+         （把 JSON 换成别的数，页面必须跟着变 —— 不变就说明它是写死的）。 -->
+
+  </aside>
+</main>
+
+<script>
+(function(){
+'use strict';
+var $ = function(s){ return document.querySelector(s); };
+var msgs = $('#msgs'), qEl = $('#q'), sendEl = $('#send');
+var history = [];
+var busy = false;
+
+/* ── 对话卡的高度：**量它自己现在在哪**，不在 CSS 里做减法 ──
+   ★原来是"页头多高 + 预测卡多高，再在 CSS 里 100dvh 减掉"（--head / --pred）。
+   那个写法的代价是：**每加一张卡就得记着多补一个变量**，漏一个对话卡就顶着视口
+   底边溢出去，而且从页面上看不出是哪一项算漏了。这轮加「人人可用」定位条时正好
+   撞上——定位条既不是页头也不是预测卡，两个变量都装不下它。
+   改成量 #chatCard 自己的 getBoundingClientRect().top：上面再多几张卡都自动算进去，
+   不需要任何新变量。这也是本仓库那条纪律的落点：**读产物，不读自己维护的状态**。 */
+var NARROW = 860;                   // 和 CSS 里那条媒体查询同一个断点，改要一起改
+function measure(){
+  var c = document.querySelector('#chatCard');
+  if (!c) return;
+  if (window.innerWidth <= NARROW){
+    // ★窄屏让页面自己滚（卡内滚动 + 手机软键盘体验很糟）。这里必须**清掉**行内
+    //   高度：行内样式优先级高过媒体查询，不清的话窄屏规则会被它盖住。
+    c.style.height = '';
+    return;
+  }
+  var top = c.getBoundingClientRect().top;      // 它现在实际在哪儿
+  c.style.height = Math.max(440, Math.round(window.innerHeight - top - 20)) + 'px';
+}
+addEventListener('resize', measure);
+
+/* ── 文本渲染：只做转义 + **加粗** + 换行。不引 markdown 库，也不 innerHTML 拼未转义的串 ── */
+// ★模型给的 high/low 有一半不自洽（实测 53%），后端按开收价重建了包络。
+//   这件事必须出现在**用户看得见的地方**，不能只写在给大模型的摘要里 ——
+//   否则图上那根影线会被当成模型的原话。返回值直接拼进说明条，且**已经过 esc**。
+function repNote(p){
+  var n = p && p.ohlc_repaired_bars;
+  if (!n) return '';
+  return '；其中 <b>' + esc(n) + '</b> 根的最高/最低价模型给得不自洽（影线穿进实体），'
+       + '已按开/收价重建';
+}
+function esc(s){
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+function fmt(s){
+  return esc(s).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+               .split(/\n{2,}/).map(function(p){
+                 return '<p>' + p.replace(/\n/g,'<br>') + '</p>';
+               }).join('');
+}
+
+function atBottom(){
+  return msgs.scrollHeight - msgs.scrollTop - msgs.clientHeight < 90;
+}
+function scroll(force){
+  if (force || atBottom()) msgs.scrollTop = msgs.scrollHeight;
+}
+
+/* ── 消息构造 ── */
+function addUser(text){
+  var d = document.createElement('div');
+  d.className = 'msg me';
+  d.textContent = text;
+  msgs.appendChild(d); scroll(true);
+}
+function addAI(){
+  var d = document.createElement('div');
+  d.className = 'msg ai';
+  d.innerHTML = '<div class="who">智能体</div><div class="body"></div>';
+  msgs.appendChild(d); scroll(true);
+  return { root: d, body: d.querySelector('.body'), text: '', trace: null, rows: null };
+}
+function addErr(title, detail){
+  var d = document.createElement('div');
+  d.className = 'msg ai err';
+  d.innerHTML = '<div class="who">出错了</div><div class="body"></div>';
+  var b = d.querySelector('.body');
+  b.appendChild(document.createTextNode(title));
+  if (detail) {
+    var c = document.createElement('code'); c.textContent = detail;
+    b.appendChild(document.createElement('br')); b.appendChild(c);
+  }
+  msgs.appendChild(d); scroll(true);
+}
+
+/* ── 工具轨迹 ── */
+function traceOf(m){
+  if (!m.trace){
+    var t = document.createElement('details');
+    t.className = 'trace';
+    t.innerHTML = '<summary></summary><div class="rows"></div>';
+    m.rows = t.querySelector('.rows');
+    m.root.appendChild(t);
+    m.trace = t;
+  }
+  return m.trace;
+}
+function traceStart(m, name, args){
+  var t = traceOf(m), row = document.createElement('div');
+  row.className = 'row';
+  var arg = '';
+  try { arg = JSON.stringify(args || {}); } catch(e){ arg = ''; }
+  row.innerHTML = '<span class="nm">' + esc(name) + '</span>' +
+                  '<span class="ar">' + esc(arg) + '</span>' +
+                  '<span class="st">…</span>';
+  m.rows.appendChild(row);
+  m.trace.open = true;
+  m.trace.querySelector('summary').textContent = '工具调用（进行中）';
+  scroll();
+  return row;
+}
+function traceEnd(m, name, ok, ms, msg){
+  var rows = m.rows ? m.rows.querySelectorAll('.row') : [];
+  for (var i = rows.length - 1; i >= 0; i--){
+    var nm = rows[i].querySelector('.nm');
+    if (nm && nm.textContent === name && rows[i].querySelector('.st').textContent === '…'){
+      var st = rows[i].querySelector('.st');
+      st.textContent = ok ? ('✓ ' + (ms||0) + 'ms') : '✗';
+      if (!ok) st.className = 'st bad';
+      if (!ok && msg){
+        var e = document.createElement('span');
+        e.className = 'ar'; e.textContent = msg;
+        rows[i].appendChild(e);
+      }
+      break;
+    }
+  }
+  if (m.rows){
+    var all = m.rows.querySelectorAll('.st');
+    var pend = 0, bad = 0;
+    for (var j = 0; j < all.length; j++){
+      if (all[j].textContent === '…') pend++;
+      else if (all[j].className.indexOf('bad') >= 0) bad++;
+    }
+    if (!pend){
+      m.trace.open = false;
+      m.trace.querySelector('summary').textContent =
+        '用了 ' + all.length + ' 个工具' + (bad ? '（' + bad + ' 个失败）' : '');
+    }
+  }
+  scroll();
+}
+
+/* ── 内联 SVG K 线（不引任何图表库）── */
+function renderChart(host, ch){
+  var hist = ch.history || ch.bars || null;
+  if (!hist || !hist.t || !hist.t.length) return;
+  var pred = ch.pred || null;
+  var W = 660, H = 300, PL = 52, PR = 14, PT = 14, PB = 30;
+  var bars = [], i, n;
+  for (i = 0; i < hist.t.length; i++)
+    bars.push({t:hist.t[i], o:hist.o[i], h:hist.h[i], l:hist.l[i], c:hist.c[i], p:false});
+  var splitAt = bars.length;
+  if (pred) for (i = 0; i < pred.t.length; i++)
+    bars.push({t:pred.t[i], o:pred.o[i], h:pred.h[i], l:pred.l[i], c:pred.c[i], p:true});
+  n = bars.length;
+
+  var lo = Infinity, hi = -Infinity;
+  for (i = 0; i < n; i++){ if (bars[i].l < lo) lo = bars[i].l; if (bars[i].h > hi) hi = bars[i].h; }
+  if (ch.base_close){ if (ch.base_close < lo) lo = ch.base_close; if (ch.base_close > hi) hi = ch.base_close; }
+  var pad = (hi - lo) * 0.06 || hi * 0.02 || 1;
+  lo -= pad; hi += pad;
+
+  var iw = W - PL - PR, ih = H - PT - PB;
+  var step = iw / n;
+  var bw = Math.max(1, Math.min(9, step * 0.62));
+  var X = function(k){ return PL + step * (k + 0.5); };
+  var Y = function(v){ return PT + (hi - v) / (hi - lo) * ih; };
+  var P = function(v){ return Math.round(v * 100) / 100; };
+
+  var s = ['<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="K线图">'];
+  // 横向网格 + 价格刻度
+  for (i = 0; i <= 4; i++){
+    var v = lo + (hi - lo) * i / 4, y = P(Y(v));
+    s.push('<line class="k-grid" x1="' + PL + '" y1="' + y + '" x2="' + (W - PR) + '" y2="' + y + '"/>');
+    s.push('<text class="k-axis" x="' + (PL - 7) + '" y="' + (y + 3.5) + '" text-anchor="end">' +
+           (v >= 1000 ? v.toFixed(0) : v.toFixed(2)) + '</text>');
+  }
+  // 基准线（最后一根历史收盘）
+  if (ch.base_close){
+    var by = P(Y(ch.base_close));
+    s.push('<line class="k-base" x1="' + PL + '" y1="' + by + '" x2="' + (W - PR) + '" y2="' + by + '"/>');
+    s.push('<text class="k-axis" x="' + (W - PR) + '" y="' + (by - 4) + '" text-anchor="end">基准 ' +
+           ch.base_close + '</text>');
+  }
+  // 历史与预测的分界
+  if (pred && splitAt < n){
+    var sx = P(PL + step * splitAt);
+    s.push('<line class="k-split" x1="' + sx + '" y1="' + PT + '" x2="' + sx + '" y2="' + (H - PB) + '"/>');
+    s.push('<text class="k-split-l" x="' + (sx + 4) + '" y="' + (PT + 11) + '">预测起点</text>');
+  }
+  // K 线本体。预测段整段包在一个 <g class="pred"> 里统一降透明度 + 虚线，
+  // 边界直接由下标判断（splitAt / n-1），不靠"上一根是不是预测"这种状态位。
+  for (i = 0; i < n; i++){
+    var b = bars[i];
+    if (b.p && i === splitAt) s.push('<g class="pred">');
+    var cls = (b.c >= b.o ? 'up' : 'dn');
+    var x = P(X(i)), yh = P(Y(b.h)), yl = P(Y(b.l));
+    var yo = P(Y(b.o)), yc = P(Y(b.c));
+    var top = Math.min(yo, yc), hgt = Math.max(1, Math.abs(yc - yo));
+    s.push('<g class="' + cls + '">' +
+           '<line class="k-wick" x1="' + x + '" y1="' + yh + '" x2="' + x + '" y2="' + yl + '"/>' +
+           '<rect class="k-body" x="' + P(x - bw/2) + '" y="' + top + '" width="' + P(bw) +
+           '" height="' + P(hgt) + '"/></g>');
+    if (b.p && i === n - 1) s.push('</g>');
+  }
+  // 日期刻度：首 / 中 / 末
+  var ticks = [0, Math.floor((splitAt - 1) / 2), splitAt - 1];
+  if (pred) ticks.push(n - 1);
+  var seen = {};
+  for (i = 0; i < ticks.length; i++){
+    var k = ticks[i];
+    if (k < 0 || k >= n || seen[k]) continue; seen[k] = 1;
+    var tx = P(X(k));
+    s.push('<text class="k-axis" x="' + tx + '" y="' + (H - 10) + '" text-anchor="middle">' +
+           esc(bars[k].t) + '</text>');
+  }
+  s.push('</svg>');
+
+  var box = document.createElement('div');
+  box.className = 'chart';
+  box.innerHTML = s.join('') + '<div class="cap">' +
+    '<span><b>红涨</b> 绿跌</span>' +
+    (pred ? '<span>虚线部分为模型预测，<b>仅供参考</b>，非实际行情' + repNote(ch.params) + '</span>'
+          : '<span>历史日K</span>') +
+    '<span>' + esc(ch.name || ch.code || '') +
+    (pred && ch.params ? ' · 预测 ' + ch.params.pred_len + ' 根 · ' + (ch.params.ms||0) + 'ms' : '') +
+    '</span></div>';
+  host.appendChild(box);
+  scroll();
+}
+
+/* ── 给"走了小模型的那条回答"打标 ──
+   ★为什么非打不可：大模型的话和模型的输出在**同一个气泡里、同一套字号、同一个颜色**，
+   不打个标就分不出哪句是模型采出来的、哪句是大模型编的人话。之前唯一的线索是
+   图里那条虚线，而图是要滚下去看的。 */
+function markPred(m){
+  if (m.predMarked) return;
+  m.predMarked = true;
+  var who = m.root.querySelector('.who');
+  var s = document.createElement('span');
+  s.className = 'predmark';
+  s.textContent = '⚡ 含小模型预测 · Kronos';
+  s.title = '这条回答里有本地小模型采样出来的K线，不是行情。';
+  if (who) who.appendChild(s); else m.root.insertBefore(s, m.root.firstChild);
+}
+
+/* ── K线预测卡：直接打 /api/predict，**不经过大模型** ──
+   ★那条通路上没有大模型兜底，所以"风险提示"必须由**这个函数**自己带出来。
+   它跟对话卡一样落进 .disclaim（同一个样式、同一套 warn 语义），
+   不许出现"一张光秃秃的预测图"。 */
+var pSym = $('#psym'), pRun = $('#prun'), pOut = $('#pout');
+var keyInput = $('#kinput'), keySave = $('#ksave'), keyClear = $('#kclear');
+
+function pct(v){
+  if (v == null || isNaN(v)) return '—';
+  return (v > 0 ? '+' : '') + Number(v).toFixed(2) + '%';
+}
+
+function predShow(r, secs){
+  pOut.innerHTML = '';
+  var s = (r && r.summary) || {};
+  if (!s.ok || !r || !r.data){
+    var e = document.createElement('div');
+    e.className = 'disclaim';
+    e.innerHTML = '<b>没跑成</b>：' + esc(s.error || s.msg || '模型没返回结果') +
+                  (s.hint ? '<br>' + esc(s.hint) : '');
+    pOut.appendChild(e);
+    measure();
+    return;
+  }
+  var d = r.data;
+  // 一句话读数：说的是"这条采样路径长什么样"，**不是**"会涨到哪" —— 措辞别改松
+  var rd = document.createElement('div');
+  rd.className = 'reading';
+  rd.innerHTML = '模型采样出的一条路径（' + ((d.params && d.params.pred_len) || '?') + ' 根）：' +
+    '终点较基准 <b>' + pct(s.pred_chg_pct) + '</b>，路径内最高 <b>' + pct(s.pred_max_up_pct) +
+    '</b> / 最低 <b>' + pct(s.pred_max_dn_pct) + '</b>。';
+  pOut.appendChild(rd);
+  // ★和对话里那张图是**同一个** renderChart —— 另画一套迟早两边不一样
+  renderChart(pOut, d);
+  var n = document.createElement('div');
+  n.className = 'disclaim';
+  n.innerHTML = '<b>风险提示</b>：这是模型按价格序列条件采样出的<b>一条</b>路径，' +
+    '不是概率意义上的预期值；它没有基本面、财报、新闻、政策这些输入。' +
+    '所有内容仅供学习，<b>不构成投资建议</b>。';
+  pOut.appendChild(n);
+  measure();                    // 卡片长高了，对话卡要让位
+}
+
+var predBusy = false;
+async function predRun(){
+  if (predBusy) return;
+  var sym = (pSym.value || '').trim();
+  if (!sym){ pSym.focus(); return; }
+  predBusy = true; pRun.disabled = true;
+  var t0 = Date.now();
+  // 几十秒的等待必须**走秒**，否则跟卡死没区别（对话卡那条也是这么做的）
+  pOut.innerHTML = '<div class="hint" id="pwait"></div>';
+  var wait = $('#pwait');
+  var say = function(){
+    wait.textContent = '正在跑本地小模型… ' + ((Date.now() - t0) / 1000).toFixed(0) +
+                       ' 秒（首次要先加载模型）';
+  };
+  say();
+  var tick = setInterval(say, 1000);
+  try {
+    var res = await fetch('/api/predict', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({symbol: sym})
+    });
+    var txt = await res.text(), r = null;
+    try { r = JSON.parse(txt); } catch(err){}
+    if (!r) throw new Error('服务返回的不是 JSON（HTTP ' + res.status + '）');
+    predShow(r, (Date.now() - t0) / 1000);
+  } catch(err){
+    predShow({summary:{ok:false, error:'连不上本地服务', hint:String(err && err.message || err)}});
+  }
+  clearInterval(tick);
+  predBusy = false; pRun.disabled = false;
+}
+
+/* ── 事件处理 ── */
+function handle(m, ev){
+  if (ev.type === 'token'){
+    m.text += ev.text;
+    m.body.innerHTML = fmt(m.text);
+    scroll();
+  } else if (ev.type === 'tool_start'){
+    m.row = traceStart(m, ev.name, ev.args);
+  } else if (ev.type === 'tool_end'){
+    traceEnd(m, ev.name, ev.ok, ev.ms, ev.msg);
+  } else if (ev.type === 'chart'){
+    markPred(m);                       // ★先打标再画图：图在下面，标在气泡头上
+    renderChart(m.root, ev.chart);
+  } else if (ev.type === 'terms'){
+    var wrap = document.createElement('div');
+    wrap.className = 'chips';
+    // ★graph.html 不认 URL 参数（改它就违反"图谱管线一行不动"），
+    //   所以 chip 只能把人送到图谱页，落哪由他自己搜 —— 不做假深链。
+    ev.chips.slice(0, 8).forEach(function(t){
+      var a = document.createElement('a');
+      a.className = 'tchip'; a.href = 'graph.html';
+      a.textContent = t; a.title = '去知识图谱看看「' + t + '」';
+      wrap.appendChild(a);
+    });
+    m.root.appendChild(wrap); scroll();
+  } else if (ev.type === 'heartbeat'){
+    if (!m.text){
+      m.body.innerHTML = '<p style="color:var(--ink-3)">模型推理中… ' + ev.elapsed + ' 秒</p>';
+    }
+  } else if (ev.type === 'error'){
+    addErr(ev.msg || '出错了', ev.hint || ev.code || '');
+    return true;
+  }
+  return false;
+}
+
+function finish(m){
+  if (!m.text && !m.root.querySelector('.chart')){
+    m.body.innerHTML = '<p style="color:var(--ink-3)">（没有内容返回）</p>';
+  }
+  if (m.text) history.push({role:'assistant', content:m.text});
+}
+
+async function ask(text){
+  if (busy) return;
+  busy = true; sendEl.disabled = true;
+  addUser(text);
+  history.push({role:'user', content:text});
+  var m = addAI();
+  var failed = false;
+  try {
+    var res = await fetch('/api/chat', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({question:text, history:history.slice(0, -1)})
+    });
+    if (!res.ok){
+      addErr('服务返回 ' + res.status, await res.text().then(function(t){return t.slice(0,200);}));
+      failed = true;
+    } else {
+      var rd = res.body.getReader(), dec = new TextDecoder(), buf = '';
+      for(;;){
+        var r = await rd.read();
+        if (r.done) break;
+        buf += dec.decode(r.value, {stream:true});
+        var parts = buf.split('\n\n'); buf = parts.pop();
+        for (var i = 0; i < parts.length; i++){
+          var ln = parts[i].trim();
+          if (ln.indexOf('data:') !== 0) continue;
+          var ev; try { ev = JSON.parse(ln.slice(5).trim()); } catch(e){ continue; }
+          if (handle(m, ev)) failed = true;
+        }
+      }
+      if (buf.trim().indexOf('data:') === 0){
+        try { handle(m, JSON.parse(buf.trim().slice(5).trim())); } catch(e){}
+      }
+    }
+  } catch(e){
+    addErr('连不上本地服务', String(e && e.message || e));
+    failed = true;
+  }
+  if (!failed) finish(m);
+  busy = false; sendEl.disabled = false; qEl.focus();
+  scroll();
+}
+
+/* ── 输入 ── */
+function submit(){
+  var t = qEl.value.trim();
+  if (!t || busy) return;
+  qEl.value = ''; qEl.style.height = 'auto';
+  ask(t);
+}
+sendEl.addEventListener('click', submit);
+qEl.addEventListener('keydown', function(e){
+  if (e.key === 'Enter' && !e.shiftKey && !e.isComposing){ e.preventDefault(); submit(); }
+});
+qEl.addEventListener('input', function(){
+  qEl.style.height = 'auto';
+  qEl.style.height = Math.min(130, qEl.scrollHeight) + 'px';
+});
+$('#qs').addEventListener('click', function(e){
+  var b = e.target.closest('button[data-q]');
+  if (b) ask(b.dataset.q);
+});
+
+/* ── 大模型 Key：在网页里填，写完立刻生效 ──
+   ★这里有一条纪律：**页面上永远只出现掩码**。keyRender 拿到的就是服务端
+   给的 mask（见 agent/apikey.py），前端没有、也不该有完整 key —— 判据拿一把
+   哨兵 key 把整张卡的文字扫一遍，找得到就算泄露。 */
+function keyRender(s){
+  var st = $('#kstate');
+  if (st){
+    st.className = 'kstate ' + (s.configured ? 'on' : 'off');
+    st.innerHTML = '<i class="kd"></i>' + (s.configured
+      ? '已配置 <code>' + esc(s.mask) + '</code> · 来源：' + esc(s.source_text)
+      : '还没配 —— 对话会降级成只答概念');
+  }
+  // ★环境变量里那把：只在"它确实存在、而且现在生效的不是它"时提醒。
+  //   不提醒的话，"我在 ~/.bashrc 里明明配过"和"怎么不生效"会同时成立，
+  //   而用户在页面上看不到任何线索 —— 这正是那种最难查的静默失效。
+  var w = $('#kwarn');
+  if (w){
+    w.innerHTML = (s.shell_mask && s.source === 'web')
+      ? '<div class="kwarn">注意：你的系统环境变量里还有一把（<code>' + esc(s.shell_mask) +
+        '</code>），它已经被 <code>.env</code> 里这把盖住了 —— 本站不用它。</div>'
+      : '';
+  }
+}
+function keyLoad(){
+  return fetch('/api/key').then(function(r){ return r.json(); })
+    .then(keyRender).catch(function(){});
+}
+/* ★探针模式**必须用同步 XHR**：整条渲染层判据都押在"beacon 在 firefox 退出前
+   发出去"上，而 beacon 是 probe() 同步跑的。这里要是换成异步 fetch，
+   就变成"key 状态"和"几何"两件事抢同一个退出窗口 —— 抢输了的话 probe() 根本
+   不跑，所有渲染判据一起消失（不是变红，是消失）。同源 GET，代价可以忽略。 */
+function keyLoadSync(){
+  try {
+    var x = new XMLHttpRequest();
+    x.open('GET', '/api/key', false);
+    x.send(null);
+    keyRender(JSON.parse(x.responseText));
+  } catch(e){ /* 读不到就保持"检查中…"：状态未知比编一个状态好 */ }
+}
+function keySend(method){
+  var save = $('#ksave'), out = $('#kout');
+  save.disabled = true;
+  // ★这里原来发的是 JSON.stringify({})，**从来没有读过 #kinput 的值** ——
+  //   也就是网页上点「保存」永远发一个空 body，而服务端对空值返回 400
+  //   「key 不能为空」。用户看到的是"填了 key、点了保存、说不能为空"。
+  //   ★为什么一直没被发现：verify_agent.py 的"保存成功"那条判据是**直接对接口**
+  //   打 `{'key': NEW_KEY}` 的，从不经过这个按钮 —— 判据测的是接口，
+  //   用户走的是按钮，两条路不是同一条。152 条全绿的时候这个功能是 100% 坏的。
+  var val = ($('#kinput').value || '').trim();
+  fetch('/api/key', {method: method, headers: {'Content-Type': 'application/json'},
+                     body: JSON.stringify(method === 'DELETE' ? {} : {key: val})})
+    .then(function(r){ return r.json().then(function(s){ return {ok: r.ok, s: s}; }); })
+    .then(function(res){
+      keyRender(res.s);
+      out.innerHTML = res.ok
+        ? '<div class="ksay">' + (method === 'DELETE'
+            ? '已清除网页保存的那把。' : '已保存，<strong>这次对话就会用它</strong>。') + '</div>'
+        : '<div class="ksay bad">' + esc(res.s.error || '没成功') + '</div>';
+      $('#kinput').value = '';
+      status();          // ★页头那枚徽章跟着变 —— 这是"真的存进去了"最直观的回执
+    })
+    .catch(function(e){
+      out.innerHTML = '<div class="ksay bad">' + esc(String(e && e.message || e)) + '</div>';
+    })
+    .then(function(){ save.disabled = false; });
+}
+/* 页头「大模型未配置」那枚徽章点一下 → 滚到 Key 卡并把光标放进输入框。
+   "告诉你缺什么"和"让你就地补上"应该是同一个地方。 */
+function focusKey(){
+  var c = $('#keyCard');
+  if (c) c.scrollIntoView({block: 'center', behavior: 'smooth'});
+  var i = $('#kinput');
+  if (i) i.focus({preventScroll: true});
+}
+
+/* ── 开场 + 状态 ── */
+function hello(){
+  var m = addAI();
+  m.text = '你好，我是这个站里的助手。\n\n' +
+    '你可以直接问我概念（**什么是可转债**），也可以问某只标的的行情和走势' +
+    '（**600519** / **sh000300** / **00700** / **AAPL** / **BTC**）。\n\n' +
+    '涉及走势的问题，我会调本地一个小模型（Kronos）跑一段预测，再把它讲成人话。' +
+    '要等几十秒，请稍候。\n\n' +
+    '**先说清楚**：那个模型只看了价格序列，不知道公司做什么生意、有没有新闻和政策。' +
+    '所以它给的是"这段走势的形状像什么"，**不是**该不该买的答案。';
+  m.body.innerHTML = fmt(m.text);
+}
+function badge(cls, text, title){
+  var b = document.createElement('span');
+  b.className = 'badge ' + cls;
+  b.innerHTML = '<i class="d"></i>' + esc(text);
+  if (title) b.title = title;
+  return b;
+}
+async function status(){
+  var box = $('#badges');
+  try {
+    var r = await fetch('/api/status'), s = await r.json();
+    box.innerHTML = '';
+    var e = s.engine || {};
+    if (e.loaded) box.appendChild(badge('ok', '模型已加载', e.device || ''));
+    else if (e.error) box.appendChild(badge('off', '模型不可用', e.error));
+    else box.appendChild(badge('warn', e.cuda ? '模型待加载' : '模型待加载（CPU，会慢）',
+                               e.torch ? ('torch ' + e.torch) : ''));
+    var llmOk = s.llm && s.llm.configured;
+    var lb = badge(llmOk ? 'ok' : 'off',
+      llmOk ? (s.llm.model || '大模型已配置') : '大模型未配置',
+      llmOk ? '' : '点这里，在网页上把 key 填进去');
+    if (!llmOk){
+      // ★这枚徽章每 30 秒被整排重建一次，所以点击行为也得在每次重建时重新挂上 ——
+      //   挂在 box 上（只挂一次）是行不通的，重建换掉的是子节点不是 box。
+      lb.style.cursor = 'pointer';
+      lb.onclick = focusKey;
+    }
+    box.appendChild(lb);
+    if (s.kb && s.kb.terms){
+      box.appendChild(badge('ok', '词表 ' + s.kb.terms + ' 词'));
+      $('#kbkv').innerHTML =
+        '<span><b>' + s.kb.terms + '</b> 词条</span>' +
+        '<span><b>' + s.kb.categories + '</b> 分类</span>' +
+        '<span><b>' + s.kb.links + '</b> 条关系</span>' +
+        '<span><b>' + (s.kb.families||[]).length + '</b> 个色族</span>';
+      $('#engineTag').textContent = e.loaded ? ('模型就绪 · ' + (e.device||'')) : '模型未加载（首次预测时加载）';
+    }
+    var fam = $('#fam'), cols = ['--f0','--f1','--f2','--f3','--f4','--f5'];
+    fam.innerHTML = '';
+    (s.families || []).forEach(function(f, i){
+      var sp = document.createElement('span');
+      sp.innerHTML = '<i style="background:var(' + cols[i % 6] + ')"></i>' + esc(f.family);
+      fam.appendChild(sp);
+    });
+  } catch(e){
+    box.innerHTML = '';
+    box.appendChild(badge('off', '连不上本地服务', String(e && e.message || e)));
+  }
+}
+
+/* ── ?demo=1：喂一段假事件走完整条渲染链路 ──
+   给无头浏览器截图/量尺寸用。★它必须走和真实回答**同一个** handle()/renderChart()，
+   否则测的是另一条代码路径，等于没测。 */
+function demo(done, fast){
+  var m = addAI();
+  var seq = [
+    {type:'tool_start', name:'search_terms', args:{query:'可转债'}},
+    {type:'tool_end', name:'search_terms', ok:true, ms:3},
+    {type:'terms', chips:['可转债','债券','国债','股票']},
+    {type:'token', text:'**先给结论**：可转债就是一张能换成股票的债券。'},
+    {type:'token', text:' 跌了可以当债券拿着吃利息，涨了能转成股票吃涨幅。\n\n'},
+    {type:'token', text:'但**"下有保底"是错觉**，退市或违约照样腰斩。'},
+    {type:'tool_start', name:'predict_kline', args:{symbol:'sh000300', pred_len:30}},
+    {type:'tool_end', name:'predict_kline', ok:true, ms:41200},
+    {type:'heartbeat', elapsed:41}
+  ];
+  var bars = [], t = new Date(2026, 4, 1), i, c = 4460;
+  for (i = 0; i < 60; i++){
+    var o = c, cl = c * (1 + (Math.sin(i/4.1) * 0.012 + (i%7-3)*0.0016));
+    bars.push({t:new Date(t.getTime() + i*864e5).toISOString().slice(0,10),
+               o:+o.toFixed(2), h:+(Math.max(o,cl)*1.006).toFixed(2),
+               l:+(Math.min(o,cl)*0.994).toFixed(2), c:+cl.toFixed(2)});
+    c = cl;
+  }
+  var pb = [], pc = c;
+  for (i = 0; i < 30; i++){
+    var po = pc, pcl = pc * (1 + (Math.cos(i/5) * 0.009));
+    pb.push({t:new Date(t.getTime() + (60+i)*864e5).toISOString().slice(0,10),
+             o:+po.toFixed(2), h:+(Math.max(po,pcl)*1.005).toFixed(2),
+             l:+(Math.min(po,pcl)*0.995).toFixed(2), c:+pcl.toFixed(2)});
+    pc = pcl;
+  }
+  seq.push({type:'chart', chart:{kind:'predict', name:'沪深300', code:'000300',
+    history:{t:bars.map(function(b){return b.t;}), o:bars.map(function(b){return b.o;}),
+             h:bars.map(function(b){return b.h;}), l:bars.map(function(b){return b.l;}),
+             c:bars.map(function(b){return b.c;})},
+    pred:{t:pb.map(function(b){return b.t;}), o:pb.map(function(b){return b.o;}),
+          h:pb.map(function(b){return b.h;}), l:pb.map(function(b){return b.l;}),
+          c:pb.map(function(b){return b.c;})},
+    base_close:+c.toFixed(2), params:{pred_len:30, ms:41200, ohlc_repaired_bars:15,
+      ohlc_max_clamp_pct:2.31}}});
+  seq.push({type:'token', text:'\n\n模型给的是一条**震荡偏弱**的路径（示例数据）。\n\n'});
+  seq.push({type:'token', text:'⚠️ 这只是拿价格序列采样出来的一条路径，' +
+    '没有基本面、新闻、政策信息，**不构成投资建议**。'});
+  seq.push({type:'done', ms:42000, steps:2});
+  if (fast){
+    // ★同步跑完：--dump-dom 是"load 之后立刻 dump"，
+    //   用 setTimeout 串起来的话 dump 时页面还停在第一帧，量到的几何是假的。
+    for (var j = 0; j < seq.length; j++) handle(m, seq[j]);
+    finish(m);
+    window.__demoDone = true;
+    if (done) done();
+    return;
+  }
+  var k = 0;
+  window.__demoDone = false;
+  (function next(){
+    if (k >= seq.length){ finish(m); window.__demoDone = true; if (done) done(); return; }
+    handle(m, seq[k++]);
+    setTimeout(next, 45);
+  })();
+}
+
+/* ── ?probe=1：把**实测几何**写进 document.title，供 --dump-dom 读回 ──
+   ★这里量的全是 getBoundingClientRect / scrollWidth，没有一个是 class 状态位。
+   状态位（"面板有没有 up 类"）在元素被滑出屏幕时照样为真，那是假绿。 */
+function probe(){
+  var cards = [].slice.call(document.querySelectorAll('.card'));
+  var out = {cards: cards.length};
+  out.cardRects = cards.slice(0, 5).map(function(c){
+    var r = c.getBoundingClientRect();
+    return {cls: c.className, w: Math.round(r.width), h: Math.round(r.height),
+            t: Math.round(r.top), l: Math.round(r.left)};
+  });
+  var chat = document.querySelector('.chat');
+  out.chatH = chat ? Math.round(chat.getBoundingClientRect().height) : 0;
+  var de = document.documentElement;
+  out.overflowX = de.scrollWidth - de.clientWidth;
+  // ★必须限定在 #msgs 里找。预测卡现在排在对话卡**前面**，用
+  //   document.querySelector('.chart svg') 会取到预测卡那张图 ——
+  //   于是"对话里的图"这条判据改去量预测卡，对话图整个坏掉它也照样绿。
+  var svg = document.querySelector('#msgs .chart svg');
+  out.svg = svg ? {
+    w: Math.round(svg.getBoundingClientRect().width),
+    h: Math.round(svg.getBoundingClientRect().height),
+    candles: svg.querySelectorAll('rect.k-body').length,
+    wicks: svg.querySelectorAll('line.k-wick').length,
+    pred: svg.querySelectorAll('g.pred rect.k-body').length
+  } : null;
+  out.msgs = document.querySelectorAll('.msg').length;
+  out.trace = document.querySelectorAll('.trace').length;
+  out.chips = document.querySelectorAll('.tchip').length;
+  // 正文真的落进气泡里了吗（流式 token 有没有被拼起来）
+  var body = document.querySelector('.msg.ai .body');
+  out.ansLen = body ? (body.textContent || '').replace(/\s+/g, '').length : 0;
+  out.hasBold = !!(body && body.querySelector('strong'));
+  out.hasWarn = !!(body && body.textContent.indexOf('不构成投资建议') >= 0);
+  out.chartCaps = document.querySelectorAll('#msgs .chart .cap').length;
+  // ★说明条里有没有**写明预测段的高/低点是重建的**。
+  //   量的是渲染出来的文字（textContent），不是源码里有没有那个函数 ——
+  //   读产物不读输入：函数在、没被调到，等于没写。
+  var cap = document.querySelector('#msgs .chart .cap');
+  out.repairNote = !!(cap && /重建/.test(cap.textContent || '') &&
+                      /最高\/最低价/.test(cap.textContent || ''));
+  out.guideHref = !!document.querySelector('a[href="guide.html"]');
+  out.graphHref = !!document.querySelector('a[href="graph.html"]');
+  // ★风险提示里那句实测数字：量**几何**和**渲染出来的文字**两样。
+  //   只量文字是不够的 —— 把这块 CSS 藏起来（display:none）时 textContent 照样返回全文，
+  //   于是一条"用户根本看不见"的页面会判绿。这正是本仓库那条纪律：读产物，不读状态位。
+  var acc = document.querySelector('#disclaim .acc-line');
+  var accR = acc ? acc.getBoundingClientRect() : null;
+  out.accText = acc ? (acc.textContent || '').replace(/\s+/g, '') : '';
+  out.accH = accR ? Math.round(accR.height) : 0;
+  // ── 「K线预测」三处标称，每处都量**几何**，不量源码里有没有那个标签 ──
+  // ★页头那枚：先**真的演一遍** status() 的破坏动作再量。
+  //   探针模式不联网、status() 压根没跑，不演这一下的话"它扛得住重建"就是句空话 ——
+  //   把徽章挪进 #badges 里也照样绿。演完再看它还在不在。
+  var bbox = document.querySelector('#badges');
+  if (bbox) bbox.innerHTML = '';        // ← status() 每 30 秒就是这么干的
+  var fb = document.querySelector('#featBadge');
+  var fbR = fb ? fb.getBoundingClientRect() : null;
+  out.featText = fb ? (fb.textContent || '').replace(/\s+/g, '') : '';
+  out.featH = fbR ? Math.round(fbR.height) : 0;
+  // ★预测回答上的打标
+  var pm = document.querySelector('.predmark');
+  var pmR = pm ? pm.getBoundingClientRect() : null;
+  out.predMarks = document.querySelectorAll('.predmark').length;
+  out.predMarkText = pm ? (pm.textContent || '').replace(/\s+/g, '') : '';
+  out.predMarkH = pmR ? Math.round(pmR.height) : 0;
+  // ★独立预测卡：卡片本身、它画出来的图、它自带的那条风险提示
+  var pc = document.querySelector('#predCard');
+  var pcR = pc ? pc.getBoundingClientRect() : null;
+  out.predCardH = pcR ? Math.round(pcR.height) : 0;
+  var psvg = document.querySelector('#pout .chart svg');
+  out.predChart = psvg ? {w: Math.round(psvg.getBoundingClientRect().width),
+                          h: Math.round(psvg.getBoundingClientRect().height),
+                          candles: psvg.querySelectorAll('rect.k-body').length,
+                          pred: psvg.querySelectorAll('g.pred rect.k-body').length} : null;
+  var pnote = document.querySelector('#pout .disclaim');
+  out.predNote = !!(pnote && (pnote.textContent || '').indexOf('不构成投资建议') >= 0);
+  out.predNoteH = pnote ? Math.round(pnote.getBoundingClientRect().height) : 0;
+  // ★布局有没有跟着屏幕长（用户原话"太小了"）：主栏实际宽度 vs 视口宽度
+  var mn = document.querySelector('main');
+  out.mainW = mn ? Math.round(mn.getBoundingClientRect().width) : 0;
+  out.docW = document.documentElement.clientWidth;
+
+  // ── ★「人人可用」定位条 ──
+  //   ★"说明"这件事只有一种可测的形式：**它在折叠线以上**。源码里写了、
+  //   或者塞在页脚，都算不得说明。所以这里量 top，判据拿视口高比 ——
+  //   写死一个像素值的话，下次改页面就得连判据一起改，等于没判。
+  var bn = document.querySelector('#siteBanner');
+  if (bn){
+    var bnR = bn.getBoundingClientRect();
+    out.bannerText = (bn.textContent || '').replace(/\s+/g, '');
+    out.bannerH = Math.round(bnR.height);
+    out.bannerTop = Math.round(bnR.top);
+    out.foldH = window.innerHeight;      // "折叠线"就是视口高，不写死
+  } else {
+    out.bannerH = 0; out.bannerTop = -1; out.bannerText = ''; out.foldH = window.innerHeight;
+  }
+
+  // ── ★大模型 Key 卡 ──
+  //   ★keyCardText 是**整张卡的文字**，判据拿它去找"完整 key 有没有漏出来"。
+  //   只断言"有个 mask 字段"是不够的：那样拦不住"顺手把原文也带上"。
+  var kc = document.querySelector('#keyCard');
+  if (kc){
+    var kcR = kc.getBoundingClientRect();
+    out.keyCardH = Math.round(kcR.height);
+    out.keyCardText = (kc.textContent || '');
+    var ks = document.querySelector('#kstate');
+    out.keyStateText = ks ? (ks.textContent || '').replace(/\s+/g, '') : '';
+    var ksR = ks ? ks.getBoundingClientRect() : null;
+    out.keyStateH = ksR ? Math.round(ksR.height) : 0;
+    var ki = document.querySelector('#kinput');
+    out.keyInputH = ki ? Math.round(ki.getBoundingClientRect().height) : 0;
+    var kw = document.querySelector('#kwarn .kwarn');
+    out.keyWarnText = kw ? (kw.textContent || '').replace(/\s+/g, '') : '';
+  } else {
+    out.keyCardH = 0; out.keyStateH = 0; out.keyInputH = 0;
+    out.keyCardText = ''; out.keyStateText = ''; out.keyWarnText = '';
+  }
+
+  // ── ★页头和主栏对不对齐 ──
+  //   量的是**内容框**（border box 减去左右内边距）：页头那排的内边距在 .bar 上、
+  //   主栏的在 main 上，两边的 border box 一样宽并不代表内容对得齐。
+  out.barL = -1; out.barCW = 0;
+  var bar = document.querySelector('header .bar');
+  if (bar && mn){
+    var cb = function(el){
+      var r = el.getBoundingClientRect(), cs = getComputedStyle(el);
+      var l = r.left + parseFloat(cs.paddingLeft || 0);
+      return {l: Math.round(l), w: Math.round(r.right - parseFloat(cs.paddingRight || 0) - l)};
+    };
+    var b1 = cb(bar), b2 = cb(mn);
+    out.barL = b1.l; out.barCW = b1.w;
+    out.mainL = b2.l; out.mainCW = b2.w;
+  }
+  document.title = JSON.stringify(out);
+  // ★把几何送回服务端：无头 firefox 读不到页面里的 JS 结果（--dump-dom 在 FF155 上挂死），
+  //   而截图里的像素又量不出 getBoundingClientRect。sendBeacon 是唯一"页面被拆掉也保证送达"
+  //   的通道，所以两样都发：beacon 保送，fetch 保解析。
+  try {
+    var body = JSON.stringify(out);
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon('/api/probe', new Blob([body], {type:'application/json'}));
+    }
+    fetch('/api/probe', {method:'POST', headers:{'Content-Type':'application/json'},
+                         body:body, keepalive:true}).catch(function(){});
+  } catch(e){}
+}
+
+/* ── 给预测卡造一份假返回，供 ?probe=1 把**同一条渲染链路**走完 ──
+   ★喂的是 predShow() 本身，不是另写一套渲染 —— 另写就等于测了另一条代码路径。
+   网络那一层由 verify_agent.py 拿真 HTTP 打 /api/predict 判，两层分开判、互不冒充。 */
+function fakePredict(){
+  var bars = [], t = new Date(2026, 4, 1), i, c = 1680;
+  for (i = 0; i < 90; i++){
+    var o = c, cl = c * (1 + (Math.cos(i/5.3) * 0.011 + (i%5-2)*0.0014));
+    bars.push({t:new Date(t.getTime() + i*864e5).toISOString().slice(0,10),
+               o:+o.toFixed(2), h:+(Math.max(o,cl)*1.005).toFixed(2),
+               l:+(Math.min(o,cl)*0.995).toFixed(2), c:+cl.toFixed(2)});
+    c = cl;
+  }
+  var pb = [], pc = c;
+  for (i = 0; i < 30; i++){
+    var po = pc, pcl = pc * (1 + (Math.sin(i/6) * 0.008));
+    pb.push({t:new Date(t.getTime() + (90+i)*864e5).toISOString().slice(0,10),
+             o:+po.toFixed(2), h:+(Math.max(po,pcl)*1.004).toFixed(2),
+             l:+(Math.min(po,pcl)*0.996).toFixed(2), c:+pcl.toFixed(2)});
+    pc = pcl;
+  }
+  var grp = function(a, k){ return a.map(function(b){ return b[k]; }); };
+  return {summary:{ok:true, symbol:'600519', name:'贵州茅台', pred_len:30, ms:41200,
+                   pred_chg_pct:0.72, pred_max_up_pct:2.35, pred_max_dn_pct:-1.81,
+                   ohlc_repaired_bars:15,
+                   model:'Kronos-small 24.7M / 512 上下文'},
+          data:{kind:'predict', name:'贵州茅台', code:'600519',
+                history:{t:grp(bars,'t'), o:grp(bars,'o'), h:grp(bars,'h'),
+                         l:grp(bars,'l'), c:grp(bars,'c')},
+                pred:{t:grp(pb,'t'), o:grp(pb,'o'), h:grp(pb,'h'),
+                      l:grp(pb,'l'), c:grp(pb,'c')},
+                base_close:+c.toFixed(2),
+                params:{pred_len:30, sample_count:1, ms:41200,
+                        ohlc_repaired_bars:15, ohlc_max_clamp_pct:2.31}}};
+}
+
+/* ── 启动 ── */
+pRun.addEventListener('click', predRun);
+pSym.addEventListener('keydown', function(e){
+  if (e.key === 'Enter' && !e.isComposing){ e.preventDefault(); predRun(); }
+});
+keySave.addEventListener('click', function(){ keySend('POST'); });
+keyClear.addEventListener('click', function(){ keySend('DELETE'); });
+keyInput.addEventListener('keydown', function(e){
+  if (e.key === 'Enter' && !e.isComposing){ e.preventDefault(); keySend('POST'); }
+});
+measure();
+var IS_PROBE = /[?&]probe=1/.test(location.search);
+if (IS_PROBE){
+  // 探针模式：同步跑完 demo → 立刻量几何 → 写进 title。全程不等定时器。
+  // ★keyLoadSync 必须在 predShow/demo **之前**：它是同步的，卡状态要在量几何之前
+  //   就落到 DOM 上，否则量到的 #kstate 是"检查中…"（那条判据就成了空转）。
+  keyLoadSync();
+  // ★预测卡必须**先**灌数据：demo() 收尾时会同步调 probe()，顺序反了量到的是空盒子。
+  predShow(fakePredict());
+  demo(probe, true);
+} else if (/[?&]demo=1/.test(location.search)){
+  demo(null, false);
+} else {
+  hello();
+  status();
+  keyLoad();
+  setInterval(status, 30000);
+  fetch('/api/warmup', {method:'POST'}).catch(function(){});
+}
+window.__licai = {handle:handle, renderChart:renderChart, fmt:fmt, esc:esc, msgs:msgs, probe:probe};
+})();
+</script>
+</body>
+</html>

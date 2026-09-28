@@ -1,0 +1,15 @@
+# 注意：torch 要 CUDA 版。本机从 PyPI（走 aliyun 镜像）装的默认 linux 轮子
+# 自带 CUDA 运行时（依赖 nvidia-* 包），**不需要** --index-url download.pytorch.org
+# —— 实测那个源在本机的代理下会下到一半断掉（两次都断）。
+#   unset ALL_PROXY all_proxy
+#   uv pip install --python .venv/bin/python -i https://mirrors.aliyun.com/pypi/simple/ torch
+torch
+einops==0.8.1
+safetensors==0.6.2
+huggingface_hub==0.33.1     # 上游 pin 的版本。runner.py 有绕开 hf_hub 的兜底路径，但优先用它
+pandas
+numpy
+akshare
+flask
+requests
+python-dotenv

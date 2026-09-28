@@ -1,0 +1,365 @@
+{
+  "ttl_sec": 900,
+  "max_items_per_source": 10,
+  "_readme": [
+    "源清单是本项目的**真源**：`agent/news/config.py` 只读它，不在代码里写死源。",
+    "字段：id / kind / role / scope / enabled / label / note + 各自的私有字段。",
+    "  kind  ∈ akshare | http | adata | crawl4ai | mediacrawler",
+    "  role  ∈ news | announcement | heat | sentiment   （消费方可用 roles= 只取一类）",
+    "  scope ∈ global | symbol      （symbol 域的源在没给标的时**跳过**，并在 health 里留痕）",
+    "  ttl_sec / timeout_sec 可逐源覆盖全局值（慢源给长 TTL，别每轮都打）",
+    "  ★label 是**干净的名字**（会进 item 标题、badge、health）；note 放实测耗时之类的注解。",
+    "    两者分开是因为 label 会流到 items/digest/时间轴里给人和大模型看，",
+    "    把「实测335ms」写进 label 会让一条事实串带着运维注释到处走。",
+    "所有 enabled=true 的源都**真实跑通过**（实测耗时见 note 与交付说明），",
+    "不是照文档配的。跑不通的一律 false，并把原因写在 note 里。",
+    "★国内站点直连：http/adata 层的 fetch 会先摘掉全部代理变量（见 http_src.direct_env）。"
+  ],
+  "sources": [
+    {
+      "id": "cls-telegraph",
+      "kind": "akshare",
+      "fn": "stock_info_global_cls",
+      "role": "news",
+      "scope": "global",
+      "enabled": true,
+      "label": "财联社·电报",
+      "note": "2026-09-22 实测 209ms / 20 行"
+    },
+    {
+      "id": "em-global",
+      "kind": "akshare",
+      "fn": "stock_info_global_em",
+      "role": "news",
+      "scope": "global",
+      "enabled": true,
+      "label": "东财·全球快讯",
+      "note": "2026-09-22 实测 344ms / 200 行"
+    },
+    {
+      "id": "sina-7x24",
+      "kind": "akshare",
+      "fn": "stock_info_global_sina",
+      "role": "news",
+      "scope": "global",
+      "enabled": true,
+      "label": "新浪·7x24",
+      "note": "2026-09-22 实测 222ms / 20 行"
+    },
+    {
+      "id": "em-individual",
+      "kind": "akshare",
+      "fn": "stock_news_em",
+      "role": "news",
+      "scope": "symbol",
+      "enabled": true,
+      "label": "东财·个股新闻",
+      "note": "2026-09-22 实测 291ms / 10 行"
+    },
+    {
+      "id": "em-724",
+      "kind": "http",
+      "parser": "em_724",
+      "role": "news",
+      "scope": "global",
+      "enabled": true,
+      "url": "https://np-listapi.eastmoney.com/comm/web/getFastNewsList",
+      "params": {
+        "client": "web",
+        "biz": "web_724",
+        "fastColumn": "102",
+        "sortEnd": "",
+        "pageSize": "50",
+        "req_trace": "$now_ms"
+      },
+      "timeout_sec": 12,
+      "label": "东财·7x24快讯",
+      "note": "直连 JSON（免登录）；2026-09-22 实测 358ms / 100 行。快讯是流水，无逐条详情页 ⇒ url=None（不拼假链接）"
+    },
+    {
+      "id": "ths-push",
+      "kind": "http",
+      "parser": "ths_push",
+      "role": "news",
+      "scope": "global",
+      "enabled": true,
+      "url": "https://news.10jqka.com.cn/tapp/news/push/stock/",
+      "params": {"page": "1", "tag": "", "track": "website", "pagesize": "50"},
+      "timeout_sec": 15,
+      "label": "同花顺·快讯",
+      "note": "直连 JSON（免登录）；2026-09-22 实测 1484ms / 100 行。带上游分类标签（tags[].name）⇒ top_terms 的来源之一"
+    },
+    {
+      "id": "ths-global",
+      "kind": "akshare",
+      "fn": "stock_info_global_ths",
+      "role": "news",
+      "scope": "global",
+      "enabled": true,
+      "label": "同花顺·全球快讯",
+      "note": "2026-09-22 实测 322ms / 20 行（列：标题/内容/发布时间/链接，走 _COLS 通用路径）"
+    },
+    {
+      "id": "futu-global",
+      "kind": "akshare",
+      "fn": "stock_info_global_futu",
+      "role": "news",
+      "scope": "global",
+      "enabled": true,
+      "label": "富途牛牛·快讯",
+      "note": "2026-09-22 实测 409ms / 50 行（列：标题/内容/发布时间/链接，走 _COLS 通用路径）"
+    },
+    {
+      "id": "cx-main",
+      "kind": "akshare",
+      "fn": "stock_news_main_cx",
+      "role": "news",
+      "scope": "global",
+      "enabled": true,
+      "label": "财新网·数据通",
+      "note": "2026-09-22 实测 570ms / 100 行。只有 tag/summary/url，没有标题列 ⇒ 标题取 summary 前 40 字"
+    },
+    {
+      "id": "cctv-xwlb",
+      "kind": "akshare",
+      "fn": "news_cctv",
+      "role": "news",
+      "scope": "global",
+      "enabled": true,
+      "date": "today",
+      "date_fallback": "yesterday",
+      "ttl_sec": 3600,
+      "label": "新闻联播·文字稿",
+      "note": "2026-09-22 实测 3416ms / 16 行；当日 19:00 前上游未发布（实测返回 0 行）⇒ 自动回退到昨天。TTL 1 小时：一天只播一次"
+    },
+    {
+      "id": "cninfo-ann",
+      "kind": "http",
+      "parser": "cninfo_ann",
+      "role": "announcement",
+      "scope": "global",
+      "enabled": true,
+      "method": "POST",
+      "url": "http://www.cninfo.com.cn/new/hisAnnouncement/query",
+      "body": {
+        "pageNum": "1",
+        "pageSize": "50",
+        "column": "szse",
+        "tabName": "fulltext",
+        "plate": "",
+        "stock": "",
+        "searchkey": "",
+        "secid": "",
+        "category": "",
+        "trade": "",
+        "seDate": "",
+        "sortName": "",
+        "sortType": "",
+        "isHLtitle": "true"
+      },
+      "headers": {"Referer": "http://www.cninfo.com.cn/new/commonUrl?url=disclosure/list/notice"},
+      "timeout_sec": 12,
+      "label": "巨潮资讯·全市场公告",
+      "note": "直连 JSON（免登录）；2026-09-22 实测 288ms / 30 行。announcementTime 是**毫秒**时间戳；PDF 实测 HEAD 200。★盘后公告上游自己定在**次日 00:00:00**（adjunctUrl 也是 finalpage/2026-09-23/），我们原样带出、不改写"
+    },
+    {
+      "id": "szse-ann",
+      "kind": "http",
+      "parser": "szse_ann",
+      "role": "announcement",
+      "scope": "global",
+      "enabled": true,
+      "method": "POST",
+      "url": "http://www.szse.cn/api/disc/announcement/annList",
+      "body": {
+        "seDate": ["$days_ago:3", "$today"],
+        "channelCode": ["listedNotice_disc"],
+        "pageSize": 50,
+        "pageNum": 1
+      },
+      "headers": {
+        "Content-Type": "application/json",
+        "Referer": "http://www.szse.cn/disclosure/listed/notice/index.html"
+      },
+      "timeout_sec": 15,
+      "label": "深交所·上市公司公告",
+      "note": "直连 JSON（免登录）；2026-09-22 实测 1487ms / 30 行。publishTime 已是 'YYYY-MM-DD HH:MM:SS'；PDF 实测 HEAD 200"
+    },
+    {
+      "id": "em-ann",
+      "kind": "akshare",
+      "fn": "stock_individual_notice_report",
+      "arg": "security",
+      "role": "announcement",
+      "scope": "symbol",
+      "enabled": true,
+      "label": "东财·个股公告",
+      "note": "2026-09-22 实测 ~200ms"
+    },
+    {
+      "id": "weibo-nlp",
+      "kind": "akshare",
+      "fn": "stock_js_weibo_report",
+      "kwargs": {"time_period": "CNHOUR12"},
+      "role": "sentiment",
+      "scope": "global",
+      "enabled": true,
+      "label": "金十·微博舆情报告",
+      "note": "2026-09-22 实测 491ms / 50 行。★上游给了 `rate` 分值 ⇒ 这是本项目唯一带 sentiment_raw 的**全局**源。上游原定义：个股微博讨论人气排行指数（热度+涨幅着色），实测区间 -4.13…+4.90"
+    },
+    {
+      "id": "adata-ths-hot",
+      "kind": "adata",
+      "call": "ths_hot100",
+      "role": "heat",
+      "scope": "global",
+      "enabled": true,
+      "ttl_sec": 600,
+      "label": "同花顺·热股100",
+      "note": "adata.sentiment；2026-09-22 实测 263ms / 100 行。带 rank/hot_value（**上游**热度）与 concept_tag/pop_tag（上游标签）"
+    },
+    {
+      "id": "adata-em-pop",
+      "kind": "adata",
+      "call": "em_pop100",
+      "role": "heat",
+      "scope": "global",
+      "enabled": true,
+      "ttl_sec": 600,
+      "label": "东财·人气榜100",
+      "note": "adata.sentiment；2026-09-22 实测 395ms / 100 行。★实测**偶发** ConnectionError（RemoteDisconnected，同一天出现 2 次）⇒ 进 degraded[] 是正常的，不是配置错"
+    },
+    {
+      "id": "adata-concept-hot",
+      "kind": "adata",
+      "call": "ths_concept_hot",
+      "role": "heat",
+      "scope": "global",
+      "enabled": true,
+      "ttl_sec": 600,
+      "label": "同花顺·热门概念20",
+      "note": "adata.sentiment；2026-09-22 实测 284ms / 20 行"
+    },
+    {
+      "id": "adata-lhb",
+      "kind": "adata",
+      "call": "lhb_daily",
+      "role": "heat",
+      "scope": "global",
+      "enabled": true,
+      "ttl_sec": 1800,
+      "label": "龙虎榜·当日",
+      "note": "adata.sentiment；2026-09-22 实测 299ms / 78 行。★`reason` 是**交易所给的上榜原因原话**，原样进 excerpt 与 tags，一个字不改"
+    },
+    {
+      "id": "em-hot-keyword",
+      "kind": "akshare",
+      "fn": "stock_hot_keyword_em",
+      "symbol_fmt": "prefixed",
+      "role": "heat",
+      "scope": "symbol",
+      "enabled": true,
+      "ttl_sec": 1800,
+      "label": "个股热门关键词",
+      "note": "2026-09-22 实测 226ms / 7 行。要 `SH600519` 这种带前缀代码（symbol_fmt=prefixed）；`概念名称` 是上游标签"
+    },
+    {
+      "id": "em-comment-score",
+      "kind": "akshare",
+      "fn": "stock_comment_detail_zhpj_lspf_em",
+      "role": "sentiment",
+      "scope": "symbol",
+      "enabled": true,
+      "ttl_sec": 3600,
+      "label": "千股千评·综合评分",
+      "note": "2026-09-22 实测 335ms / 30 行；只取上游最新一行（选时间点，不是分析）"
+    },
+    {
+      "id": "em-comment-focus",
+      "kind": "akshare",
+      "fn": "stock_comment_detail_scrd_focus_em",
+      "role": "sentiment",
+      "scope": "symbol",
+      "enabled": true,
+      "ttl_sec": 3600,
+      "label": "千股千评·用户关注指数",
+      "note": "2026-09-22 实测 283ms / 30 行"
+    },
+    {
+      "id": "em-comment-jgcyd",
+      "kind": "akshare",
+      "fn": "stock_comment_detail_zlkp_jgcyd_em",
+      "role": "sentiment",
+      "scope": "symbol",
+      "enabled": true,
+      "ttl_sec": 3600,
+      "label": "千股千评·机构参与度",
+      "note": "2026-09-22 实测 197ms / 44 行"
+    },
+    {
+      "id": "em-comment-desire",
+      "kind": "akshare",
+      "fn": "stock_comment_detail_scrd_desire_em",
+      "role": "sentiment",
+      "scope": "symbol",
+      "enabled": true,
+      "ttl_sec": 3600,
+      "label": "千股千评·参与意愿",
+      "note": "2026-09-22 实测 199ms / 5 行"
+    },
+    {
+      "id": "c4a-jrj",
+      "kind": "crawl4ai",
+      "role": "news",
+      "scope": "global",
+      "enabled": true,
+      "url": "https://www.jrj.com.cn/",
+      "css": null,
+      "schema": {
+        "name": "jrj-headline",
+        "baseSelector": "div.headline-news ul#newsList li, #content1 ul li",
+        "fields": [
+          {"name": "title", "selector": "a", "type": "text"},
+          {"name": "url", "selector": "a", "type": "attribute", "attribute": "href"}
+        ]
+      },
+      "ts_from_url": "/(?P<y>\\d{4})/(?P<mo>\\d{2})/(?P<d>\\d{2})(?P<h>\\d{2})(?P<mi>\\d{2})(?P<s>\\d{2})",
+      "min_title_len": 8,
+      "timeout_sec": 90,
+      "label": "金融界·首页头条",
+      "note": "crawl4ai（.venv-collector）；2026-09-22 实测 1933ms / 10 条真实头条。ts 从详情页 URL（/2026/09/22171658513711.shtml）里取，是**上游生成的时间**；引擎需 chromium（见 README 附录）"
+    },
+    {
+      "id": "c4a-cls-web",
+      "kind": "crawl4ai",
+      "role": "news",
+      "scope": "global",
+      "enabled": false,
+      "url": "https://www.cls.cn/telegraph",
+      "label": "财联社·网页电报",
+      "note": "【关】2026-09-22 实测：Next.js 单页应用、正文不 SSR，链接回退只捞到页脚备案链接（沪ICP备…）⇒ 会把垃圾塞进新闻流。要开必须先给它写 telegraph 列表的 css/schema（同 c4a-jrj 的形状）"
+    },
+    {
+      "id": "mc-weibo",
+      "kind": "mediacrawler",
+      "platform": "weibo",
+      "mode": "search",
+      "role": "news",
+      "scope": "global",
+      "enabled": false,
+      "label": "微博·关键词搜索",
+      "note": "【关】需 cookies（免登录跑不起来）。开启步骤：① cd third_party/MediaCrawler ② 用它的 venv 跑 `python main.py --platform wb --lt qrcode --type search` ③ 扫码，cookies 落到 browser_data/weibo_cookies.txt ④ 把本条 enabled 改 true。缺 cookies 时 subproc_src 会抛明确错误、进 degraded[]（不静默空转）"
+    },
+    {
+      "id": "mc-zhihu",
+      "kind": "mediacrawler",
+      "platform": "zhihu",
+      "mode": "search",
+      "role": "news",
+      "scope": "global",
+      "enabled": false,
+      "label": "知乎·关键词搜索",
+      "note": "【关】需 cookies（免登录跑不起来）。开启步骤同 mc-weibo，把 --platform 换成 zhihu、cookies 文件是 browser_data/zhihu_cookies.txt"
+    }
+  ]
+}

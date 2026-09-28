@@ -1,0 +1,1058 @@
+{
+  "measured_at": "2026-09-20 11:35:27",
+  "machine": {
+    "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "torch": "2.14.0+cu130",
+    "cuda": true
+  },
+  "model": "Kronos-small 24.7M / max_context 512",
+  "model_sha": "b082dfcbd8e8",
+  "config": {
+    "lookback": 400,
+    "pred_len": 30,
+    "stride": 12,
+    "deadband_pct": 0.3,
+    "sample_count": 1,
+    "coverage_samples": 9,
+    "note": "每个起点一次完整推理；起点等距取，不挑窗口；★单次采样 ⇒ 这个脚本**不是可复现的**（top_p=0.9 采样），重跑一遍数字会小幅变（同一批起点实测两次跑出不同路径）"
+  },
+  "total": {
+    "n_origins": 243,
+    "horizon_bars": 30,
+    "lookback_bars": 400,
+    "dir_strict": {
+      "n_called": 243,
+      "n_hit": 127,
+      "hit_rate": 52.3,
+      "ci95": [
+        46.0,
+        58.5
+      ]
+    },
+    "dir_band": {
+      "n_called": 240,
+      "n_hit": 119,
+      "hit_rate": 49.6,
+      "ci95": [
+        43.3,
+        55.9
+      ]
+    },
+    "baseline_always_up": {
+      "hit_rate": 50.6
+    },
+    "baseline_momentum": {
+      "n_called": 233,
+      "hit_rate": 45.9,
+      "ci95": [
+        39.6,
+        52.3
+      ]
+    },
+    "mape_close_model": 9.018,
+    "mape_close_flat": 4.9,
+    "mape_by_step": [
+      {
+        "step": 1,
+        "model": 2.281,
+        "flat": 1.262
+      },
+      {
+        "step": 2,
+        "model": 3.597,
+        "flat": 1.832
+      },
+      {
+        "step": 3,
+        "model": 4.658,
+        "flat": 2.307
+      },
+      {
+        "step": 4,
+        "model": 5.218,
+        "flat": 2.727
+      },
+      {
+        "step": 5,
+        "model": 5.74,
+        "flat": 3.127
+      },
+      {
+        "step": 6,
+        "model": 6.342,
+        "flat": 3.323
+      },
+      {
+        "step": 7,
+        "model": 6.973,
+        "flat": 3.496
+      },
+      {
+        "step": 8,
+        "model": 7.496,
+        "flat": 3.806
+      },
+      {
+        "step": 9,
+        "model": 7.828,
+        "flat": 4.172
+      },
+      {
+        "step": 10,
+        "model": 7.779,
+        "flat": 4.476
+      },
+      {
+        "step": 11,
+        "model": 8.114,
+        "flat": 4.517
+      },
+      {
+        "step": 12,
+        "model": 8.621,
+        "flat": 4.775
+      },
+      {
+        "step": 13,
+        "model": 9.038,
+        "flat": 4.986
+      },
+      {
+        "step": 14,
+        "model": 9.199,
+        "flat": 4.956
+      },
+      {
+        "step": 15,
+        "model": 9.309,
+        "flat": 4.939
+      },
+      {
+        "step": 16,
+        "model": 9.598,
+        "flat": 5.158
+      },
+      {
+        "step": 17,
+        "model": 9.646,
+        "flat": 5.374
+      },
+      {
+        "step": 18,
+        "model": 10.069,
+        "flat": 5.441
+      },
+      {
+        "step": 19,
+        "model": 10.286,
+        "flat": 5.644
+      },
+      {
+        "step": 20,
+        "model": 10.46,
+        "flat": 5.845
+      },
+      {
+        "step": 21,
+        "model": 10.66,
+        "flat": 5.985
+      },
+      {
+        "step": 22,
+        "model": 11.29,
+        "flat": 6.231
+      },
+      {
+        "step": 23,
+        "model": 11.525,
+        "flat": 6.237
+      },
+      {
+        "step": 24,
+        "model": 11.577,
+        "flat": 6.35
+      },
+      {
+        "step": 25,
+        "model": 11.938,
+        "flat": 6.538
+      },
+      {
+        "step": 26,
+        "model": 11.952,
+        "flat": 6.635
+      },
+      {
+        "step": 27,
+        "model": 11.887,
+        "flat": 6.561
+      },
+      {
+        "step": 28,
+        "model": 12.204,
+        "flat": 6.643
+      },
+      {
+        "step": 29,
+        "model": 12.478,
+        "flat": 6.81
+      },
+      {
+        "step": 30,
+        "model": 12.765,
+        "flat": 6.832
+      }
+    ],
+    "actual_up_pct": 50.6,
+    "jump1_abs_mean": 1.746,
+    "true1_abs_mean": 1.26,
+    "revert_mean": 0.03
+  },
+  "per_symbol": {
+    "600519": {
+      "n_origins": 65,
+      "horizon_bars": 30,
+      "lookback_bars": 400,
+      "dir_strict": {
+        "n_called": 65,
+        "n_hit": 39,
+        "hit_rate": 60.0,
+        "ci95": [
+          47.9,
+          71.0
+        ]
+      },
+      "dir_band": {
+        "n_called": 63,
+        "n_hit": 35,
+        "hit_rate": 55.6,
+        "ci95": [
+          43.3,
+          67.2
+        ]
+      },
+      "baseline_always_up": {
+        "hit_rate": 43.1
+      },
+      "baseline_momentum": {
+        "n_called": 62,
+        "hit_rate": 38.7,
+        "ci95": [
+          27.6,
+          51.2
+        ]
+      },
+      "mape_close_model": 4.617,
+      "mape_close_flat": 3.36,
+      "mape_by_step": [
+        {
+          "step": 1,
+          "model": 1.58,
+          "flat": 0.98
+        },
+        {
+          "step": 2,
+          "model": 2.114,
+          "flat": 1.352
+        },
+        {
+          "step": 3,
+          "model": 2.726,
+          "flat": 1.814
+        },
+        {
+          "step": 4,
+          "model": 2.938,
+          "flat": 1.79
+        },
+        {
+          "step": 5,
+          "model": 2.849,
+          "flat": 2.034
+        },
+        {
+          "step": 6,
+          "model": 3.417,
+          "flat": 2.335
+        },
+        {
+          "step": 7,
+          "model": 3.443,
+          "flat": 2.449
+        },
+        {
+          "step": 8,
+          "model": 3.576,
+          "flat": 2.81
+        },
+        {
+          "step": 9,
+          "model": 4.036,
+          "flat": 3.194
+        },
+        {
+          "step": 10,
+          "model": 4.191,
+          "flat": 3.258
+        },
+        {
+          "step": 11,
+          "model": 4.178,
+          "flat": 3.039
+        },
+        {
+          "step": 12,
+          "model": 4.945,
+          "flat": 3.444
+        },
+        {
+          "step": 13,
+          "model": 4.707,
+          "flat": 3.347
+        },
+        {
+          "step": 14,
+          "model": 4.867,
+          "flat": 3.43
+        },
+        {
+          "step": 15,
+          "model": 5.104,
+          "flat": 3.37
+        },
+        {
+          "step": 16,
+          "model": 5.197,
+          "flat": 3.641
+        },
+        {
+          "step": 17,
+          "model": 5.306,
+          "flat": 3.633
+        },
+        {
+          "step": 18,
+          "model": 5.48,
+          "flat": 3.864
+        },
+        {
+          "step": 19,
+          "model": 5.343,
+          "flat": 3.742
+        },
+        {
+          "step": 20,
+          "model": 5.203,
+          "flat": 3.762
+        },
+        {
+          "step": 21,
+          "model": 5.297,
+          "flat": 4.042
+        },
+        {
+          "step": 22,
+          "model": 6.082,
+          "flat": 4.226
+        },
+        {
+          "step": 23,
+          "model": 5.808,
+          "flat": 3.98
+        },
+        {
+          "step": 24,
+          "model": 5.625,
+          "flat": 4.225
+        },
+        {
+          "step": 25,
+          "model": 6.043,
+          "flat": 4.346
+        },
+        {
+          "step": 26,
+          "model": 5.627,
+          "flat": 4.514
+        },
+        {
+          "step": 27,
+          "model": 5.588,
+          "flat": 4.412
+        },
+        {
+          "step": 28,
+          "model": 5.658,
+          "flat": 4.467
+        },
+        {
+          "step": 29,
+          "model": 5.775,
+          "flat": 4.589
+        },
+        {
+          "step": 30,
+          "model": 5.806,
+          "flat": 4.722
+        }
+      ],
+      "actual_up_pct": 43.1,
+      "jump1_abs_mean": 1.15,
+      "true1_abs_mean": 0.987,
+      "revert_mean": 0.075,
+      "name": "贵州茅台",
+      "market": "cn_stock",
+      "first": "2023-06-05",
+      "last": "2026-08-05"
+    },
+    "00700": {
+      "n_origins": 65,
+      "horizon_bars": 30,
+      "lookback_bars": 400,
+      "dir_strict": {
+        "n_called": 65,
+        "n_hit": 32,
+        "hit_rate": 49.2,
+        "ci95": [
+          37.5,
+          61.1
+        ]
+      },
+      "dir_band": {
+        "n_called": 65,
+        "n_hit": 31,
+        "hit_rate": 47.7,
+        "ci95": [
+          36.0,
+          59.6
+        ]
+      },
+      "baseline_always_up": {
+        "hit_rate": 50.8
+      },
+      "baseline_momentum": {
+        "n_called": 61,
+        "hit_rate": 44.3,
+        "ci95": [
+          32.5,
+          56.7
+        ]
+      },
+      "mape_close_model": 11.569,
+      "mape_close_flat": 5.387,
+      "mape_by_step": [
+        {
+          "step": 1,
+          "model": 2.624,
+          "flat": 1.506
+        },
+        {
+          "step": 2,
+          "model": 4.073,
+          "flat": 2.162
+        },
+        {
+          "step": 3,
+          "model": 5.596,
+          "flat": 2.551
+        },
+        {
+          "step": 4,
+          "model": 6.671,
+          "flat": 3.078
+        },
+        {
+          "step": 5,
+          "model": 7.486,
+          "flat": 3.319
+        },
+        {
+          "step": 6,
+          "model": 8.328,
+          "flat": 3.744
+        },
+        {
+          "step": 7,
+          "model": 9.559,
+          "flat": 4.056
+        },
+        {
+          "step": 8,
+          "model": 9.951,
+          "flat": 3.973
+        },
+        {
+          "step": 9,
+          "model": 10.29,
+          "flat": 4.591
+        },
+        {
+          "step": 10,
+          "model": 10.128,
+          "flat": 5.091
+        },
+        {
+          "step": 11,
+          "model": 11.283,
+          "flat": 5.044
+        },
+        {
+          "step": 12,
+          "model": 12.199,
+          "flat": 5.385
+        },
+        {
+          "step": 13,
+          "model": 12.612,
+          "flat": 5.655
+        },
+        {
+          "step": 14,
+          "model": 12.695,
+          "flat": 5.629
+        },
+        {
+          "step": 15,
+          "model": 12.72,
+          "flat": 5.51
+        },
+        {
+          "step": 16,
+          "model": 13.049,
+          "flat": 5.321
+        },
+        {
+          "step": 17,
+          "model": 13.159,
+          "flat": 5.221
+        },
+        {
+          "step": 18,
+          "model": 13.567,
+          "flat": 5.508
+        },
+        {
+          "step": 19,
+          "model": 13.913,
+          "flat": 6.049
+        },
+        {
+          "step": 20,
+          "model": 14.041,
+          "flat": 6.245
+        },
+        {
+          "step": 21,
+          "model": 14.021,
+          "flat": 6.69
+        },
+        {
+          "step": 22,
+          "model": 13.679,
+          "flat": 6.982
+        },
+        {
+          "step": 23,
+          "model": 14.062,
+          "flat": 6.871
+        },
+        {
+          "step": 24,
+          "model": 13.825,
+          "flat": 7.167
+        },
+        {
+          "step": 25,
+          "model": 14.142,
+          "flat": 7.229
+        },
+        {
+          "step": 26,
+          "model": 14.074,
+          "flat": 7.645
+        },
+        {
+          "step": 27,
+          "model": 14.072,
+          "flat": 7.229
+        },
+        {
+          "step": 28,
+          "model": 14.811,
+          "flat": 7.36
+        },
+        {
+          "step": 29,
+          "model": 15.013,
+          "flat": 7.352
+        },
+        {
+          "step": 30,
+          "model": 15.43,
+          "flat": 7.442
+        }
+      ],
+      "actual_up_pct": 50.8,
+      "jump1_abs_mean": 2.038,
+      "true1_abs_mean": 1.523,
+      "revert_mean": -0.001,
+      "name": "腾讯控股",
+      "market": "hk_stock",
+      "first": "2023-06-16",
+      "last": "2026-08-05"
+    },
+    "AAPL": {
+      "n_origins": 65,
+      "horizon_bars": 30,
+      "lookback_bars": 400,
+      "dir_strict": {
+        "n_called": 65,
+        "n_hit": 30,
+        "hit_rate": 46.2,
+        "ci95": [
+          34.6,
+          58.1
+        ]
+      },
+      "dir_band": {
+        "n_called": 64,
+        "n_hit": 27,
+        "hit_rate": 42.2,
+        "ci95": [
+          30.9,
+          54.4
+        ]
+      },
+      "baseline_always_up": {
+        "hit_rate": 56.9
+      },
+      "baseline_momentum": {
+        "n_called": 63,
+        "hit_rate": 52.4,
+        "ci95": [
+          40.3,
+          64.2
+        ]
+      },
+      "mape_close_model": 9.621,
+      "mape_close_flat": 4.703,
+      "mape_by_step": [
+        {
+          "step": 1,
+          "model": 2.398,
+          "flat": 1.103
+        },
+        {
+          "step": 2,
+          "model": 4.2,
+          "flat": 1.55
+        },
+        {
+          "step": 3,
+          "model": 5.643,
+          "flat": 2.271
+        },
+        {
+          "step": 4,
+          "model": 6.033,
+          "flat": 2.71
+        },
+        {
+          "step": 5,
+          "model": 6.587,
+          "flat": 3.207
+        },
+        {
+          "step": 6,
+          "model": 7.253,
+          "flat": 3.117
+        },
+        {
+          "step": 7,
+          "model": 8.268,
+          "flat": 3.272
+        },
+        {
+          "step": 8,
+          "model": 8.697,
+          "flat": 3.608
+        },
+        {
+          "step": 9,
+          "model": 8.77,
+          "flat": 3.843
+        },
+        {
+          "step": 10,
+          "model": 8.585,
+          "flat": 4.193
+        },
+        {
+          "step": 11,
+          "model": 8.732,
+          "flat": 4.394
+        },
+        {
+          "step": 12,
+          "model": 8.833,
+          "flat": 4.519
+        },
+        {
+          "step": 13,
+          "model": 9.367,
+          "flat": 4.892
+        },
+        {
+          "step": 14,
+          "model": 9.464,
+          "flat": 4.904
+        },
+        {
+          "step": 15,
+          "model": 9.881,
+          "flat": 4.949
+        },
+        {
+          "step": 16,
+          "model": 10.478,
+          "flat": 5.138
+        },
+        {
+          "step": 17,
+          "model": 10.14,
+          "flat": 5.599
+        },
+        {
+          "step": 18,
+          "model": 10.552,
+          "flat": 5.362
+        },
+        {
+          "step": 19,
+          "model": 10.746,
+          "flat": 5.67
+        },
+        {
+          "step": 20,
+          "model": 10.772,
+          "flat": 5.843
+        },
+        {
+          "step": 21,
+          "model": 10.511,
+          "flat": 5.926
+        },
+        {
+          "step": 22,
+          "model": 11.489,
+          "flat": 6.005
+        },
+        {
+          "step": 23,
+          "model": 11.962,
+          "flat": 6.057
+        },
+        {
+          "step": 24,
+          "model": 11.986,
+          "flat": 5.91
+        },
+        {
+          "step": 25,
+          "model": 12.121,
+          "flat": 6.008
+        },
+        {
+          "step": 26,
+          "model": 12.586,
+          "flat": 6.192
+        },
+        {
+          "step": 27,
+          "model": 12.452,
+          "flat": 6.412
+        },
+        {
+          "step": 28,
+          "model": 13.126,
+          "flat": 6.128
+        },
+        {
+          "step": 29,
+          "model": 13.495,
+          "flat": 6.29
+        },
+        {
+          "step": 30,
+          "model": 13.508,
+          "flat": 6.012
+        }
+      ],
+      "actual_up_pct": 56.9,
+      "jump1_abs_mean": 1.947,
+      "true1_abs_mean": 1.107,
+      "revert_mean": 0.071,
+      "name": "苹果",
+      "market": "us_stock",
+      "first": "2023-07-12",
+      "last": "2026-08-04"
+    },
+    "BTC": {
+      "n_origins": 48,
+      "horizon_bars": 30,
+      "lookback_bars": 400,
+      "dir_strict": {
+        "n_called": 48,
+        "n_hit": 26,
+        "hit_rate": 54.2,
+        "ci95": [
+          40.3,
+          67.4
+        ]
+      },
+      "dir_band": {
+        "n_called": 48,
+        "n_hit": 26,
+        "hit_rate": 54.2,
+        "ci95": [
+          40.3,
+          67.4
+        ]
+      },
+      "baseline_always_up": {
+        "hit_rate": 52.1
+      },
+      "baseline_momentum": {
+        "n_called": 47,
+        "hit_rate": 48.9,
+        "ci95": [
+          35.3,
+          62.8
+        ]
+      },
+      "mape_close_model": 10.704,
+      "mape_close_flat": 6.59,
+      "mape_by_step": [
+        {
+          "step": 1,
+          "model": 2.605,
+          "flat": 1.531
+        },
+        {
+          "step": 2,
+          "model": 4.143,
+          "flat": 2.417
+        },
+        {
+          "step": 3,
+          "model": 4.668,
+          "flat": 2.694
+        },
+        {
+          "step": 4,
+          "model": 5.238,
+          "flat": 3.543
+        },
+        {
+          "step": 5,
+          "model": 6.143,
+          "flat": 4.237
+        },
+        {
+          "step": 6,
+          "model": 6.379,
+          "flat": 4.371
+        },
+        {
+          "step": 7,
+          "model": 6.497,
+          "flat": 4.459
+        },
+        {
+          "step": 8,
+          "model": 7.853,
+          "flat": 5.198
+        },
+        {
+          "step": 9,
+          "model": 8.352,
+          "flat": 5.373
+        },
+        {
+          "step": 10,
+          "model": 8.367,
+          "flat": 5.675
+        },
+        {
+          "step": 11,
+          "model": 8.315,
+          "flat": 5.971
+        },
+        {
+          "step": 12,
+          "model": 8.464,
+          "flat": 6.101
+        },
+        {
+          "step": 13,
+          "model": 9.616,
+          "flat": 6.427
+        },
+        {
+          "step": 14,
+          "model": 9.975,
+          "flat": 6.179
+        },
+        {
+          "step": 15,
+          "model": 9.61,
+          "flat": 6.278
+        },
+        {
+          "step": 16,
+          "model": 9.693,
+          "flat": 7.02
+        },
+        {
+          "step": 17,
+          "model": 10.095,
+          "flat": 7.632
+        },
+        {
+          "step": 18,
+          "model": 10.893,
+          "flat": 7.592
+        },
+        {
+          "step": 19,
+          "model": 11.445,
+          "flat": 7.635
+        },
+        {
+          "step": 20,
+          "model": 12.308,
+          "flat": 8.126
+        },
+        {
+          "step": 21,
+          "model": 13.576,
+          "flat": 7.741
+        },
+        {
+          "step": 22,
+          "model": 14.839,
+          "flat": 8.237
+        },
+        {
+          "step": 23,
+          "model": 15.239,
+          "flat": 8.679
+        },
+        {
+          "step": 24,
+          "model": 16.038,
+          "flat": 8.719
+        },
+        {
+          "step": 25,
+          "model": 16.686,
+          "flat": 9.289
+        },
+        {
+          "step": 26,
+          "model": 16.786,
+          "flat": 8.738
+        },
+        {
+          "step": 27,
+          "model": 16.692,
+          "flat": 8.769
+        },
+        {
+          "step": 28,
+          "model": 16.292,
+          "flat": 9.317
+        },
+        {
+          "step": 29,
+          "model": 16.748,
+          "flat": 9.786
+        },
+        {
+          "step": 30,
+          "model": 17.572,
+          "flat": 9.976
+        }
+      ],
+      "actual_up_pct": 52.1,
+      "jump1_abs_mean": 1.883,
+      "true1_abs_mean": 1.482,
+      "revert_mean": -0.046,
+      "name": "比特币",
+      "market": "crypto",
+      "first": "2025-01-28",
+      "last": "2026-08-15"
+    }
+  },
+  "coverage": {
+    "n": 243,
+    "n_paths": 9,
+    "nominal_pct": 80.0,
+    "covered": 68,
+    "empirical_pct": 28.0,
+    "ci95": [
+      22.7,
+      33.9
+    ],
+    "median_width_pct": 10.97,
+    "zero_width": 0,
+    "hist_band": {
+      "n": 243,
+      "assumed_pct": 80.0,
+      "covered": 206,
+      "empirical_pct": 84.8,
+      "ci95": [
+        79.7,
+        88.7
+      ],
+      "median_width_pct": 27.07,
+      "how": "日波动率 ×√h ×1.2816（假设正态的同样名义 80% 带子，不用模型）"
+    },
+    "measured_at": "2026-09-20 11:35:27",
+    "model_sha": "b082dfcbd8e8",
+    "pred_len": 30,
+    "lookback": 400,
+    "stride": 12,
+    "per_symbol": {
+      "00700": {
+        "n": 65,
+        "covered": 10,
+        "empirical_pct": 15.4,
+        "median_width_pct": 12.46,
+        "hist_pct": 86.2
+      },
+      "600519": {
+        "n": 65,
+        "covered": 32,
+        "empirical_pct": 49.2,
+        "median_width_pct": 6.29,
+        "hist_pct": 92.3
+      },
+      "AAPL": {
+        "n": 65,
+        "covered": 17,
+        "empirical_pct": 26.2,
+        "median_width_pct": 11.43,
+        "hist_pct": 83.1
+      },
+      "BTC": {
+        "n": 48,
+        "covered": 9,
+        "empirical_pct": 18.8,
+        "median_width_pct": 13.88,
+        "hist_pct": 75.0
+      }
+    }
+  },
+  "skipped": []
+}

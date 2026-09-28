@@ -1,0 +1,123 @@
+{
+  "measured_at": "2026-09-20 11:45:02",
+  "machine": {
+    "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35",
+    "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "torch": "2.14.0+cu130",
+    "cuda": true
+  },
+  "load_ms": 449,
+  "device": "cuda:0",
+  "lookback": 400,
+  "model": "Kronos-small 24.7M / max_context 512",
+  "note": "Kronos 无 KV cache，每步重算整段上下文 ⇒ 耗时随 pred_len 近似线性；★路径条数那一列走 `sample_paths`（N 次独立调用），不是一次采 N 条",
+  "rows": [
+    {
+      "pred_len": 10,
+      "n_paths": 1,
+      "lookback": 400,
+      "api": "sample_paths",
+      "paths": 1,
+      "ms_median": 75,
+      "ms_min": 73,
+      "ms_max": 76,
+      "rows": 1,
+      "repeats": 2
+    },
+    {
+      "pred_len": 20,
+      "n_paths": 1,
+      "lookback": 400,
+      "api": "sample_paths",
+      "paths": 1,
+      "ms_median": 138,
+      "ms_min": 137,
+      "ms_max": 139,
+      "rows": 1,
+      "repeats": 2
+    },
+    {
+      "pred_len": 30,
+      "n_paths": 1,
+      "lookback": 400,
+      "api": "sample_paths",
+      "paths": 1,
+      "ms_median": 204,
+      "ms_min": 204,
+      "ms_max": 205,
+      "rows": 1,
+      "repeats": 2
+    },
+    {
+      "pred_len": 60,
+      "n_paths": 1,
+      "lookback": 400,
+      "api": "sample_paths",
+      "paths": 1,
+      "ms_median": 423,
+      "ms_min": 420,
+      "ms_max": 425,
+      "rows": 1,
+      "repeats": 2
+    },
+    {
+      "pred_len": 120,
+      "n_paths": 1,
+      "lookback": 400,
+      "api": "sample_paths",
+      "paths": 1,
+      "ms_median": 893,
+      "ms_min": 893,
+      "ms_max": 894,
+      "rows": 1,
+      "repeats": 2
+    },
+    {
+      "pred_len": 30,
+      "n_paths": 3,
+      "lookback": 400,
+      "api": "sample_paths",
+      "paths": 3,
+      "ms_median": 613,
+      "ms_min": 601,
+      "ms_max": 625,
+      "rows": 3,
+      "repeats": 2
+    },
+    {
+      "pred_len": 30,
+      "n_paths": 9,
+      "lookback": 400,
+      "api": "sample_paths",
+      "paths": 9,
+      "ms_median": 1890,
+      "ms_min": 1875,
+      "ms_max": 1904,
+      "rows": 9,
+      "repeats": 2
+    }
+  ],
+  "ms_per_bar": [
+    [
+      10,
+      7.5
+    ],
+    [
+      20,
+      6.9
+    ],
+    [
+      30,
+      6.8
+    ],
+    [
+      60,
+      7.0
+    ],
+    [
+      120,
+      7.4
+    ]
+  ],
+  "recommended_pred_len": 30
+}

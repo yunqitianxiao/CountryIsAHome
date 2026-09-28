@@ -1,0 +1,103 @@
+/* ── 居中的放大版卡片 ────────────────────────────────────────────────────
+   一组"垂直居中的大卡片"容器，用在首页/引导页/游戏页。
+   这个文件由 `index.css:4` 的 `@import` 引入 —— 位置在 `index.css` 的**最前面**，
+   而且它**不在任何 `@layer` 里**（`@import` 不能写进 `@layer`）⇒
+   它的规则优先于 `index.css` 里 `@layer components` 的同类规则。
+   踩过的坑就住在这里：`.center-large-card h2` 原来的 `1.8em`
+   **压掉**了 `.card h2` 的 `--fs-lg`，而这一点从两边源码都看不出来。
+
+   ── 改了什么（2026-09-22）────────────────────────────────────────────
+   全部改成刻度上的 token。改之前是"随手加的"那一批值：
+     圆角 16px / 14px / 8px  —— 都不在圆角刻度（`--r-sm/md/lg` = 6/10/14）上；
+     间距 30px / 25px / 20px  —— 都不在间距刻度（4/8/12/16/24/32）上；
+     字号 1.2em / 1.15em / 1.1em / 1.8em —— 用的是 em 倍数，
+       而全站别处是 px，两套混着写的后果是"这一页的字比别页大一点"，说不清为什么；
+     阴影 `0 10px 30px -14px rgba(0,0,0,.7)` —— **写死的黑**，
+       浅色主题下是一团脏影（`--shadow` 是两套主题各一份的）。
+   ★"放大"这个意图保留着，只是改用刻度表达：
+     容器字号 `--fs-md`（14，正文强调档）、标题 `--fs-num`（24，数字主角档）。
+   ★布局（`width: 80%` / `max-width: 1200px` / `min-height: 100vh` /
+     两个断点下的 90% / 95%）**一个数都没动** ——
+     渲染层判据里有一档 420px 的窄视口（`probe.ts: overflowX`），
+     改宽度是唯一可能把它顶出横向滚动条的动作。 */
+
+.center-large-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: var(--sp-5);
+  box-sizing: border-box;
+}
+
+.center-large-card {
+  width: 80%;
+  max-width: 1200px;
+  padding: var(--sp-6);
+  font-size: var(--fs-md);
+  border-radius: var(--r-lg);
+  /* ★`var(--shadow)` 而不是写死那团黑：浅色主题下黑阴影是脏的，
+     暗色主题下才需要它。两套主题各自一份值，这正是 token 层的活。 */
+  box-shadow: var(--shadow);
+}
+
+.center-large-card h2 {
+  font-size: var(--fs-num);
+  margin-bottom: var(--sp-4);
+}
+
+.center-large-card p {
+  font-size: var(--fs-base);
+  line-height: 1.6;
+}
+
+/* 引导卡：比主卡窄一档、矮一档 */
+.guidance-card {
+  width: 100%;
+  max-width: 900px;
+  padding: var(--sp-5);
+  font-size: var(--fs-md);
+  border-radius: var(--r-lg);
+  margin: var(--sp-4) 0;
+}
+
+/* 放大版按钮：这里只有尺寸，配色由 `Button.tsx` 的 variant 决定 ——
+   ★不要在这里写 `background`/`color`：那会盖掉按钮自己的 variant，
+     而"主按钮"和"次按钮"的区别恰好全在那两个属性上。 */
+.enlarged-btn {
+  padding: var(--sp-3) var(--sp-5);
+  font-size: var(--fs-md);
+  border-radius: var(--r-sm);
+}
+
+/* ── 窄屏 ──────────────────────────────────────────────────────────────
+   两档断点保留（768 / 480），只把里面的值搬到刻度上。 */
+@media (max-width: 768px) {
+  .center-large-container {
+    padding: var(--sp-4);
+  }
+
+  .center-large-card {
+    width: 90%;
+    padding: var(--sp-5);
+    font-size: var(--fs-base);
+  }
+}
+
+@media (max-width: 480px) {
+  .center-large-container {
+    padding: var(--sp-3);
+  }
+
+  .center-large-card {
+    width: 95%;
+    padding: var(--sp-4);
+    font-size: var(--fs-base);
+  }
+
+  .guidance-card {
+    padding: var(--sp-4);
+    font-size: var(--fs-base);
+  }
+}

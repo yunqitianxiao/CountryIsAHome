@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- ★这里的站名只在 JS 跑起来之前有效（首帧），挂载后由 `main.tsx` 的 ROUTES
+         按页覆写成「页名 · 站名」。★★两处必须**同时**改：只改这里的话，
+         首帧一闪而过之后标签页就换回旧名，而"闪一下"这种东西没人会注意到。 -->
+    <title>乡e家——县乡村家庭财富管理服务平台</title>
+
+    <script>
+      // ★防闪白：**首帧之前**把主题写到 <html data-theme> 上。
+      //   站点默认深色（用户的决定：专业 + 深色金融终端），而 React 挂载前浏览器
+      //   已经画过一帧 —— 那一帧还没有 data-theme，会走亮色那套 token，
+      //   于是"深色站点"每次打开都先闪一下白底。`useLayoutEffect` 救不了它：
+      //   它要等模块下载、执行、React 渲染，比首帧晚得多。
+      //
+      //   ★**必须是内联脚本**，不能是一个 .ts 模块（照下面那段探针脚本的先例）：
+      //     模块是异步的，等它执行完首帧早画完了，那就等于没写。
+      //   ★默认值 `dark` 与 `web/src/theme.ts` 里的 `DEFAULT_THEME` 是**同一个决定**，
+      //     两处必须一致 —— 不一致就是一次闪烁（首帧一个色、挂载后另一个色），
+      //     而闪烁只发生在首帧，除了真开一次浏览器没人看得出来。
+      //   ★**这里不写 window.__bootTheme 的话，判据就只能去比两处源码文本** ——
+      //     那是读输入（改个变量名就骗过去了）。所以这里把"启动时用了什么"记下来，
+      //     探针带回去，判据量的是**这个页面真的启动成了什么**。
+      (function () {
+        var t = 'dark'
+        try {
+          var v = localStorage.getItem('licai-theme')
+          if (v === 'light' || v === 'dark' || v === 'system') t = v
+        } catch (e) {}
+        if (t === 'system') document.documentElement.removeAttribute('data-theme')
+        else document.documentElement.setAttribute('data-theme', t)
+        window.__bootTheme = { v: t, attr: document.documentElement.getAttribute('data-theme') || '' }
+
+        // ★涨跌色语义（A 股红涨绿跌 / 欧美绿涨红跌）也必须在**首帧之前**定下：
+        //   晚一帧的话 `--up`/`--down` 会先按 A 股画一遍再翻过来 —— 闪的是
+        //   **颜色语义**，同一个红一会儿表示涨、一会儿表示跌，比闪白底难发现得多
+        //   （用户会把上一眼那笔读反）。晚到什么时候算晚：React 挂载之后才写，
+        //   就是"整屏先按 A 股画一帧"。
+        //   ★默认 `cn` 由 `index.css` 的 `:root` 那份承担 ⇒ 没存过时**删属性**，
+        //     不写 `data-market="cn"`：写死会造出第二份"默认值"，两份将来会分叉。
+        //   ★这里**没有** `window.__bootMarket`（旁边那个有）：主题那个是为判据
+        //     "量页面真的启动成了什么"而记的，而市场这一版**还没有判据** ——
+        //     交付说明里写明了这一点，不假造一个可量的启动值。
+        var mk = 'cn'
+        try {
+          var mv = localStorage.getItem('licai-market')
+          if (mv === 'cn' || mv === 'us') mk = mv
+        } catch (e) {}
+        if (mk === 'cn') document.documentElement.removeAttribute('data-market')
+        else document.documentElement.setAttribute('data-market', mk)
+      })()
+    </script>
+
+    <script>
+      // 探针自诊断（只在 ?probe=1 时启用，平时一个字节都不发）。
+      // 分层：这一层是**内联**脚本，不受模块加载影响 ⇒ 能把"beacon 通道不通"
+      // 和"模块没执行"两件事分开。spike 里就是靠它定位到 flushSync 引错模块的白屏。
+      (function () {
+        if (!/[?&]probe=1/.test(location.search)) return
+        var P = '/api/probe'
+        window.__beacon = function (o) {
+          // ★必须用 Blob 指定 application/json，不能直接发字符串：
+          //   sendBeacon(url, 字符串) 发出去的是 text/plain，而服务端读的是
+          //   request.get_json(silent=True) —— 它对非 JSON content-type **静默返回 None**，
+          //   于是 POST 回 200、数据却被丢掉，看起来"探针通了"其实什么都没收到。
+          //   两路并发（照旧页面的约定）：beacon 保送（页面被拆掉也发得出去），
+          //   fetch(keepalive) 保解析（beacon 的响应读不到）。
+          try {
+            var body = JSON.stringify(o)
+            if (navigator.sendBeacon) {
+              navigator.sendBeacon(P, new Blob([body], { type: 'application/json' }))
+            }
+            fetch(P, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: body,
+              keepalive: true,
+            }).catch(function () {})
+          } catch (e) {}
+        }
+        window.__beacon({ t: 'boot 壳内联脚本执行' })
+        window.addEventListener('error', function (e) {
+          window.__beacon({
+            t: 'ERROR',
+            msg: String((e && e.message) || e),
+            src: String((e && e.filename) || ''),
+            line: (e && e.lineno) || 0,
+          })
+        })
+        window.addEventListener('unhandledrejection', function (e) {
+          window.__beacon({
+            t: 'REJECT',
+            msg: String((e && e.reason && e.reason.message) || (e && e.reason)),
+          })
+        })
+      })()
+    </script>
+    <script type="module" crossorigin src="/app.js"></script>
+    <link rel="stylesheet" crossorigin href="/app.css">
+  </head>
+  <body>
+    <!-- ★数字的唯一出口：服务端每次请求现读 kronos_accuracy.json 注入这个占位符
+         （agent/accuracy.py 的 fill()）。壳子本身**不含任何数字**。
+         React 启动时读它的 innerHTML 渲染进可见节点（保留 #disclaim .acc-line）。
+         ★这条有个新的假绿形状：壳里有数字 ≠ 用户看得见 —— 所以渲染层判据必须量
+         可见节点的高度，且要有一条注入专门删掉"读 acc-boot"那一步。
+         ★必须放在 <body> 里、不能放 <head>：div 出现在 head 里是非法的，
+         浏览器会**隐式地**把 </head><body> 补上，后面整段都被挪进 body ——
+         产物看着没错，但解析结果取决于浏览器的纠错行为，不是我们写的结构。 -->
+    <div id="acc-boot" hidden><!--ACCURACY--></div>
+
+    <div id="root"></div>
+    <!-- 添加暗色优先主题样式 -->
+    <!-- 添加奢华主题样式 -->
+
+  </body>
+</html>

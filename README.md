@@ -96,7 +96,7 @@
 ## 怎么跑
 
 ```bash
-cd /home/ylf/licai-agent
+cd licai-agent
 ./run.sh                      # 起在 http://127.0.0.1:8848
 ```
 
@@ -1708,7 +1708,7 @@ crawl4ai 会拉 playwright + chromium（数百 MB），而主 venv 是 uv 建的
 `.venv-collector`** 里，绝不进主环境：
 
 ```bash
-cd /home/ylf/licai-agent
+cd licai-agent
 python3 -m venv .venv-collector        # uv venv .venv-collector 也行
 .venv-collector/bin/pip install crawl4ai
 .venv-collector/bin/playwright install chromium
@@ -1733,7 +1733,7 @@ python3 -m venv .venv-collector        # uv venv .venv-collector 也行
 MediaCrawler 不在 PyPI 上，是一整个应用，clone 进 `third_party/`：
 
 ```bash
-cd /home/ylf/licai-agent
+cd licai-agent
 git clone https://github.com/NanmiCoder/MediaCrawler third_party/MediaCrawler
 cd third_party/MediaCrawler
 python3 -m venv .venv                  # 它自己的 venv
