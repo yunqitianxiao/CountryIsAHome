@@ -28,9 +28,11 @@ import accuracy                                                            # noq
 import checkup                                                             # noqa: E402
 import game                                                                # noqa: E402
 import graph_kb                                                            # noqa: E402
+import guide                                                               # noqa: E402
 import ledger                                                              # noqa: E402
 import llm                                                                 # noqa: E402
 import news                                                                # noqa: E402
+import siteguide                                                           # noqa: E402
 import tools                                                               # noqa: E402
 import uicopy                                                              # noqa: E402
 # ★`uicopy.humanize` 只用在**发给浏览器的 JSON 出口**上：把写给智能体的散文
@@ -44,7 +46,12 @@ app = Flask(__name__)
 # ★`index.html` 已经**不在这里**了：它现在是 SPA 的壳，从 web/dist 发（见 SPA_PAGES）。
 #   根目录那个 index.html（旧页面）改从 `/legacy` 发 —— 文件没动、也没删，
 #   只是换了条路由，迁移期里两边都能开。
-WHITELIST = {'guide.html', 'graph.html', 'graph_data.json', 'favicon.ico'}
+# ★`site_map.json` 进白名单的理由和 `graph_data.json` 一样，不是图省事：
+#   引导智能体讲的每一句"站上有几页 / 几个角色 / 多少词条"都出自这份文件，
+#   那就得让用户**自己能把它下载下来看**。一份没人能核的介绍，和一句
+#   无法证伪的免责声明是同一种东西。
+WHITELIST = {'guide.html', 'graph.html', 'graph_data.json', 'site_map.json',
+             'favicon.ico'}
 
 # ★新前端（React + Tremor）的构建产物。**故意不和 WHITELIST 混在一起**：
 #   WHITELIST 里的名字是从 HERE（仓库根）发的，而这两个只能从 web/dist 发。
@@ -130,6 +137,19 @@ def dash():
 @app.route('/agent')
 def agent_page():
     """智能体页。★搬迁之前 `/` 就是这么一页，内容一字未改，只是换了个地址。"""
+    return page('index.html', base=DIST)
+
+
+@app.route('/siteguide')
+def siteguide_page():
+    """引导智能体。★条目、卡片、提示词块**全部**来自 `site_map.json` ——
+    那份 JSON 是 `build_sitemap.py` 反向解析本站源码现算的，这里一个字都不手写。
+
+    ★这条路由**必须**是真路由：主页第一张卡指向它，而"能从主页点到的页
+      都要有服务端路由"是本站的纪律（判据在 `build_sitemap.py` 的端到端那条、
+      以及 `verify_agent.py` 的 HOME_LINKS 表）。少了它，用户点第一张卡
+      会跳到主页 —— 而且看起来像"点错了"，不像"少写了一条路由"。
+    """
     return page('index.html', base=DIST)
 
 
@@ -380,6 +400,79 @@ def chat():
                     mimetype='text/event-stream', headers={
         'Cache-Control': 'no-cache',
         'X-Accel-Buffering': 'no',               # 有反代时别攒着，攒了心跳就白发了
+        'Connection': 'keep-alive',
+    })
+
+
+@app.route('/api/siteguide', methods=['GET'])
+def api_siteguide():
+    """引导智能体选项卡的内容 + 这份结构此刻还准不准。
+
+    ★`freshness` 是**每次请求现算**的（把 JSON 里存的 `sha256` 跟磁盘现读的重算值
+      逐个比），不是读 `generated_at`。源码改过而没重跑 `build_sitemap.py` 时，
+      `generated_at` 照样是"刚刚"，只有 sha 比得出来。
+    ★它跟内容一起发出去，前端据此在页面上挂一条"这份目录可能过时"的提示 ——
+      **不静默降级**：智能体的介绍跟着源码漂了，用户得看得见。
+    """
+    secs = siteguide.sections()
+    fw = siteguide.freshness()
+    avail = siteguide.available()
+    # ★`ok` 取 **`available()`**，不取 `bool(secs)` —— 这两件事必须分开，
+    #   因为它们指向两句不同的人话：
+    #     · JSON 读不到（`available()` False）⇒ **这条通道取不到**，
+    #       前端显示 `Degraded`（"后端这条通道还没接上"）；
+    #     · JSON 读到了、但一张卡都拼不出来（`sections()` 空）⇒
+    #       **通道通着，是内容空**，前端显示 `Empty`。
+    #   取 `bool(secs)` 的话第二种会被说成"通道没接上" ——
+    #   那是把"我们读到了但没拼出东西"这句话，栽给一个根本没坏的后端。
+    #   （`api2.call` 的 `fromBody()` 把 `ok:false` 直接判成 `kind:'server'`。）
+    return jsonify({
+        'ok': avail,
+        'sections': secs,
+        'freshness': fw,
+        'stale_hint': ('' if fw['ok'] else
+                       ('这份站点目录与现在的页面已经不一致（有 %d 处改动还没收进目录）'
+                        ' —— 下面的话可能过时。' % len(fw['stale'])
+                        if fw['stale'] else
+                        '这份站点目录读不到，下面的话可能不是最新的。')),
+        # ★"这份知识在不在"这件事本身要发出去：拿不到时前端该说
+        #   "目录读不到"，而不是渲染一堆空卡（空卡看着像"这个站没有内容"）。
+        'available': avail,
+        # ★`ok:false` 时前端那句原因**优先用服务端给的这个**（`fromBody`）。
+        #   不给的话它会回落到"服务端说这条取不到" —— 那句话没告诉用户
+        #   到底缺的是哪个文件。
+        'msg': ('' if avail else
+                '站点目录读不到 —— 重新生成一次目录就好了。'),
+    })
+
+
+@app.route('/api/siteguide/chat', methods=['POST'])
+def api_siteguide_chat():
+    """站内引导的对话 —— 由**导览团**答，不是一个智能体一个人答完。
+
+    ★这一条路由的引擎换成了 `guide`（`agent/guide/`），但**出口协议没变**：
+      正文仍然以 `token` 事件出去，所以前端那条气泡一个字都不用改；
+      多出来的是 `guide_*` 那一族事件（谁在答、答了什么、多久、校对位查到什么），
+      前端拿它们铺"导览团"那一栏。**未知事件旧前端会静默忽略**
+      （`chat.ts` 的 `applyEvent` 落到最后一行原样返回），所以这是加法不是改协议。
+
+    ★为什么不是"`/api/chat` 多带一块 `extra=prompt_block()`"（上一版就是这么写的）：
+      那样写，"只答目录里有的"是一句**嘱咐**，模型可以不照做，而且不照做的时候
+      看不出来。换成导览团之后它是**结构** —— 每位导览员物理上只拿到自己那块
+      （`guide/slices.py`），主持手上一个数都没有，成稿里的数字由一个非 LLM 的
+      校对位（`guide/audit.py`）拿去目录里查出处。理由写在 `guide/__init__.py` 顶上。
+
+    ★`profile` 照旧不带：这一页回答的是"这个站有什么"，
+      个性化画像在这里只是噪声，还会让用户以为它在拿他的资产说事。
+    """
+    body = request.get_json(silent=True) or {}
+    q = (body.get('question') or '').strip()
+    if not q:
+        return jsonify({'error': '没问题内容'}), 400
+    return Response(guide.sse_stream(q, history=body.get('history')),
+                    mimetype='text/event-stream', headers={
+        'Cache-Control': 'no-cache',
+        'X-Accel-Buffering': 'no',
         'Connection': 'keep-alive',
     })
 

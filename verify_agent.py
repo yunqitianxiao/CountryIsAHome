@@ -847,7 +847,15 @@ def check_static(rep):
                        ('/portfolio', 200), ('/ledger', 200),
                        ('/inspect', 200),
                        ('/agents', 200), ('/intraday', 200), ('/linkage', 200),
-                       ('/collect', 200), ('/psych', 200), ('/dash', 200)]:
+                       ('/collect', 200), ('/psych', 200), ('/dash', 200),
+                       # ★2026-09-29 补：`/siteguide`（引导智能体）。这一条守的
+                       #   只是"这条路走得通"（和上面那一串同族：同一份 SPA 壳、
+                       #   各一条路由）。**页面里画了什么不归它管** —— 那是
+                       #   `check_siteguide` 的活（真 firefox 那一路）。
+                       #   ★两条都要有：只有这一条的话，"路由在、页面白屏"
+                       #   照样全绿（`/collect?probe=1` 和 `/linkage?probe=1`
+                       #   就是这么白屏的，见 `web/src/siteguide.ts` 顶上那段）。
+                       ('/siteguide', 200)]:
         s, body = http(path)
         ok &= rep.add('静态页 %s → %d（要 %d）' % (path, s, want), s == want,
                       '' if s == want else body[:120])
@@ -968,6 +976,27 @@ def check_links(rep):
     ok &= rep.add('卡式布局：主页面至少有 3 张卡（渲染出来且几何非零）',
                   cards >= 3 and len(nonzero) >= 3,
                   '数到 %s 张；前 5 张里几何非零的 %d 张' % (cards, len(nonzero)))
+
+    # ★★ **引导智能体卡真的排在主栏所有入口卡之前**（用户原话："放在主界面的第一个"）。
+    #   ★在这条之前，"它在第一个"只写在 `Home.tsx` 的注释里 ——
+    #     把那张卡挪到 `#agentCard` 后面，上面每一条**照样全绿**
+    #     （`siteGuideHref` 只证明 href 对，不证明它在哪儿）。
+    #   ★形状：与 `#agentCard` **同一列**的入口卡里，这一张的 `top` 严格最小。
+    #     限定同列的理由见 `probe.ts`：右栏那两张侧栏卡可能更靠上，
+    #     拿"全页最小"比会把一张正确的版面判红。
+    #   ★`col >= 3` 是**对照组**，不是装饰：`col == 1` 时"上面没人"是**空转**
+    #     （压根没有可比的对象），而不是"排在第一"。
+    #     这正是 ⑪ 那一类假绿 —— 空的样本集让断言恒真。
+    so = data.get('sgOrder') or None
+    if so is None:
+        ok &= rep.add('★主页：引导智能体卡排在主栏所有入口卡之前（"放在第一个"）', False,
+                      '探针没量到 `sgOrder`（`#siteGuideCard` 或 `#agentCard` 不在 DOM 里？）')
+    else:
+        above, col = so.get('above') or [], so.get('col') or 0
+        ok &= rep.add('★主页：引导智能体卡排在主栏所有入口卡之前（"放在第一个"）',
+                      not above and col >= 3,
+                      '它 top=%s；同列入口卡 %d 张；排在它前面的 %r'
+                      % (so.get('sg'), col, above))
     return ok
 
 
@@ -5450,6 +5479,17 @@ PAGE_VIEW = (('页面', (1400, 950)),)
 #   ★`/dash`（行情总览）**不在这张表里**，这是有意的：它没有主页卡，
 #     是子页之间的横向入口。别"顺手补上"——补一条就是补一条永远红的判据。
 HOME_LINKS = (
+    # ★2026-09-29 补：`/siteguide`（引导智能体）。位置在**第一行**，理由就是
+    #   这张表自己的规矩「位置照页面卡序」：`Home.tsx` 里 `a#siteGuideCard`
+    #   现在是**第一张入口卡**（在 `siteLead` 那块表态之后、`a#agentCard` 之前）。
+    #   ★`/onboarding` 那一行**没动** —— 它本来就占着头位（"从头串一遍"那张），
+    #     是这张表里唯一不按页序的一行。两张都在最前，谁先谁后不影响任何判据：
+    #     `check_links` 是**逐行独立**断言 `got == path`，顺序不在它射程内。
+    #     顺手把 onboarding 挪下去就是**改别人的读数**，收益为零。
+    #   ★这一张与 `agentsCard`/`intradayCard`/`assessCard` 三张**不同**：那三张
+    #     的注释记着「改成 `#` 不会红」（没进这张表）。这一张补上了锚 ——
+    #     `probe.ts` 的 `out.siteGuideHref` + 这一行。
+    ('/siteguide', 'siteGuideHref', '引导智能体卡'),
     ('/onboarding', 'guideHref', '新手引导卡'),
     ('/agent', 'agentHref', '智能体卡'),
     ('graph.html', 'graphHref', '知识图谱卡'),
@@ -6437,6 +6477,431 @@ def _form_criteria(rep, who, f, extra=(), why=''):
     return ok
 
 
+def check_siteguide(rep):
+    """引导智能体页（`/siteguide`）：选项卡上写的字**就是服务端给的那份目录**。
+
+    ★这一页的整个存在理由是「**反向解析**」那条链：
+
+        源码 ──build_sitemap.py──▶ site_map.json ──/api/siteguide──▶ 页面
+
+      所以判据必须落在**链条的末端**：页面上每一个字、每一个去向，逐条跟
+      `/api/siteguide` 这一趟真回的东西对账。对不上的话，说明前端**自己
+      手写了一份**介绍文字 —— 那就是第二份真源（改了页面只有一处跟着动，
+      另一处看着一模一样），本仓库对这件事零容忍。
+
+    ★前置那条"拿到载荷了吗"**故意不写**：理由与 `check_route`/`check_onboarding`
+      相同 —— 载荷整份没收到时，下面每一条都会各报一次自己的红，
+      再加一条"没收到"只是把同一件事说两遍；而**消失的判据**才是最危险的
+      （载荷取不到时，这一页的判据会集体不见，报告里长得像"这一页没做"）。
+      所以下面每一条的 detail 里都带上 `why`（`_PROBE_FAIL` 记的原因）。
+    """
+    ok = True
+    by = _gather_probe(_siteguide_url(), PAGE_VIEW)
+    d = (by or {}).get(PAGE_VIEW[0][0]) or {}
+    why = '' if d else '（★整份载荷都没收到：%s）' % _PROBE_FAIL.get(PAGE_VIEW[0][0], '没有记录')
+    sg = d.get('sg') or {}
+    if not sg:
+        # ★`sg` 缺席有两种成因，**必须分开报**：探针根本没跑到那一页（载荷空），
+        #   与探针跑到了、而 `#sgTabs` 不在（页面没渲染出来）。合成一句的话，
+        #   "整页白屏"会被当成"探针抽风"。
+        return rep.add('★引导智能体页：探针在 `/siteguide` 上收到了 `sg` 那一簇载荷',
+                       False,
+                       '载荷%s；sg=%r' % (why or '收到了', d.get('sg')))
+    # ★服务端那一侧：拿**同一个时刻**的真接口。不用 `site_map.json` 直接读文件 ——
+    #   读文件的话，前端走接口、判据走文件，两边一旦不同源（缓存、还没重启的服务），
+    #   判据绿着而用户看到的是另一份。
+    st, body = http('/api/siteguide')
+    try:
+        api = json.loads(body) if st == 200 else {}
+    except ValueError:
+        api = {}
+    secs = api.get('sections') if isinstance(api.get('sections'), list) else []
+    # ★接口这一侧自己坏掉时**不能静默降级成空表** —— 空表会让下面每条对账
+    #   都变成"0 == 0"，一路绿。所以先单独守一条。
+    ok &= rep.add('★引导智能体页：`/api/siteguide` 这一趟真的回了一份非空的站点目录',
+                  st == 200 and bool(api.get('ok')) and len(secs) >= 5,
+                  'HTTP %s；ok=%r；sections=%d 张；available=%r；msg=%r'
+                  % (st, api.get('ok'), len(secs), api.get('available'), (api.get('msg') or '')[:120]))
+    if not secs:
+        return ok
+
+    # ★① **灯的数量**：选项卡格数 = 服务端张数 + 1（多出来那格是"对话"）。
+    #   这一条是下面几条对账的**前提**：条数对不上时逐条比对会错位，
+    #   而错位之后的红字会指着一个无辜的卡骂。
+    tabs, panels = sg.get('tabs'), sg.get('panels')
+    ok &= rep.add('★引导智能体页：选项卡格数 == 服务端给的介绍卡张数 + 1（「对话」那格）',
+                  tabs == len(secs) + 1,
+                  '页面 %r 格（含对话）；服务端 %d 张；差 %r'
+                  % (tabs, len(secs), (tabs or 0) - (len(secs) + 1)))
+
+    # ★★「期望的那一串」只在这里造一次，下面 ③b/③c/④⑤⑥ 全用它 ——
+    #   每条判据各造一遍的话，改了一处忘了另一处就会出现"两条判据量的不是
+    #   同一份名单"，而它们看起来都合理。
+    #   ★`txt()` 在探针那一侧**把所有空白都剥掉**了，所以这一侧必须照同样的
+    #     规矩归一化再比 —— 不然 `乡e家 —— 基于…`（服务端）与页面上的
+    #     `乡e家——基于…` 会被判成两句不同的话。**那是尺子坏了，不是页面坏了**
+    #     （实测就这么假红过一次：h2 里那几个空格）。
+    #   ★`href` **不归一化** —— URL 里的空白是真的坏，而它走的是 `getAttribute`，
+    #     本来就没被剥过。
+    nows = lambda s: re.sub(r'\s+', '', s or '')                                  # noqa: E731
+    want_kick = [nows(s.get('kicker')) for s in secs]
+    want_title = [nows(s.get('title')) for s in secs]
+    want_id = [s.get('id') or '' for s in secs]
+    want_href = [s.get('href') or '' for s in secs]
+    got_kick = (sg.get('tabLabels') or [])[1:]        # 第 0 格是"对话"
+    got_title = sg.get('secTitles') or []
+    got_id = sg.get('secIds') or []
+    got_href = sg.get('secHrefs') or []
+
+    # ★② **每一格底下都有一张卡**。`TabsContent` 不 `forceMount` 的话，
+    #   非当前那几格**根本不挂载** —— 探针数出来的 `panels` 会掉成 0，
+    #   而页面上"看着很正常"（当前那格在）。这是那类"点别的灯才发现是空的"坏法。
+    ok &= rep.add('★引导智能体页：每一格选项卡底下都真挂着一张卡（不是切过去才发现是空的）',
+                  panels == len(secs) and panels >= 5,
+                  '面板 %r 张；服务端 %d 张%s' % (panels, len(secs), why))
+
+    # ★③ **「对话」亮着的时候，介绍卡一张都不该有几何**（它们得被藏起来）。
+    #   ★这一条是**实测补上来的**：`forceMount` 会把 radix 的 `hidden` 一起关掉
+    #   （`hidden: !(forceMount || isSelected)`）⇒ 八张卡本来**同时铺在屏幕上**，
+    #   "选项卡"这个交互等于不存在 —— 而 `data-state` 一个都没变，只看状态位的话
+    #   完全看不出来。（补这条之前，这个数量到 8。）
+    #   ⇒ 量高度，不量 `data-state`/`classList`（本仓库的老规矩）。
+    #   ★对面那一半在 ③c：切过去之后**恰好一张**（切过去的那张）有几何。
+    #     两条合起来才是"同一时刻屏幕上只有一格"这件事 —— 少任何一半，
+    #     "九格全铺开"和"一格都看不见"都各能骗过其中一条。
+    #   ★名字里**不写张数**（这里原来写的是"八张"）：卡数是服务端给的，
+    #     加一张卡这句话就悄悄变成假的，而判据本身还是对的 ——
+    #     数字只出现在 detail 里，由 `panels` 现算。
+    ok &= rep.add('★引导智能体页：亮着「对话」时，介绍卡一张都不该有几何（全被藏起来）',
+                  sg.get('visible') == 0,
+                  '有高度的 %r 张（要 0）；总 %r 张%s' % (sg.get('visible'), panels, why))
+
+    # ★③b **亮着的那盏灯 == 显示着的那一格**。两个答案来自两个**不同来源**：
+    #   `lit*` 读 radix 打的 `data-state`（"哪盏灯亮着"本来就是个状态问题），
+    #   `visSec*` 读几何（"哪一格真有地方"是渲染问题）。
+    #   单看任何一个都不够：状态位分不出"显示着"和"被 CSS 压成 0 高"，
+    #   而几何分不出"是哪一盏灯让它显出来的"。
+    lit_b, vis_b = sg.get('litBefore') or '', sg.get('visSecBefore') or ''
+    ok &= rep.add('★引导智能体页：进来时亮着的是「对话」（而且那张卡不在介绍卡那一族里）',
+                  lit_b == 'chat' and vis_b == '',
+                  '亮着 %r（要 chat）；显示着的介绍卡 %r（要空）%s' % (lit_b, vis_b, why))
+
+    # ★③c **点一下第二盏灯，真的换了，且换了之后屏幕上恰好是那一格**。
+    #   ★必须跟"点之前"比（`lit_b`）：只读点之后的状态的话，"灯点不动"
+    #     量出来的和"点对了"一模一样 —— 两边都是"亮着 chat"。
+    #     这一条就是**实测出来的那个坑**：radix 的灯认 `mousedown` 不认 `click`，
+    #     探针一开始只派 `click`，于是 `litAfter` 一直是 `chat`。
+    #   这是"选项卡式布局"这个交互**唯一**的证据。
+    tab2 = want_id[0]
+    ok &= rep.add('★引导智能体页：点第二盏灯 —— 亮着的换了，且屏幕上恰好是那一格',
+                  sg.get('tabAfter') == tab2 and sg.get('litAfter') == tab2
+                  and sg.get('visSecAfter') == tab2 and sg.get('visibleAfter') == 1
+                  and lit_b != sg.get('litAfter'),
+                  '点的是 %r；亮着 %r→%r；显示着 %r→%r；有几何 %r→%r%s'
+                  % (tab2, lit_b, sg.get('litAfter'), vis_b, sg.get('visSecAfter'),
+                     sg.get('visible'), sg.get('visibleAfter'), why))
+
+    # ★④⑤⑥ **逐条对账**：灯上的字、卡标题、卡的 id、卡的正文长度、
+    #   「去这一页 →」的去向 —— 全部照服务端这一趟回的东西。
+    #   ★顺序也在射程内（比的是**列表全等**，不是集合相等）：卡序变了
+    #     对账就该红，因为卡序是页面给人的读法。
+    #   ★★`txt()` 在探针那一侧**把所有空白都剥掉**了，所以这一侧必须照同样的
+    #     规矩归一化再比 —— 不然 `乡e家 —— 基于…`（服务端）与页面上的
+    #     `乡e家——基于…` 会被判成两句不同的话。**那是尺子坏了，不是页面坏了**
+    #     （实测就这么假红过一次：h2 里那几个空格）。★`href` **不归一化** ——
+    #     URL 里的空白是真的坏，而它走的是 `getAttribute`，本来就没被剥过。
+    ok &= rep.add('★引导智能体页：每一格灯上的字**就是**服务端给的 kicker（逐条、按序）',
+                  got_kick == want_kick and bool(want_kick),
+                  '页面 %r\n  服务端 %r%s' % (got_kick, want_kick, why))
+    ok &= rep.add('★引导智能体页：每张卡的**标题**就是服务端给的 title（逐条、按序）',
+                  got_title == want_title and bool(want_title),
+                  '页面 %r\n  服务端 %r%s' % (got_title[:4], want_title[:4], why))
+    ok &= rep.add('★引导智能体页：每张卡的 id 就是服务端给的 id（逐条、按序 —— 对不上说明卡序换了）',
+                  got_id == want_id and bool(want_id),
+                  '页面 %r\n  服务端 %r%s' % (got_id, want_id, why))
+    ok &= rep.add('★引导智能体页：「去这一页 →」的去向就是服务端给的 href（逐条、按序）',
+                  got_href == want_href and bool(want_href),
+                  '页面 %r\n  服务端 %r%s' % (got_href, want_href, why))
+
+    # ★⑦ **没有空卡**。九张卡的标题都渲染出来了、正文是空的 ——
+    #   这种坏法在上面任何一条上都看不出来。阈值取 60 字（实测每张都在几百字），
+    #   留的余量足够，而"正文整段没了"一定会掉到 60 以下。
+    lens = sg.get('secLens') or []
+    thin = [(want_kick[i] if i < len(want_kick) else '?', n)
+            for i, n in enumerate(lens) if n < 60]
+    ok &= rep.add('★引导智能体页：每张卡都真的写了正文（没有"标题在、内容是空"的空卡）',
+                  len(lens) == len(secs) and not thin,
+                  '长度 %r；太短的 %r%s' % (lens, thin, why))
+
+    # ★⑧ **聊天那一格真的是"大聊天界面"**（用户原话）。三个数一起量：
+    #   面板高、消息区高、开场那句在不在。
+    #   ★`msgsH` 的门槛来自用户要的"大"：`min-h-[46vh]` 在 1400×950 上是 ~437px。
+    #     取 300 是留了余量（视口差一档、字体差一点），而"塌成一条"必红。
+    chat_h, msgs_h = sg.get('chatH') or 0, sg.get('msgsH') or 0
+    ok &= rep.add('★引导智能体页：聊天那一格是**大的**（面板 ≥300px、消息区 ≥300px）',
+                  chat_h >= 300 and msgs_h >= 300,
+                  '面板 %r px；消息区 %r px%s' % (chat_h, msgs_h, why))
+    # ★⑨ 开场那句 + 「问问看」那一排。空的按钮行是**静默**的坏：
+    #   用户没得点，页面上也不报错。开场白同理 —— 一片空白的聊天框看着像"没加载完"。
+    ok &= rep.add('★引导智能体页：进来就有开场白，且「问问看」那一排不是空的',
+                  (sg.get('welcomeLen') or 0) > 0 and (sg.get('quick') or 0) >= 1
+                  and (sg.get('sendH') or 0) > 0,
+                  '开场白 %r 字；快捷问 %r 条；发送键高 %r px%s'
+                  % (sg.get('welcomeLen'), sg.get('quick'), sg.get('sendH'), why))
+
+    # ★⑩ **目录过时那条横幅**：`sg.stale`（横幅在不在）与 `staleHint`（服务端说
+    #   过时了没有）必须**同真同假**。只判"出现过"是半个判据 ——
+    #   横幅常年挂着（目录明明是最新的）和该出现时不出现，是两种不同的坏法，
+    #   而它们在前半条上长得一模一样。
+    stale_in_page = bool(sg.get('stale'))
+    stale_says = bool((api.get('freshness') or {}).get('ok') is False)
+    ok &= rep.add('★引导智能体页：目录与源码不一致时出横幅、一致时不出（两者同真同假）',
+                  stale_in_page == stale_says,
+                  '页面有横幅=%r；接口说目录过时=%r（freshness.ok=%r）%s'
+                  % (stale_in_page, stale_says, (api.get('freshness') or {}).get('ok'), why))
+    return ok
+
+
+# ── ★导览团（`/api/siteguide/chat` 背后那一套）────────────────────────
+#
+# ★这一组和上面 `check_siteguide` 量的**不是同一条链**，两条都得有：
+#   · `check_siteguide`：源码 → `site_map.json` → `/api/siteguide` → **页面上的卡**；
+#   · `check_guide`    ：**同一份目录** → 六个导览员各看一块 → 主持收口 → 校对位。
+#   卡片做得再对，"答话的那一层"仍然可以是一个模型把整份目录念一遍 ——
+#   而那正是这一组要拦住的东西（用户要的是引导智能体，技术槽写的是**多智能体**）。
+#
+# ★★这一组**全在进程内跑、不碰网络**（`run='mod'`）：导览团跑一趟是七次模型调用，
+#   真打网络的话这一组就是"几分钟、而且每次读数不一样"。可它要判的四件事
+#   （切片是结构、主持手上只有原话、校对位有牙齿、`done` 必发）**一条都不需要真模型**：
+#   离线桩**由 payload 驱动**（只念分给它的那段目录里出现过的那几个数），
+#   同一份输入永远给同一份输出。真模型那一层另有人肉验过的记录（见 README）。
+#
+# ★为什么"切片"要**两条**判据（一条动态、一条静态）：它们防的是两种漂法，
+#   而对方那一条在自己的射程里是绿的 ——
+#   · 动态那条防"**没切开**"：`part()` 被改成返回整份目录 ⇒ 导览员真看见了别人的数；
+#   · 静态那条防"**切开之后有人自己去拿**"：`_TEXT` 里的函数多读了一个键。
+#     这时 `part()` 是好的、切片声明没动，**动态判据完全看不见** ——
+#     是"哪几个键被读"漂了，不是"闸门坏了"。
+#   （这两条各自都要有注入能打红，见文件末尾那一组 `★导览团` 注入。）
+
+_GUIDE_STUB_OUT = lambda: os.path.join(tempfile.gettempdir(),           # noqa: E731
+                                       'licai_guide_payloads.jsonl')
+
+
+def _guide_role_of(sysmsg):
+    """桩落盘的 payload → 这一趟是谁在说话。★认法与桩**同一套约定**（抬头里的 id）。
+
+    ★不另立一套（比如按 role 出现的顺序数）：认错了角色，判据就会在**桩自己的错**
+      上打转，而那种红指向的东西是假的。
+    """
+    import guide
+    s = sysmsg or ''
+    for r in guide.roster.DOCENTS:
+        if ('（导览员 id：%s）' % r) in s:
+            return r
+    if ('（角色 id：%s）' % guide.roster.HOST) in s:
+        return guide.roster.HOST
+    return None
+
+
+def _guide_run(question='这个站一共有几页？'):
+    """离线跑一趟导览团 → `(events, payloads, result)`。
+
+    ★桩的开关是**调用时现读**的（`guide.TRANSPORT` 就是这么设计的），所以这里设
+      env 就够了、不必重载模块 —— 也正因为如此，本函数可以在同一个进程里跑很多遍。
+    ★跑完把 env **还原**（不是删掉了事）：判据之间共用同一个进程环境，
+      留一份"我的桩开着"的全局状态，正是这个仓库最不想见的那种副作用
+      （下一条判据读到的环境不是它以为的那一份 ⇒ 假红假绿都解释得通）。
+    """
+    import guide
+    out = _GUIDE_STUB_OUT()
+    with contextlib.suppress(OSError):
+        os.remove(out)
+    keep = {k: os.environ.get(k) for k in (guide.STUB_ENV, guide.STUB_OUT_ENV)}
+    os.environ[guide.STUB_ENV] = '1'
+    os.environ[guide.STUB_OUT_ENV] = out
+    evs = []
+    try:
+        res = guide.run(question, emit=evs.append)
+    finally:
+        for k, v in keep.items():
+            if v is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = v
+    payloads = []
+    try:
+        with open(out, encoding='utf-8') as f:
+            payloads = [json.loads(x) for x in f if x.strip()]
+    except (OSError, ValueError):
+        payloads = []
+    return evs, payloads, res
+
+
+def check_guide(rep):
+    """★导览团：目录切成六块分给六个人答，主持只转述，非 LLM 校对位按规则查数。
+
+    ★八条判据，一条都不量"模型答得好不好" —— 那是真模型那一层的事，人肉验过。
+      这里量的全是**结构**：谁看见了什么、谁手上有什么、规则位查得出什么、
+      事件流收没收口。结构坏了的话，答案看着照样专业。
+    """
+    import guide
+    import siteguide
+    S, R = guide.slices, guide.roster
+    ok = True
+    evs, payloads, res = _guide_run()
+    types = [e.get('type') for e in evs]
+    d = siteguide.raw()
+
+    # ① **`done` 必发，且在最后**。少一条 `done`，用户那边就是"页面永远在等"
+    #    （前端认的就是这个字），而服务端日志里什么都没有。
+    after = types[types.index('done') + 1:] if 'done' in types else []
+    ok &= rep.add('★导览团：`done` 一定发，而且是这一趟的最后一条（全部事件都在它之前）',
+                  bool(types) and types.count('done') == 1 and types[-1] == 'done'
+                  and not [t for t in after if str(t).startswith('guide_')],
+                  '事件 %d 条；`done` %d 次；最后一条 %r；它之后还有 %r'
+                  % (len(types), types.count('done'), types[-1] if types else None, after))
+
+    # ② **名册上每一位都发了言、都带时长**。★比的是**名册**（`roster.DOCENTS`），
+    #   不是"发出来的那几条"：拿后者当基准的话，"少跑了几位"会表现成
+    #   "样本变小了、但每一条都合格" —— 判据眼里是绿的（那一族错：样本集跟着
+    #   被测对象的状态走）。时长也要在：没有 `ms`，"谁卡住了"就答不出来。
+    says = {e.get('role'): e for e in evs if e.get('type') == 'guide_say'}
+    dends = [e for e in evs if e.get('type') == 'guide_docent_done']
+    miss = [r for r in R.DOCENTS if r not in says]
+    bad_ms = [r for r in R.DOCENTS
+              if not isinstance((says.get(r) or {}).get('ms'), int)
+              or (says[r]['ms'] < 0)]
+    ok &= rep.add('★导览团：名册上每一位都发了言，每一位都带时长（不是"发了几条就算跑过"）',
+                  not miss and not bad_ms and len(dends) == len(R.DOCENTS),
+                  '名册 %d 位；发过言的 %d 位；没说话的 %r；没带时长的 %r；收口事件 %d 条'
+                  % (len(R.DOCENTS), len(says), miss, bad_ms, len(dends)))
+
+    # ③ **切片是真的**：某位导览员那次调用的目录段里，没有**别的块的数**。
+    #   ★基准**不经过 `part()`** —— 被测的正是 `part()`（那道闸）。拿它现算基准的话，
+    #     注入把 `part` 改成"返回整份目录"时，"别块的数"这个集合会跟着一起变大、
+    #     甚至变空，判据就在**同一个方向上自我抵消**、照样绿。
+    #     （这条形状本仓库踩过：判据的基准不能让被测代码先碰过。）
+    #   ★★但**基准不经过 `part()` 还不够**：这一层有**两把锁**，`part()` 管"递过去的
+    #     册子有几页"、各个 `_*_text` 的手写 `d.get(...)` 管"实际翻开哪几页"，
+    #     任一把单独都在时别人的数就进不了 payload ⇒ **只放松 `part()` 这一条注入
+    #     是打不红本判据的**（payload 逐字不变）。本判据的否证落在"绕过切片器"上
+    #     （把整份目录直接当目录块发下去）—— GG3 那条注入就是它。
+    #     ⇒ 所以下面这个 `own` 池**同时**是 `part()` 与 `_TEXT` 两把锁的对照物；
+    #       `_TEXT` 那一把另有一条静态判据（⑧，`_TEXT` 只读 `OWNED` 里的键）。
+    #   ★只量 `【分给你的目录】` **那一段**，不量整份提示词：团纪律那几句里
+    #     有"2~4 句"这样的**句法数**，而 2/4 很可能正好落在别人的块里 ——
+    #     拿整份提示词去比，每一条都会因为纪律那句话假红。
+    #   ★`empty` 那一支也要红：目录段不见了说明分段约定变了，那时 `leaks` 恒空
+    #     （空样本恒真），不单独接住它，"整个目录段被删掉"会是绿的。
+    own = {r: S.catalog_numbers({k: d[k] for k in S.OWNED[r] if k in d})
+           for r in R.DOCENTS}
+    host_sys, per_role = '', {}
+    for p in payloads:
+        who = _guide_role_of(p.get('system'))
+        if who == R.HOST:
+            host_sys = p.get('system') or ''
+        elif who:
+            per_role[who] = p.get('system') or ''
+    leaks, empty = [], []
+    for r in R.DOCENTS:
+        seg = per_role.get(r, '')
+        if '【分给你的目录】' not in seg:
+            empty.append(r)
+            continue
+        seg = seg.split('【分给你的目录】', 1)[1]
+        foreign = set().union(*[own[x] for x in R.DOCENTS if x != r]) - own[r]
+        hit = sorted(set(S.numbers_in(seg)) & foreign)
+        if hit:
+            leaks.append((r, hit))
+    ok &= rep.add('★导览团：某位导览员那次调用的目录里，没有别的块的数（切片是结构不是嘱咐）',
+                  not leaks and not empty and bool(own.get('nav')),
+                  '切出目录的 %d/%d 位；越界的 %r；没有目录段的 %r；基准池 nav=%d 个'
+                  % (len(per_role), len(R.DOCENTS), leaks, empty, len(own.get('nav') or ())))
+
+    # ④ **主持拿到的就是原话**（逐字），不是摘要、不是"看过一眼"。摘要会把
+    #    "这个数是谁说的"磨掉，而那句话是校对位唯一的锚。
+    #   ★`len(nonempty) >= 2` 是**空样本的接住手**：一位都没说出话时 `lost` 必然是空的，
+    #     不写这一条，那一种情况在这条判据眼里就是绿的。
+    seg_h = host_sys.split(R.LINES_MARK)[-1] if R.LINES_MARK in host_sys else ''
+    said = {r: (res['docents'][r]['text'] or '') for r in R.DOCENTS}
+    nonempty = [r for r in R.DOCENTS if said[r].strip()]
+    lost = [r for r in nonempty if said[r].strip() not in seg_h]
+    ok &= rep.add('★导览团：主持拿到的就是各位导览员的原话（逐字，不是摘要）',
+                  R.LINES_MARK in host_sys and len(nonempty) >= 2 and not lost,
+                  '有原话的 %d 位；主持那一整段里找不到原话的 %r；原话段 %d 字'
+                  % (len(nonempty), lost, len(seg_h)))
+
+    # ⑤ **校对位有牙齿** —— 三个面一起才算：编的数要**被抓出来**、**被判为不合格**、
+    #   目录里真有的数不许冤枉。
+    #   ★`unsourced` 与 `ok` 必须**分别断言**：只断言 `unsourced == ['99991']` 时，
+    #     把 `'ok': not unsourced` 改成 `'ok': True`（GG5 那条注入）**读数一模一样** ——
+    #     集合照旧对，判决被写死了，判据却看不见。这正是本仓库那条老账
+    #     "断言的形状会放行它本该抓住的反转"：**量到了名字，没量到结论**。
+    #     ⚠ 所以这一条里 `unsourced` 是"集"，`ok` 是"判"，两个都要。
+    a_fake = guide.audit.check('这个站一共有 99991 页。', d)
+    terms = (d.get('kb') or {}).get('terms')
+    real = '知识图谱里有 %s 个词条。' % terms if terms else ''
+    a_real = guide.audit.check(real, d)
+    ok &= rep.add('★导览团：校对位抓得住编的数，且不冤枉目录里有的数（两个方向一起才算）',
+                  a_fake.get('unsourced') == ['99991'] and a_fake.get('ok') is False
+                  and bool(real)
+                  and a_real.get('ok') is True and a_real.get('unsourced') == [],
+                  '编的「99991」→ unsourced=%r ok=%r；目录里有的 %r → ok=%r unsourced=%r'
+                  % (a_fake.get('unsourced'), a_fake.get('ok'), real,
+                     a_real.get('ok'), a_real.get('unsourced')))
+
+    # ⑥ **主持没说成话时，校对位说"无从下手"**，不是"通过"。空文本量不出任何东西，
+    #   返回 True 就是**空样本恒真**那一族错（"整批消失"和"全都合格"读数一样）。
+    #   ★两个方向都判：因为"没输出"被说成绿（ok=True）和被说成红（ok=False）
+    #     是两种不同的坏法，而它们在前半条上都合格。
+    a_empty = guide.audit.check('', d)
+    ln_empty = guide.audit.line(a_empty)
+    ok &= rep.add('★导览团：主持一个字没说时，校对位说"无从下手"（不是"通过"）',
+                  a_empty.get('ok') is None and a_empty.get('n') == 0
+                  and '找不到出处' not in ln_empty
+                  and '都能在站点目录里找到出处' not in ln_empty,
+                  'ok=%r；n=%r；给界面那一行=%r'
+                  % (a_empty.get('ok'), a_empty.get('n'), ln_empty))
+
+    # ⑦ **给主持的定位块里一个数字都没有**。这是"主持的数只能来自导览员"那句话的
+    #   前提：定位块里只要有一个数，主持就有了一个**自己手上**的数的来源，
+    #   而它和"导览员说的数"在成稿里分不出来 —— ⑤ 那条判据的射程会当场少一半。
+    ov = S.overview_text(d)
+    digs = ''.join(re.findall(r'\d', ov))
+    ok &= rep.add('★导览团：给主持的定位块里一个数字都没有（"主持的数只能来自导览员"的前提）',
+                  bool(ov) and not digs,
+                  '定位块 %d 字；出现在里面的数字字符 %r' % (len(ov), digs))
+
+    # ⑧ **静态**：`_TEXT` 里每个函数读的键，都在 `OWNED` 分给它的那几个里。
+    #   ★这条读**源码文本**、按语法树取字符串字面量，不靠运行 —— 因为要防的正是
+    #     "多读了一个键但那个键这一趟刚好是空的"：运行时看不出来，代码里写得明明白白。
+    #   ★`bool(tops)` 是空样本的接住手：目录读不到时 `tops` 为空、`stray` 必然为空，
+    #     不写这一条，那一种情况在这条判据眼里是绿的。
+    #   ★`gone` 也要红：函数改了名/搬了家时这条判据会**安静地空转**，
+    #     而"判据还在、只是量不到东西了"比判据变红更坏。
+    with open(os.path.join(HERE, 'agent', 'guide', 'slices.py'), encoding='utf-8') as f:
+        tree = ast.parse(f.read())
+    fns = {n.name: n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef)}
+    tops = set((d or {}).keys())
+    stray, gone = {}, []
+    for role, fn in S._TEXT.items():
+        node = fns.get(getattr(fn, '__name__', ''))
+        if node is None:
+            gone.append(role)
+            continue
+        lits = {c.value for c in ast.walk(node)
+                if isinstance(c, ast.Constant) and isinstance(c.value, str)}
+        out = sorted((lits & tops) - set(S.OWNED.get(role) or ()))
+        if out:
+            stray[role] = out
+    ok &= rep.add('★导览团：`_TEXT` 每个函数只读 `OWNED` 里分给它的那几个键（静态）',
+                  bool(tops) and not gone and not stray,
+                  '目录顶层键 %d 个；函数找不到的 %r；越界读的 %r'
+                  % (len(tops), gone, stray))
+    return ok
+
+
 def _profile_store_ok(raw, known):
     """存储里那串 JSON 是不是一份**真填过**的画像，且值都来自 `known`（页面上那份选项表）。
 
@@ -6945,6 +7410,30 @@ def check_fault_anchors(rep):
     # ★唯一性单独一条：它和"在不在"是两件事（找不到必然不唯一，反过来不成立）。
     ok &= rep.add('  ↳ 而且锚点在目标文件里只出现一次（不然没说清打哪一处）',
                   not dup, '；'.join(dup) or '都不重复')
+    # ★第三个面：**这个脚本里有没有第二个同名定义**。
+    #   加这一条是因为它当天真的发生了，代价是一整轮自测：新写的 `_c_guide`
+    #   （导览团那八条）撞上了早就存在的 `_c_guide`（`guide.html` 那张静态页的
+    #   链接判据）。**后面的定义赢**，于是那八条注入跑去打另一组判据，
+    #   屏幕上打的是 `★guide.html 里读到了站内链接`、结论是「找不到判据」——
+    #   读起来像"判据没写"，实际是"**我写的八条判据一次都没跑过**"。
+    #   ★它与上面两条**互相独立**：锚点在不在、锚点唯不唯一，这两条全绿的时候
+    #     这一条照样可以是红的（我那八条注入的锚点当时都在、都不重复）。
+    #   ★只查**模块顶层**（`def` 与"赋值成 lambda/调用"的赋值）：函数体里的同名
+    #     局部变量是正常作用域，不是"被顶掉"。
+    defs = []
+    for node in tree.body:
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            defs.append(node.name)
+        elif isinstance(node, ast.Assign):
+            for t in node.targets:
+                if isinstance(t, ast.Name) and isinstance(node.value, (ast.Lambda, ast.Call)):
+                    defs.append(t.id)
+    cnt = {}
+    for n in defs:
+        cnt[n] = cnt.get(n, 0) + 1
+    shadow = sorted([k for k, v in cnt.items() if v > 1])
+    ok &= rep.add('★这个脚本里没有第二个同名定义（后面那个赢，前面那个静默作废）',
+                  not shadow, '顶层定义 %d 个；重名的 %r' % (len(defs), shadow))
     return ok
 
 
@@ -11952,6 +12441,16 @@ def reload_agent():
                  #     名单就都停在那一刻了。
                  'collector.store', 'collector.synth', 'collector.sources',
                  'collector',
+                 # ★导览团那一组（`check_guide`）是 `run='mod'` **在进程内直调**的
+                 #   （`guide.run()`，离线桩），所以这四个名字必须在名单里 ——
+                 #   漏了就是本函数开头写的那件事换个模块名重演：注入改的是磁盘、
+                 #   内存里那份旧代码一直留着，判据报"没变红"，看起来像判据是装饰。
+                 #   ★子模块要先于包（`guide/__init__.py` 里是 `from . import
+                 #   audit, roster, slices`）：只 reload 包的话，三个子模块还是旧对象。
+                 #   ★`siteguide` 也列上：`check_guide` 会直调 `siteguide.raw()`
+                 #   （那一份目录是六个导览员共用的唯一事源）。今天没有注入打它，
+                 #   但"哪天有人打它"是迟早的事，而漏登记的症状是静默的。
+                 'guide.slices', 'guide.audit', 'guide.roster', 'guide', 'siteguide',
                  # ★各包那个 `_probe.py` **故意不列**：它们是**独立跑的开发脚本**
                  #   （`python -m agent.<包>._probe`），产品代码一条都不 import
                  #   ⇒ 永远不在 `sys.modules` 里，列了也是空转（`.get` 返 None）。
@@ -11996,6 +12495,11 @@ _game_url = lambda: BASE + '/game?probe=1'                            # noqa: E7
 #   在 `?probe=1` 分支里现塞进 localStorage 的（`probeSeedPortfolio`），
 #   只有真跑到这一页上才会塞。落到别页上量到的是一份空组合。
 _portfolio_url = lambda: BASE + '/portfolio?probe=1'                  # noqa: E731
+# ★引导智能体页（`/siteguide`）同样要**自己那一份**载荷，而且理由比组合体检页
+#   还硬一层：这一页的**全部内容都是数据驱动的** —— 它自己去 `GET /api/siteguide`
+#   拿那份反向解析出来的站点目录，有几张卡、卡上写什么字，全看服务端这一趟
+#   回了什么。落到别页上量到的 `sg` 是 `null`，判据会**集体消失**（不是变红）。
+_siteguide_url = lambda: BASE + '/siteguide?probe=1'                  # noqa: E731
 
 
 def _c_static_links(sub, stub_out):
@@ -12214,6 +12718,36 @@ def _c_profile(sub, stub_out):
     return check_profile(sub)
 
 
+def _c_siteguide(sub, stub_out):
+    """引导智能体页那几条注入的判据。
+
+    ★为什么**只**跑 `check_siteguide`：它量的全是那一页自己的载荷
+      （`_siteguide_url()`）。打这个文件的注入**也会**把主页那张卡的
+      去向带坏 —— 但那件事由 `_c_home` 那一族（`check_links`）守，
+      这边再跑一遍只是多花一次 firefox 换同一句话。
+    """
+    return check_siteguide(sub)
+
+
+def _c_guide_team(sub, stub_out):
+    """导览团那一组注入的判据。
+
+    ★名字带 `_team`：`_c_guide` 早就被**另一个东西**占了 —— 那是 `guide.html`
+      这张静态页的链接判据（`check_guide_links`，`run='http'`）。两个都叫
+      `_c_guide` 的话，**后面的定义赢**（Python 就是这个语义），于是这八条注入
+      会去打那一组链接判据，报"找不到判据「…」"。实测就撞了这一次：
+      屏幕上打的 `★guide.html 里读到了站内链接` 就是它在跑。
+      ★这种撞名没有任何症状、也不报错 —— 只有"跑一下"才看得出来。
+
+    ★它**不看 `stub_out`**（那是议会/工具那条链的桩落盘文件）：导览团有自己的桩
+      开关和落盘文件（`guide.STUB_ENV` / `_GUIDE_STUB_OUT()`），自己的 `check_guide`
+      里现设现还原。把爹的参数塞进去只会让"这份 jsonl 是谁写的"变得说不清。
+    ★`run='mod'`：注入之后 `reload_agent()` 就够了，不必另起服务 ——
+      这一组一条 HTTP 都不发、一个浏览器都不开（理由见 `check_guide` 顶上）。
+    """
+    return check_guide(sub)
+
+
 def _c_forms(sub, stub_out):
     """表单那几条注入的判据：**两页都要跑**。
 
@@ -12271,6 +12805,11 @@ _AGENT = lambda: os.path.join(WEB_SRC, 'src', 'components', 'Agent', 'Agent.tsx'
 _SHELL = lambda: os.path.join(WEB_SRC, 'src', 'components', 'Shell', 'Shell.tsx')         # noqa: E731
 _SITE_BANNER = lambda: os.path.join(WEB_SRC, 'src', 'components', 'SiteBanner',
                                     'SiteBanner.tsx')                                     # noqa: E731
+# ★引导智能体页（`/siteguide`）那一条页面主体。★2026-09-29 起它是主页**第一张**
+#   入口卡的去向，所以这个文件同时被"主页那一族"（卡的去向）和"自己那一族"
+#   （选项卡上的字跟服务端对不对得上）两边的注入打 —— 打哪一处必须写清。
+_SITEGUIDE = lambda: os.path.join(WEB_SRC, 'src', 'pages', 'SiteGuide',
+                                  'SiteGuide.tsx')                                    # noqa: E731
 
 # ── ★guide.html 那两条 ─────────────────────────────────────────────────
 # ★这两条注入**不用重新构建**（guide.html 是每次请求现从磁盘读的，不走 web/dist），
@@ -12763,30 +13302,31 @@ fault('★把回测数字手抄成常量（不再从唯一出口取）',
 fault('★给 system_prompt 加一层缓存（每轮现拼退回成"只拼一次"）',
       '★不缓存：同一个进程里连调两次（中间换 JSON），第二次必须变',
       # ★这段锚点漂过**两次**了（阶段 3 给 `system_prompt` 加了 `profile` 参数；
-      #   组合体检这一轮又加了 `question`、还多了一个 `skills.framework_block` 块）。
-      #   漂了不会有人告诉你 —— `check_fault_anchors` 会红，但那时你已经分不清
-      #   是"锚点过时"还是"注入真坏"。改被测代码时**顺手把锚点跟着改**，是唯一省事的时机。
-      #   ★这条注入按定义就得**换掉整个函数体**（要把它变成"只拼一次"），
-      #     所以它没法像别处那样只用一小段子串当锚点 —— 每次改这个函数都得跟着改。
+      #   组合体检这一轮又加了 `question`、还多了一个 `skills.framework_block` 块；
+      #   引导智能体这一轮又加了 `extra`）。
+      #   ★★第三次漂的时候（`extra` 那一下）把**病根**一起改了：原来这条注入
+      #     锚的是**整个函数**（签名 + docstring + 函数体），于是"改这个函数的任何
+      #     一行"都会让锚点烂掉 —— 而它烂掉是**静默**的（`check_fault_anchors`
+      #     会红，但那时你已经分不清是"锚点过时"还是"注入真坏"）。
+      #     原来那句"这条注入按定义就得换掉整个函数体，没法只用一小段子串当锚点"
+      #     是**错的**：要的不是"换掉函数体"，是"让它只拼一次" —— 而那件事
+      #     可以在函数体**尾部**加一道守卫就做到，签名和 docstring 一个字都不用碰。
+      #   ⇒ 锚点从此只覆盖"拼的那三行 + 返回"，`extra` 这种**加参数**的改动
+      #     再也碰不到它（加参数改的是签名）。
+      #   ★守卫那两行改的是**函数已经算完的那一段**，语义与"整段算一次"等价。
       lambda: Fault(os.path.join(HERE, 'agent', 'llm.py'),
-                    'def system_prompt(history=None, profile=None, question=None):\n'
-                    '    """基础提示词 + 用户画像 + 本轮实况 + （落在组合诊断上时的）分析框架骨架。\n'
-                    '\n'
-                    '    ★每轮调用都重新拼，不缓存。★每个块都是**非空才出现**（`framework_block`\n'
-                    "      不触发就返回 ''，拼进去等于没拼）。\n"
-                    '    """\n'
-                    '    blocks = [profile_block(profile), skills.framework_block(question),\n'
-                    '              live_context(history)]\n'
+                    "    blocks = [profile_block(profile), extra,"
+                    " skills.framework_block(question),\n"
+                    "              live_context(history)]\n"
                     "    live = '\\n\\n'.join(b for b in blocks if b)\n"
                     "    return SYSTEM_PROMPT + ('\\n\\n' + live if live else '')",
-                    'def system_prompt(history=None, profile=None, question=None, _c={}):\n'
-                    '    """基础提示词 + 用户画像 + 本轮实况。★每轮调用都重新拼，不缓存。"""\n'
-                    "    if 'v' not in _c:\n"
-                    '        blocks = [profile_block(profile), skills.framework_block(question),\n'
-                    '                  live_context(history)]\n'
+                    "    if 'v' not in system_prompt.__dict__:\n"
+                    "        blocks = [profile_block(profile), extra,"
+                    " skills.framework_block(question),\n"
+                    "                  live_context(history)]\n"
                     "        live = '\\n\\n'.join(b for b in blocks if b)\n"
-                    "        _c['v'] = SYSTEM_PROMPT + ('\\n\\n' + live if live else '')\n"
-                    "    return _c['v']"),
+                    "        system_prompt.v = SYSTEM_PROMPT + ('\\n\\n' + live if live else '')\n"
+                    "    return system_prompt.v"),
       _c_prompt_fresh, 'mod')
 
 fault('★把"这次对话提到过哪些词条"那段删掉',
@@ -13013,7 +13553,6 @@ fault('★把页面说明条里"高低点是重建的"那句去掉（等于瞒�
 #   （卡在不在 / 宽度是不是算出来的 / 用没用涨跌色 / 说明条写没写清楚口径），
 #   一条注入只能验一条判据 —— 少一条，"那条判据是装饰"就没人知道。
 _FUNDCARD = lambda: os.path.join(WEB_SRC, 'src', 'components', 'FundCard', 'FundCard.tsx')  # noqa: E731
-_CHATCARD = lambda: os.path.join(WEB_SRC, 'src', 'components', 'ChatCard', 'ChatCard.tsx')  # noqa: E731
 
 fault('★分位卡不再渲染（kind 分发里把 fundamentals 摘掉）',
       '  ↳ ★demo：估值分位卡真的渲染出来了',
@@ -13436,7 +13975,6 @@ fault('★把「K线预测」徽章挪进 #badges（那盒子每 30 秒被整排
                        '          </div>'),
       _c_render, 'http')
 
-_CHATCARD = lambda: os.path.join(WEB_SRC, 'src', 'components', 'ChatCard', 'ChatCard.tsx')  # noqa: E731
 _PREDCARD = lambda: os.path.join(WEB_SRC, 'src', 'components', 'PredCard', 'PredCard.tsx')  # noqa: E731
 
 fault('★把「走小模型就打个标」那行调用删掉（回到"分不出哪句是模型说的"）',
@@ -14323,6 +14861,220 @@ fault('★画像存好之后不给回显（用户不知道存没存上）',
       lambda: WebFault(_PROFILE_PAGE(), 'setSaved(true)', 'setSaved(false)'),
       _c_profile, 'http')
 
+# ══ ★引导智能体页（`/siteguide`）════════════════════════════════════
+# 这一组守的是**反向解析那条链的末端**：源码 → `site_map.json` →
+# `/api/siteguide` → 页面。判据逐条拿页面上的字跟接口这一趟回的东西对账，
+# 所以每条注入干的都是"**前端自己另写一份**"这件事的各种形状。
+# ★名字统一带 `★引导智能体` 前缀，为的是 `LICAI_SELFTEST_ONLY` —— 它是纯子串，
+#   这一组单独重跑就是 `LICAI_SELFTEST_ONLY='★引导智能体'`。
+
+# ★SG1 那一格「去这一页 →」指向 `#`。判据量的是 **href 的值**，不是"按钮在不在"：
+#   卡还在、按钮还在、点下去什么也不发生 —— 这是"元素在不在"抓不住的那类坏法。
+fault('★引导智能体：「去这一页 →」指向 `#`（卡在、按钮在，用户到不了）',
+      '★引导智能体页：「去这一页 →」的去向就是服务端给的 href',
+      lambda: WebFault(_SITEGUIDE(), '<a href={s.href} data-k="sgGo"',
+                       '<a href="#" data-k="sgGo"'),
+      _c_siteguide, 'http')
+
+# ★SG2 灯上写的是**内部 id**，不是服务端给的 kicker。这是"前端自己造了一份名字"
+#   里最像样的一种：页面上照样有九个像样的短标签（`overview`/`council`…），
+#   排版、可点、切页全对，只有跟接口对账才看得出来。
+fault('★引导智能体：灯上写的是内部 id、不是服务端给的 kicker（自己造了一份名字）',
+      '★引导智能体页：每一格灯上的字**就是**服务端给的 kicker',
+      lambda: WebFault(_SITEGUIDE(), 'data-sec={s.id}>{s.kicker}</TabsTrigger>',
+                       'data-sec={s.id}>{s.id}</TabsTrigger>'),
+      _c_siteguide, 'http')
+
+# ★SG3 介绍卡那几块**不 `forceMount`**。这是最容易写出来的版本（少写一个布尔），
+#   而它的症状是**静默**的：当前那一格（"对话"）看着完全正常，八张介绍卡
+#   要**点过去**才发现是空的。探针数出来的 `panels` 会掉成 0。
+fault('★引导智能体：介绍卡那几块不 `forceMount`（切过去才发现是空的）',
+      '★引导智能体页：每一格选项卡底下都真挂着一张卡',
+      lambda: WebFault(_SITEGUIDE(), 'value={s.id} forceMount\n',
+                       'value={s.id}\n'),
+      _c_siteguide, 'http')
+
+# ★SG4 把"哪一格显示着"那条 CSS **顶掉** —— 九张卡**同时铺在屏幕上**。
+#   ★形状：判据量的是**几何**（有几块高度非零），不是 `data-state`。
+#     所以这条注入必须真的让那八块拿到高度，光改状态位是打不红的 ——
+#     这也正是这两条判据存在的理由（状态位分不出"显示着"和"压成 0 高"）。
+#   ★做法：往卡片里塞一条 `[data-state=inactive]{display:block!important}`。
+#     页面那条是 Tailwind 生成的 `.[data-state=inactive]:hidden`（specificity 0,2,0，
+#     普通声明），这条带 `!important` ⇒ 赢。而"CSS 里后一条 `!important` 盖掉前一条"
+#     正是这件事在生产里会发生的形状。
+#   ★打的是 ③ 那一条（"亮着对话时一张都不该有几何"）。★这条注入**同时**让 ③c
+#     红（屏幕上不再是"恰好那一格"），但认红的锚只挂在 ③ 上 —— ③c 那边有自己的
+#     对照物（SG6）。一个注入挂两条判据的话，"这条注入能打红它"这句话就分不清
+#     是打红了哪一条了。
+fault('★引导智能体：把"非当前那格藏起来"那条 CSS 顶掉（九张卡同时铺在屏幕上）',
+      '★引导智能体页：亮着「对话」时，介绍卡一张都不该有几何',
+      lambda: WebFault(_SITEGUIDE(), '<SecCard s={s} onAsk={askFromTab} />',
+                       '<style>{"[data-state=inactive]{display:block!important}"}</style>'
+                       '<SecCard s={s} onAsk={askFromTab} />'),
+      _c_siteguide, 'http')
+
+# ★SG6 点灯**没反应**（`onValueChange` 空实现）。★这条打的正是 ③c 的
+#   "跟点之前比"那一半：只读点之后的状态的话，"点不动"和"点对了"
+#   量出来一模一样（两边都是第一盏灯亮着 —— 因为压根没换）。
+#   ★这也是为什么 ③c 必须拿 `litBefore` 跟 `litAfter` 比。
+fault('★引导智能体：点选项卡没反应（亮着的灯不换）',
+      '★引导智能体页：点第二盏灯 —— 亮着的换了，且屏幕上恰好是那一格',
+      lambda: WebFault(_SITEGUIDE(), 'onValueChange={setTab}', 'onValueChange={() => {}}'),
+      _c_siteguide, 'http')
+
+
+# ★SG5 主页那张**引导智能体卡**的 href 改成 `#`。这条不归 `_c_siteguide` 管，
+#   它落在 `check_links` 那张表上（`HOME_LINKS` 新增的第一行）。
+#   ★为什么两条都要有：SG1 守的是"进去之后还能去别的页"，这一条守的是
+#     "**从主页进得去**"。入口断了的话，后面那九张卡做得再好也没人看得到。
+fault('★引导智能体：主页那张卡指向 `#`（进不去，后面的九张卡全白做）',
+      '主页面里有指向 /siteguide 的链接',
+      lambda: WebFault(_HOME(), 'href="/siteguide" id="siteGuideCard"',
+                       'href="#" id="siteGuideCard"'),
+      _c_home, 'http')
+
+# ★SG7 **那张卡被挪到了主栏别的入口卡后面**（"放在第一个"这件事没了）。
+#   ★这条守的是上面那条**位置**判据 —— 它和 SG5 打的是同一张卡、
+#     但两件事完全不同：SG5 打"**进不去**"（href 坏了），
+#     这条打"**在最后一个**"（href 全对、路由全通，只是它在下面）。
+#     没有这条的话，"位置"那条判据的可否证性就没有任何东西承载。
+#   ★做法：给它加一个 `position:relative; top:2000px` —— 位移**只动它自己**，
+#     后面的卡不回流（相对定位仍占原来的格子），于是它落到主栏每一张之后。
+#     2000px 是个**够大**的数、不是量出来的 185px：那 185 是"它和 `agentCard`
+#     之间的间距"，卡里的字改一行就变 —— 拿它当注入的常数，注入会随着
+#     正文长度悄悄失效（而失效是静默的：判据照样绿）。
+fault('★引导智能体：主页那张**位置**被挪到别的入口卡后面（"放在第一个"没了）',
+      '★主页：引导智能体卡排在主栏所有入口卡之前',
+      lambda: WebFault(_HOME(), 'href="/siteguide" id="siteGuideCard"',
+                       'href="/siteguide" id="siteGuideCard"'
+                       ' style={{ position: "relative", top: "2000px" }}'),
+      _c_home, 'http')
+
+# ══ ★导览团（`agent/guide/`）═════════════════════════════════════════
+# 这一组守的是「站内引导**不是一个人答完**」这件事本身。上面 SG1–SG7 守的是
+# 那一页的卡（反向解析那条链的末端），和这里**互不重叠**：卡全对、而答话的
+# 那一层退化成一个模型念整份目录，上面七条一条都不会红。
+# ★这一组全部 `run='mod'`：判据在**进程内**直调 `guide.run()`（离线桩驱动），
+#   所以注入要生效靠的是 `reload_agent()` 的名单 —— 那四个名字必须在名单里，
+#   见 `reload_agent` 里导览团那一段。
+# ★名字统一带 `★导览团` 前缀，单独重跑就是 `LICAI_SELFTEST_ONLY='★导览团'`。
+_GUIDE_INIT = lambda: os.path.join(HERE, 'agent', 'guide', '__init__.py')     # noqa: E731
+_GUIDE_SLICES = lambda: os.path.join(HERE, 'agent', 'guide', 'slices.py')     # noqa: E731
+_GUIDE_ROSTER = lambda: os.path.join(HERE, 'agent', 'guide', 'roster.py')     # noqa: E731
+_GUIDE_AUDIT = lambda: os.path.join(HERE, 'agent', 'guide', 'audit.py')       # noqa: E731
+
+# ★GG1 `done` **不发**了。这是整组里最要命的一条：用户那边是"页面永远在等",
+#   而服务端日志里干干净净 —— 少的那一个字节没有替代品。
+fault('★导览团：最后不发 `done`（用户那边永远在等，服务端日志里看不出）',
+      '`done` 一定发，而且是这一趟的最后一条',
+      lambda: Fault(_GUIDE_INIT(),
+                    "    emit({'type': 'done', 'ms': ms_total, 'steps': n_says[0]})",
+                    "    emit({'type': 'done_later', 'ms': ms_total, 'steps': n_says[0]})"),
+      _c_guide_team, 'mod')
+
+# ★GG2 **少跑一位导览员**（名册还在，池子里少给一个）。
+#   ★这条打的正是 ② 为什么拿**名册**当基准：拿"发出来的那几条"当基准的话，
+#     "少跑一位"会表现成"样本小了一点、每一条都合格"，判据眼里是绿的。
+#   ★target 收窄到 ②：少一位之后主持那段原话里也少了它 —— 但 ④ 只要求
+#     "非空的那些原话逐字在"（那位没说话，本来就轮不到它），所以 ④ 不跟着红。
+fault('★导览团：少跑一位导览员（名册六个人，只叫了五个）',
+      '名册上每一位都发了言',
+      lambda: Fault(_GUIDE_INIT(), '_pool(_docent, roster.DOCENTS)',
+                    '_pool(_docent, roster.DOCENTS[:5])'),
+      _c_guide_team, 'mod')
+
+# ★GG3 **切片这道闸坏了**：把整份目录当"分给你的目录"交给每一位导览员。
+#   这是"只答目录里有的"从**结构**退化成**嘱咐**的那一步 —— 提示词里那几条纪律
+#   原样都在，导览员看着还是"只看自己那块"，可它手上已经是整份目录了。
+#
+#   ★★这条注入的落点换过一次，换的原因本身是判据的一部分：
+#     原来打的是 `slices.part()`（让它返回整份目录），**判据不红**。原因是这一层
+#     有**两把锁**：`part()` 决定"递过去的那本册子里有几页"，各个 `_*_text` 里的
+#     手写 `d.get(...)` 决定"它实际翻开哪几页"。两把锁**任一把单独都在**时，
+#     别人的数进不了那份 prompt ⇒ 只放松一把是**看不见效果**的，payload 逐字不变。
+#     （这正是"没变红≠判据不行，是注入放错层"那一族：那一步要造成的影响，
+#      在那一层根本不存在 —— 另一把锁先挡住了。）
+#     所以 ③ 的否证只能落在"**绕过切片器**"这一步上：把 `text_of(...)` 直接换成
+#     整份目录的 dump。此时两把锁一起失效，越界的数真的进了 payload。
+#     ⚠ 反过来记一笔：`part()` 单独**不能被** ③ 否证，它是由静态那条 ⑧
+#       （`_TEXT` 只读 `OWNED` 里的键）与实际读数共同兜住的 —— 别把它当成"有注入守着的"。
+fault('★导览团：切片那道闸坏了（整份目录当"分给你的目录"发下去）',
+      '某位导览员那次调用的目录里，没有别的块的数',
+      lambda: Fault(_GUIDE_INIT(),
+                    "            txt = _ask_docent(role, q, history, slices.text_of(d, role), tr)",
+                    "            txt = _ask_docent(role, q, history, json.dumps(d, ensure_ascii=False), tr)"),
+      _c_guide_team, 'mod')
+
+# ★GG4 主持那段**原话被摘要掉**（`LINES_MARK` 还在、里面的话没了）。
+#   ★为什么这条要单列：摘要出来的那几句读起来更像人话、更顺，页面上一切正常，
+#     坏掉的只有**校对位唯一的锚** —— "这个数是谁说的"没了。
+fault('★导览团：主持拿到的不是原话（原话那一段被摘要掉）',
+      '主持拿到的就是各位导览员的原话',
+      lambda: Fault(_GUIDE_ROSTER(),
+                    "        sys_parts.append(LINES_MARK + '\\n' + '\\n'.join(body))",
+                    "        sys_parts.append(LINES_MARK + '\\n（导览员的话就从略了）')"),
+      _c_guide_team, 'mod')
+
+# ★GG5 校对位**恒绿**（`ok` 写死 True）。编的数照样放行 ——
+#   而"编了数被放行"和"没编数"在成稿上长得一模一样，这是这条判据存在的全部理由。
+fault('★导览团：校对位恒绿（成稿里编的数一律放行）',
+      '校对位抓得住编的数',
+      lambda: Fault(_GUIDE_AUDIT(), "        'ok': not unsourced,", "        'ok': True,"),
+      _c_guide_team, 'mod')
+
+# ★GG6 主持**一个字没说**时，校对位报"通过"而不是"无从下手"。
+#   ★这条单独列，是因为它不是 GG5 的同一个方向：GG5 是"该报红时报绿"，
+#     这条是"**没东西可量**时报绿" —— 空样本恒真那一族，形状完全不同。
+fault('★导览团：主持一个字没说时，校对位报"通过"（空样本恒真）',
+      '主持一个字没说时，校对位说',
+      lambda: Fault(_GUIDE_AUDIT(),
+                    "        return {'numbers': [], 'unsourced': [], 'n': 0, 'ok': None,",
+                    "        return {'numbers': [], 'unsourced': [], 'n': 0, 'ok': True,"),
+      _c_guide_team, 'mod')
+
+# ★GG7 给主持的**定位块里塞进一个数**。主持于是有了一个"自己手上"的数的来源，
+#   而它和导览员说的数在成稿里分不出来 —— ⑤ 那条判据的射程会当场少一半。
+fault('★导览团：给主持的定位块里塞进一个数（"主持的数只能来自导览员"破了）',
+      '给主持的定位块里一个数字都没有',
+      lambda: Fault(_GUIDE_SLICES(),
+                    "    return '\\n'.join(L)",
+                    "    L.append('一共 %d 页。' % len(d.get('pages') or []))\n"
+                    "    return '\\n'.join(L)"),
+      _c_guide_team, 'mod')
+
+# ★GG8 **静态那条的对照组**：`part()` 是好的（切片声明一个字没动），
+#   坏的是 `_TEXT` 里有人自己去多读了一个键。
+#   ★这条注入在 ③（动态，读 payload）眼里**必然是绿的** —— `part()` 把目录切好了，
+#     多读的那个键在切片之后根本不存在，导览员实际看不到它。
+#     所以它只能由 ⑧（静态，读源码）来抓：**这条注入就是 ⑧ 存在的理由**。
+fault('★导览团：`_TEXT` 里多读了一个别人的键（`part` 是好的，静态才看得见）',
+      '每个函数只读 `OWNED` 里分给它的那几个键',
+      lambda: Fault(_GUIDE_SLICES(),
+                    "    cards = d.get('home_cards') or []",
+                    "    cards = d.get('home_cards') or []\n    d.get('council')"),
+      _c_guide_team, 'mod')
+
+# ★GH1 **同一个名字被定义两次**（后面那个赢）。打的是 `check_fault_anchors` 的
+#   第三个面，而那条判据是**读 `__file__`** 现算的 —— 所以"打在 harness 自己身上"
+#   这一类注入在这里是够得着的（本仓库那条"注入到不了被测代码"的老账，
+#   前提是"被测代码从 sys.modules 里那份旧对象读"，而这条判据每次现读磁盘）。
+#   ★注入的形状要**净效果为零**：复制出来的那一行和原来那句一模一样，
+#     所以除了"重名"这件事，别处一条判据都不该跟着动。
+#   ★锚点取**那一段的注释行**，不取 `_GUIDE_SLICES = …` 那一行本身：
+#     拿被测的那一行当锚点的话，注入一落，**这条注入自己的锚点就出现两次** ——
+#     上面那条"锚点在目标文件里只出现一次"会跟着变红（同一件事报两遍，
+#     而且第二遍说的是注入自己造成的现象）。注释行不参与任何别的注入，干净。
+fault('★验证脚本自己：同一个名字被定义两次（后面那个赢，前面那个静默作废）',
+      '这个脚本里没有第二个同名定义',
+      lambda: Fault(os.path.abspath(__file__),
+                    "# ★名字统一带 `★导览团` 前缀，单独重跑就是"
+                    " `LICAI_SELFTEST_ONLY='★导览团'`。",
+                    "# ★名字统一带 `★导览团` 前缀，单独重跑就是"
+                    " `LICAI_SELFTEST_ONLY='★导览团'`。\n"
+                    "_GUIDE_SLICES = lambda: os.path.join(HERE, 'agent', 'guide',"
+                    " 'slices.py')"),
+      _c_anchors, 'mod')
+
 # ══ ★画像进提示词（阶段 3）═══════════════════════════════════════════
 # 这一组守的是"画像真的被用上了"这条链的**后半段**：浏览器把它带上来了（那是
 # 上面那两条渲染层判据的事），服务端到底有没有把它变成提示词里的字。
@@ -14352,12 +15104,16 @@ fault('★每一枪都捎一个画像键（没填过就捎个空的）',
 #   前端、接口、参数传递全对，只在最后一步少了个元素。
 #   ★锚点跟着 `skills.framework_block` 一起更新过：注入只许动**画像那一项**，
 #     框架那一项原样留着 —— 否则这条注入就同时验了两件事，红了说不清是哪个。
+#   ★这一轮（引导智能体加 `extra`）又跟着更新了一次：`blocks` 那条列表里多了一项
+#     `extra`，**注入要动的仍然只有 `profile_block(profile)` 那一项** ——
+#     `extra` 必须原样留在 `new` 里，删掉它的话这条注入就顺手验了另一件事。
 fault('★拼提示词时把画像整块漏掉（收了不用）',
       '★画像进了系统提示词',
       lambda: Fault(os.path.join(HERE, 'agent', 'llm.py'),
-                    'blocks = [profile_block(profile), skills.framework_block(question),\n'
+                    'blocks = [profile_block(profile), extra,'
+                    ' skills.framework_block(question),\n'
                     '              live_context(history)]',
-                    'blocks = [skills.framework_block(question),\n'
+                    'blocks = [extra, skills.framework_block(question),\n'
                     '              live_context(history)]'),
       _c_profile_prompt, 'mod')
 
@@ -14366,10 +15122,12 @@ fault('★拼提示词时把画像整块漏掉（收了不用）',
 fault('★不管用户填没填，都塞一段写死的画像进提示词',
       '★对照组：没填画像时，提示词里一个画像字眼都没有',
       lambda: Fault(os.path.join(HERE, 'agent', 'llm.py'),
-                    'blocks = [profile_block(profile), skills.framework_block(question),\n'
+                    'blocks = [profile_block(profile), extra,'
+                    ' skills.framework_block(question),\n'
                     '              live_context(history)]',
                     "blocks = [profile_block({'interests': ['债券', '黄金'],"
                     " 'risk': '进取'}),\n"
+                    '              extra,\n'
                     '              skills.framework_block(question),\n'
                     '              live_context(history)]'),
       _c_profile_prompt, 'mod')
@@ -14380,11 +15138,12 @@ fault('★不管用户填没填，都塞一段写死的画像进提示词',
 fault('★画像块被缓存住（换个画像再问，用的还是上一份）',
       '★画像也是每轮现拼的',
       lambda: Fault(os.path.join(HERE, 'agent', 'llm.py'),
-                    '    blocks = [profile_block(profile), skills.framework_block(question),\n'
+                    '    blocks = [profile_block(profile), extra,'
+                    ' skills.framework_block(question),\n'
                     '              live_context(history)]',
                     "    _c = system_prompt.__dict__\n"
                     "    _pb = _c.setdefault('pb', profile_block(profile))\n"
-                    '    blocks = [_pb, skills.framework_block(question),\n'
+                    '    blocks = [_pb, extra, skills.framework_block(question),\n'
                     '              live_context(history)]'),
       _c_profile_prompt, 'mod')
 
@@ -14597,6 +15356,19 @@ def main():
                 check_route(rep)
                 check_onboarding(rep)
                 check_profile(rep)
+                # ★引导智能体页（`/siteguide`）。挂在这儿而不是并进"主页"那一组：
+                #   它量的是**那一页自己**渲染出来的九张卡，要自己那一份载荷
+                #   （`_siteguide_url()`）。和上面两页一样只跑一档宽屏 ——
+                #   它判的是"选项卡上的字跟服务端对不对得上"，不是版式。
+                print('\n%s── 引导智能体（/siteguide）──%s' % (DIM, OFF))
+                check_siteguide(rep)
+                # ★导览团那一层（同一页里「对话」那一格答话的**是谁**）。
+                #   和 `check_siteguide` 挨着放，但**它一个浏览器都不用** ——
+                #   它量的是服务端那一套编排（切片 / 收口 / 校对位 / `done`），
+                #   离线桩驱动，跑一趟不到一秒。放在这里是因为读报告的人
+                #   该把这两条当成一件事的两半：**卡对** + **答话的是个团**。
+                print('\n%s── 导览团（目录切片 / 主持收口 / 校对位）──%s' % (DIM, OFF))
+                check_guide(rep)
                 # ★放在这三条**之后**是有意的：波纹是每一份载荷里都量了的，
                 #   这里读的三份载荷上面刚 gather 过，缓存命中、不多花 firefox。
                 print('\n%s── 点击反馈（圈状波纹）──%s' % (DIM, OFF))
@@ -15209,9 +15981,10 @@ fault('★组合体检：真持仓只认工具参数（请求上下文那份看�
 fault('★skill 框架没接进提示词（大模型不知道按什么流程组织回答）',
       '落在组合诊断上',
       lambda: Fault(os.path.join(HERE, 'agent', 'llm.py'),
-                    'blocks = [profile_block(profile), skills.framework_block(question),\n'
+                    'blocks = [profile_block(profile), extra,'
+                    ' skills.framework_block(question),\n'
                     '              live_context(history)]',
-                    'blocks = [profile_block(profile),\n'
+                    'blocks = [profile_block(profile), extra,\n'
                     '              live_context(history)]'),
       _c_skills, 'mod')
 

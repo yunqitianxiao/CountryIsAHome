@@ -110,6 +110,61 @@ export function Home({ probe = false, initial, initialRural }: {
                 ★★**不要再往这个文件里加回来。** 要加乡村元素，加到 `Shell.tsx` 那两处；
                   加在这个文件里就又是一块"插在元素之间"的东西。 */}
 
+            {/* ★★**引导智能体卡**（2026-09-29 加，用户点名"放在主界面的第一个"）——
+                它是这一站的第一张入口卡，所以摆在 `#agentCard` **之前**。
+                位置刻意留在 `#siteLead` **之后**：那块是"本站立场"，
+                `siteLead` 顶上那段注释已经拍了"立场要排在入口之前"这个决定
+                （"把立场放在入口之前，等于先回答那个问题再给门牌"），
+                所以"第一个"指的是**第一张入口卡**，不是绕过立场块。
+
+                ★它为什么值一整行、和 `agentCard` 同档尺寸（`p-6` + `text-lg`）：
+                这一页回答的是"这个站是什么"，而它下面那些卡全都是"进去干什么"。
+                主次得在版面上看得出来 —— 一个刚打开的人，第一个问题不是
+                "哪一页能算 K 线"，是"这站是干嘛的"。
+
+                ★底色仍用中性的 `--card`，**没有**跟 `agentCard` 一起用 `bg-accent/5`：
+                那个绿底是"全站唯一的第一入口"这个记号（见下面 `agentCard` 那段注释），
+                两张都染上就等于两张都不是第一入口了。这一张靠**位置**排在第一。
+
+                ★★**这一张的 href 有判据守着** —— 与 `agentsCard`/`intradayCard`/
+                `assessCard` 那三张不同（那三张的注释记着"改成 `#` 不会红"）。
+                这一张补上了锚：`probe.ts` 的 `out.siteGuideHref` +
+                `verify_agent.py` 的 `HOME_LINKS` 表项。理由：这一页是**主页第一张卡**
+                指向的地方，href 写错了整个引导智能体就没入口了 —— 那是这一版
+                最不能静默坏掉的一处。
+
+                ★★上面那句"靠**位置**排在第一"本来**只有注释在说** ——
+                把这张卡挪到 `#agentCard` 后面，href 那几条判据**照样全绿**
+                （它们只证明 href 对，不证明它在哪儿）。现在补上了锚：
+                `probe.ts` 的 `out.sgOrder`（它自己的 `top` + 同列入口卡的**张数**
+                + 比它更靠上的那些卡的名字）+ `check_links` 里那条
+                「排在主栏所有入口卡之前」，注入 `SG7` 打它。
+                ⇒ 位置从"注释里的承诺"变成"每次都被量的一件事"。
+
+                ★`card linkcard block` 这个**前缀照抄**：它同时是那条
+                「把 `card` 类名削掉」注入（`WebFault(..., 99)` 全文替换）的落点，
+                新卡带上这个前缀，那条注入的覆盖面就跟着变大，注入本身不用改。
+
+                ★记账：`cardRects` 只量 DOM 顺序**前 5 张** `.card`，插在这里
+                把第 3 个名额起整体后移一位（现在末位是 `intradayCard`）。
+                那条判据量的是"几何非零"（`w>40 且 h>20`），不是"是哪张卡"，
+                所以它照样绿 —— 但组成又变了一次，照上面几段的规矩记一笔。 */}
+            <a className="card linkcard block rounded-lg border border-[var(--rule)] bg-[var(--card)] p-6 no-underline"
+               href="/siteguide" id="siteGuideCard">
+              <div className="flex items-center justify-between gap-4">
+                <div className="min-w-0">
+                  <span className="kicker">引导智能体</span>
+                  <h2 className="mt-1 text-lg font-semibold text-[var(--ink)]">先花一分钟，看清这个站</h2>
+                  <p className="mt-1 text-sm text-[var(--ink-2)]">
+                    它把本站的结构<b>从源码里读了一遍</b> —— 有哪些页、每个模块是怎么算的、
+                    哪个数字有实测撑着、哪个数<b>它自己承认没证明</b>。
+                    进去是一个能问的对话界面，旁边几格是逐块介绍。
+                  </p>
+                </div>
+                <span className="kicker shrink-0 whitespace-nowrap" aria-hidden="true">开始 →</span>
+              </div>
+            </a>
+
             {/* ★主入口：智能体。
                 原来五张卡是**同一个模子**（`p-4` + `text-base` 标题 + 同样的底），
                 "智能体"这个真正的主入口和"知识图谱"长得一模一样 —— 这就是

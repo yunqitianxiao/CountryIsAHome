@@ -1,0 +1,1379 @@
+{
+  "generated_at": "2026-09-30T17:56:09",
+  "generator": "build_sitemap.py",
+  "site": {
+    "name": "乡e家",
+    "subtitle": "基于多智能体与金融知识图谱的县乡村家庭财富管理服务平台",
+    "banner": "人人可用打开就能用：不用注册、不用登录、不用装东西，也不用先懂金融术语。不填 Key 也能查词、看图谱、跑 K 线预测；想要会对话的助手，就填一把你自己的 DeepSeek Key —— 它只存在本机，页面上只显示掩码。这些词条和这张图，是按县乡村家庭的过法编的 —— 地里的收成、打工的汇款、老人的药钱、村里的人情往来，都在里面。",
+    "lead": "这个站不发理财建议 —— 它检验你收到的那条。群里转的、亲戚介绍的、理财经理发的，原文粘进「建议体检」，它告诉你：这段话承诺了什么、哪几句是红旗（每条都带你能自己核的原文）、哪几句看着像红旗、其实不算、你该问它什么，以及哪几件事它判不了。它不预测涨跌、不推荐任何产品、不替你判\"这是不是诈骗\" —— 判定走规则，每条都能追到词条原文。"
+  },
+  "sources": [
+    {
+      "path": "app.py",
+      "sha256": "1d81a90c337378f03c112f6fc3204ba0844fa1745afb9526516478f94c5f13bf",
+      "bytes": 57037,
+      "mtime": 1790762136
+    },
+    {
+      "path": "web/src/main.tsx",
+      "sha256": "a74f0fac583d3fde7620b73c481b63c0072cad2070beacfc06bcf0b73cac35fe",
+      "bytes": 19924,
+      "mtime": 1790688227
+    },
+    {
+      "path": "web/src/chrome.tsx",
+      "sha256": "8ebf659abbe3d6ca0323b3db3b5f8347c44ddb7338d7a793749c8a53866b1e63",
+      "bytes": 9651,
+      "mtime": 1790252903
+    },
+    {
+      "path": "web/src/components/Home/Home.tsx",
+      "sha256": "0e0bc6a77b72d0d138c3195df970672dd29e698e52e05a7af15190484680325d",
+      "bytes": 42119,
+      "mtime": 1790697550
+    },
+    {
+      "path": "web/src/components/SiteBanner/SiteBanner.tsx",
+      "sha256": "de0d71543f9b7b6a080835abfe44bbb85c68a287417d03af4a17b6aa5f30c5a4",
+      "bytes": 1730,
+      "mtime": 1790578950
+    },
+    {
+      "path": "web/src/components/Shell/Shell.tsx",
+      "sha256": "7edc98d526abf5a5472b527c3e337b741ae67d912240dbafe0a103409c536dba",
+      "bytes": 16187,
+      "mtime": 1790581206
+    },
+    {
+      "path": "agent/tools.py",
+      "sha256": "015c36ec36aa77c0b538d34f6d21df940563c1302e828fc54a5e00237c7fdcac",
+      "bytes": 108254,
+      "mtime": 1790576759
+    },
+    {
+      "path": "agent/runner.py",
+      "sha256": "5c7afc3c27636535a3c864fa816a6ba01b511f0a2611df5f18bbad6e11958b67",
+      "bytes": 22566,
+      "mtime": 1789974458
+    },
+    {
+      "path": "agent/agents/roles.py",
+      "sha256": "178c1e2e51f1a851c80d3538d0042539d5b1e458c3c6ab24f658a2104421a54f",
+      "bytes": 33848,
+      "mtime": 1790576765
+    },
+    {
+      "path": "agent/intraday/strategies.py",
+      "sha256": "2ee21e7c5a528c7671b29c519a57048de638f295543b795da3ccca720228f478",
+      "bytes": 52995,
+      "mtime": 1790080335
+    },
+    {
+      "path": "agent/intraday/__init__.py",
+      "sha256": "1dc9330cd7a0e244202e81e494b339554bc0a2be6dea7227b8505ffa2186e4fd",
+      "bytes": 26319,
+      "mtime": 1790070771
+    },
+    {
+      "path": "agent/news/config.py",
+      "sha256": "b1c11121d2a70da9c694b6da1f149ad60234c483e28322b33a7b18d2d2c68304",
+      "bytes": 1510,
+      "mtime": 1790058070
+    },
+    {
+      "path": "terms.json",
+      "sha256": "19a0e0fd8123fabf6a2017d38240f38ecd98136d220b4a6d8152529f58d1f97e",
+      "bytes": 64377,
+      "mtime": 1790757454
+    },
+    {
+      "path": "graph_data.json",
+      "sha256": "0ef42c98981c5558b0a4e63bd1e0f03784e83ce1ea535869a5d10bedda8210f6",
+      "bytes": 281696,
+      "mtime": 1790757462
+    },
+    {
+      "path": "kronos_accuracy.json",
+      "sha256": "2af04fe91fbab99c14d1c18b2c1e5f47b824460c397f661a43d0aec4f638e104",
+      "bytes": 20212,
+      "mtime": 1790757412
+    },
+    {
+      "path": "data/news_sources.json",
+      "sha256": "e9355f0f095ceaad7d5dc134107f3aa5555e1142737a28a43ac3431e96348652",
+      "bytes": 13207,
+      "mtime": 1790071341
+    }
+  ],
+  "missing_sources": [],
+  "pages": [
+    {
+      "path": "/agent",
+      "page_key": "agent",
+      "page": "智能体",
+      "title": "智能体 · 乡e家——县乡村家庭财富管理服务平台",
+      "client_route": true,
+      "server_route": true,
+      "server_note": "智能体页",
+      "methods": [
+        "GET"
+      ],
+      "in_home": true,
+      "home_card_id": "agentCard",
+      "kicker": "智能体",
+      "tagline": "有问题直接问它",
+      "intro": "查词、看行情、跑一段 K 线预测，它把结果翻成人话讲给你，还会告诉你它没把握的地方在哪儿。",
+      "in_feature_nav": false
+    },
+    {
+      "path": "/agents",
+      "page_key": "agents",
+      "page": "多智能体博弈",
+      "title": "多智能体博弈 · 乡e家——县乡村家庭财富管理服务平台",
+      "client_route": true,
+      "server_route": true,
+      "server_note": "多智能体博弈页",
+      "methods": [
+        "GET"
+      ],
+      "in_home": true,
+      "home_card_id": "agentsCard",
+      "kicker": "多智能体博弈",
+      "tagline": "九个角色吵一架，再给结论",
+      "intro": "多头、空头、基本面、技术面、舆情各有各的说法，风控官握着一票否决，投资经理最后汇总裁决。谁被点名谁就得回应，权重按这轮表现动态调。",
+      "in_feature_nav": true,
+      "nav_label": "多智能体博弈"
+    },
+    {
+      "path": "/assess",
+      "page_key": "assess",
+      "page": "风险测评",
+      "title": "风险测评 · 乡e家——县乡村家庭财富管理服务平台",
+      "client_route": true,
+      "server_route": true,
+      "server_note": "投资者风险测评页",
+      "methods": [
+        "GET"
+      ],
+      "in_home": true,
+      "home_card_id": "assessCard",
+      "kicker": "风险测评",
+      "tagline": "你的承受能力，由哪几件事决定",
+      "intro": "十道题问的是这笔钱占你资产多少、多久不用、你见过什么样的跌 —— 能核对的事，比「我觉得我能扛」实在。本站的教学口径，不是官方问卷。",
+      "in_feature_nav": true,
+      "nav_label": "风险测评"
+    },
+    {
+      "path": "/dash",
+      "page_key": "dash",
+      "page": "行情总览",
+      "title": "行情总览 · 乡e家——县乡村家庭财富管理服务平台",
+      "client_route": true,
+      "server_route": true,
+      "server_note": "行情总览",
+      "methods": [
+        "GET"
+      ],
+      "in_home": true,
+      "home_card_id": "dashCard",
+      "kicker": "行情总览",
+      "tagline": "一屏看完几只标的",
+      "intro": "A股、指数、港股、美股、加密各一只：最新收盘价、近 5/20/60 日涨跌、年化波动、区间位置，底下还有一条对比条。每个数都是当场取的，取不到就明说取不到。",
+      "in_feature_nav": false
+    },
+    {
+      "path": "/game",
+      "page_key": "game",
+      "page": "模拟投资",
+      "title": "模拟投资 · 乡e家——县乡村家庭财富管理服务平台",
+      "client_route": true,
+      "server_route": true,
+      "server_note": "模拟投资游戏",
+      "methods": [
+        "GET"
+      ],
+      "in_home": true,
+      "home_card_id": "gameCard",
+      "kicker": "模拟投资",
+      "tagline": "拿虚拟本金练手",
+      "intro": "本金是虚拟的（跟你在别处填的资产无关），行情是真抓的。回看三个月前买它会赚多少，或者今天建仓、一天天跟着走。",
+      "in_feature_nav": false
+    },
+    {
+      "path": "/inspect",
+      "page_key": "inspect",
+      "page": "建议体检",
+      "title": "建议体检 · 别人给你的理财建议，先拿它过一遍",
+      "client_route": true,
+      "server_route": true,
+      "server_note": "建议体检",
+      "methods": [
+        "GET"
+      ],
+      "in_home": true,
+      "home_card_id": "inspectCard",
+      "kicker": "建议体检",
+      "tagline": "别人给你的建议，先过一遍",
+      "intro": "把那条建议的原文粘进来：它承诺了什么、哪几句是红旗（带原文）、哪几句看着像红旗其实不算、你该问什么、哪几件事它判不了。不给预测、不推产品 —— 判定走规则，每条都能追到词条原文。",
+      "in_feature_nav": true,
+      "nav_label": "建议体检"
+    },
+    {
+      "path": "/intraday",
+      "page_key": "intraday",
+      "page": "分钟级策略",
+      "title": "分钟级策略 · 乡e家——县乡村家庭财富管理服务平台",
+      "client_route": true,
+      "server_route": true,
+      "server_note": "分钟级策略页（5/15/30）",
+      "methods": [
+        "GET"
+      ],
+      "in_home": true,
+      "home_card_id": "intradayCard",
+      "kicker": "分钟级策略",
+      "tagline": "这一分钟，量价在说什么",
+      "intro": "盘中量价怎么看：蜡烛、成交量、均价线和价值区共用一根横轴，每条策略信号都带一条你能自己动手复核的算术。方向不是胜率。",
+      "in_feature_nav": true,
+      "nav_label": "分钟级策略"
+    },
+    {
+      "path": "/ledger",
+      "page_key": "ledger",
+      "page": "预测台账",
+      "title": "预测台账 · 乡e家——县乡村家庭财富管理服务平台",
+      "client_route": true,
+      "server_route": true,
+      "server_note": "预测台账",
+      "methods": [
+        "GET"
+      ],
+      "in_home": true,
+      "home_card_id": "ledgerCard",
+      "kicker": "预测台账",
+      "tagline": "它过去猜得怎么样",
+      "intro": "每一次预测都记下来，到期拿真实行情打分。命中率永远和「无脑喊涨」并排显示 —— 没有基线的命中率说明不了任何事。在线记录和离线回填分开算，不混成一个数。",
+      "in_feature_nav": false
+    },
+    {
+      "path": "/onboarding",
+      "page_key": "onboarding",
+      "page": "新手引导",
+      "title": "新手引导 · 乡e家——县乡村家庭财富管理服务平台",
+      "client_route": true,
+      "server_route": true,
+      "server_note": "新手引导（交互式分步）",
+      "methods": [
+        "GET"
+      ],
+      "in_home": true,
+      "home_card_id": "guideCard",
+      "kicker": "新手引导",
+      "tagline": "第一次来？先看这页",
+      "intro": "这个站是干什么的、三步怎么用、Kronos 模型是什么、以及它做不到什么。一步步走完，顺便把你的投资兴趣和情况填一下。",
+      "in_feature_nav": false
+    },
+    {
+      "path": "/portfolio",
+      "page_key": "portfolio",
+      "page": "组合体检",
+      "title": "组合体检 · 乡e家——县乡村家庭财富管理服务平台",
+      "client_route": true,
+      "server_route": true,
+      "server_note": "组合体检",
+      "methods": [
+        "GET"
+      ],
+      "in_home": true,
+      "home_card_id": "portfolioCard",
+      "kicker": "组合体检",
+      "tagline": "看看这样配有没有问题",
+      "intro": "集中度、相关性聚集（哪几只是\"名字不同、走势一条线\"）、波动回撤、Beta 与压力情景。只算数、不给健康总分，算不了的明说算不了。",
+      "in_feature_nav": false
+    },
+    {
+      "path": "/profile",
+      "page_key": "profile",
+      "page": "我的画像",
+      "title": "我的画像 · 乡e家——县乡村家庭财富管理服务平台",
+      "client_route": true,
+      "server_route": true,
+      "server_note": "投资画像表单",
+      "methods": [
+        "GET"
+      ],
+      "in_home": true,
+      "home_card_id": "profileCard",
+      "kicker": "我的画像",
+      "tagline": "你填过的，智能体记得",
+      "intro": "{bits.join(\" ｜ \")} 点这里改",
+      "in_feature_nav": false
+    },
+    {
+      "path": "/siteguide",
+      "page_key": "siteguide",
+      "page": "引导智能体",
+      "title": "引导智能体 · 乡e家——县乡村家庭财富管理服务平台",
+      "client_route": true,
+      "server_route": true,
+      "server_note": "引导智能体",
+      "methods": [
+        "GET"
+      ],
+      "in_home": true,
+      "home_card_id": "siteGuideCard",
+      "kicker": "引导智能体",
+      "tagline": "先花一分钟，看清这个站",
+      "intro": "它把本站的结构从源码里读了一遍 —— 有哪些页、每个模块是怎么算的、哪个数字有实测撑着、哪个数它自己承认没证明。进去是一个能问的对话界面，旁边几格是逐块介绍。",
+      "in_feature_nav": false
+    },
+    {
+      "path": "graph.html",
+      "page_key": null,
+      "page": "知识图谱",
+      "title": "知识图谱",
+      "client_route": false,
+      "server_route": false,
+      "server_note": "",
+      "methods": [],
+      "in_home": true,
+      "home_card_id": "ruralCard",
+      "kicker": "县乡村",
+      "tagline": "家里的账，县里的事",
+      "intro": "正在取词表…",
+      "in_feature_nav": false
+    },
+    {
+      "path": "/collect",
+      "page_key": "collect",
+      "page": "采集监视",
+      "title": "采集监视 · 乡e家——县乡村家庭财富管理服务平台",
+      "client_route": true,
+      "server_route": true,
+      "server_note": "常驻采集器监视页",
+      "methods": [
+        "GET"
+      ],
+      "in_home": false,
+      "home_card_id": null,
+      "kicker": "",
+      "tagline": "",
+      "intro": "",
+      "in_feature_nav": true,
+      "nav_label": "采集监视"
+    },
+    {
+      "path": "/invest-sim",
+      "page_key": "investSim",
+      "page": "投资模拟可视化",
+      "title": "投资模拟可视化 · 乡e家——县乡村家庭财富管理服务平台",
+      "client_route": true,
+      "server_route": false,
+      "server_note": "",
+      "methods": [],
+      "in_home": false,
+      "home_card_id": null,
+      "kicker": "",
+      "tagline": "",
+      "intro": "",
+      "in_feature_nav": false
+    },
+    {
+      "path": "/legacy",
+      "page_key": null,
+      "page": "/legacy",
+      "title": "/legacy",
+      "client_route": false,
+      "server_route": true,
+      "server_note": "换栈之前的那个单页（根目录 index.html）",
+      "methods": [
+        "GET"
+      ],
+      "in_home": false,
+      "home_card_id": null,
+      "kicker": "",
+      "tagline": "",
+      "intro": "",
+      "in_feature_nav": false
+    },
+    {
+      "path": "/linkage",
+      "page_key": "linkage",
+      "page": "关联检测",
+      "title": "关联检测 · 乡e家——县乡村家庭财富管理服务平台",
+      "client_route": true,
+      "server_route": true,
+      "server_note": "关联检测页",
+      "methods": [
+        "GET"
+      ],
+      "in_home": false,
+      "home_card_id": null,
+      "kicker": "",
+      "tagline": "",
+      "intro": "",
+      "in_feature_nav": true,
+      "nav_label": "关联检测"
+    },
+    {
+      "path": "/luxury-dash",
+      "page_key": "luxuryDash",
+      "page": "奢华仪表板",
+      "title": "奢华仪表板 · 乡e家——县乡村家庭财富管理服务平台",
+      "client_route": true,
+      "server_route": false,
+      "server_note": "",
+      "methods": [],
+      "in_home": false,
+      "home_card_id": null,
+      "kicker": "",
+      "tagline": "",
+      "intro": "",
+      "in_feature_nav": false
+    },
+    {
+      "path": "/psych",
+      "page_key": "psych",
+      "page": "投资心理",
+      "title": "投资心理 · 乡e家——县乡村家庭财富管理服务平台",
+      "client_route": true,
+      "server_route": true,
+      "server_note": "投资心理页",
+      "methods": [
+        "GET"
+      ],
+      "in_home": false,
+      "home_card_id": null,
+      "kicker": "",
+      "tagline": "",
+      "intro": "",
+      "in_feature_nav": true,
+      "nav_label": "投资心理"
+    },
+    {
+      "path": "/research",
+      "page_key": "research",
+      "page": "行情特征研判",
+      "title": "行情特征研判 · 乡e家——县乡村家庭财富管理服务平台",
+      "client_route": true,
+      "server_route": true,
+      "server_note": "行情特征研判",
+      "methods": [
+        "GET"
+      ],
+      "in_home": false,
+      "home_card_id": null,
+      "kicker": "",
+      "tagline": "",
+      "intro": "",
+      "in_feature_nav": false
+    }
+  ],
+  "api": [
+    {
+      "path": "/api/accuracy",
+      "page_key": null,
+      "page": "/api/accuracy",
+      "title": "/api/accuracy",
+      "client_route": false,
+      "server_route": true,
+      "server_note": "回测数字的机器可读出口（页面是服务端填的，这个给外部/判据用）",
+      "methods": [
+        "GET"
+      ],
+      "in_home": false,
+      "home_card_id": null,
+      "kicker": "",
+      "tagline": "",
+      "intro": "",
+      "in_feature_nav": false
+    },
+    {
+      "path": "/api/agents",
+      "page_key": null,
+      "page": "/api/agents",
+      "title": "/api/agents",
+      "client_route": false,
+      "server_route": true,
+      "server_note": "",
+      "methods": [
+        "POST"
+      ],
+      "in_home": false,
+      "home_card_id": null,
+      "kicker": "",
+      "tagline": "",
+      "intro": "",
+      "in_feature_nav": false
+    },
+    {
+      "path": "/api/chat",
+      "page_key": null,
+      "page": "/api/chat",
+      "title": "/api/chat",
+      "client_route": false,
+      "server_route": true,
+      "server_note": "",
+      "methods": [
+        "POST"
+      ],
+      "in_home": false,
+      "home_card_id": null,
+      "kicker": "",
+      "tagline": "",
+      "intro": "",
+      "in_feature_nav": false
+    },
+    {
+      "path": "/api/collect/once",
+      "page_key": null,
+      "page": "/api/collect/once",
+      "title": "/api/collect/once",
+      "client_route": false,
+      "server_route": true,
+      "server_note": "",
+      "methods": [
+        "POST"
+      ],
+      "in_home": false,
+      "home_card_id": null,
+      "kicker": "",
+      "tagline": "",
+      "intro": "",
+      "in_feature_nav": false
+    },
+    {
+      "path": "/api/collect/ring",
+      "page_key": null,
+      "page": "/api/collect/ring",
+      "title": "/api/collect/ring",
+      "client_route": false,
+      "server_route": true,
+      "server_note": "",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "in_home": false,
+      "home_card_id": null,
+      "kicker": "",
+      "tagline": "",
+      "intro": "",
+      "in_feature_nav": false
+    },
+    {
+      "path": "/api/collect/status",
+      "page_key": null,
+      "page": "/api/collect/status",
+      "title": "/api/collect/status",
+      "client_route": false,
+      "server_route": true,
+      "server_note": "",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "in_home": false,
+      "home_card_id": null,
+      "kicker": "",
+      "tagline": "",
+      "intro": "",
+      "in_feature_nav": false
+    },
+    {
+      "path": "/api/game/quote",
+      "page_key": null,
+      "page": "/api/game/quote",
+      "title": "/api/game/quote",
+      "client_route": false,
+      "server_route": true,
+      "server_note": "模拟投资：按真实历史行情算一次「如果那天买了，现在赚多少」",
+      "methods": [
+        "POST"
+      ],
+      "in_home": false,
+      "home_card_id": null,
+      "kicker": "",
+      "tagline": "",
+      "intro": "",
+      "in_feature_nav": false
+    },
+    {
+      "path": "/api/game/recommend",
+      "page_key": null,
+      "page": "/api/game/recommend",
+      "title": "/api/game/recommend",
+      "client_route": false,
+      "server_route": true,
+      "server_note": "按投资兴趣给一份**建议**列表 —— 只推荐，不限制",
+      "methods": [
+        "POST"
+      ],
+      "in_home": false,
+      "home_card_id": null,
+      "kicker": "",
+      "tagline": "",
+      "intro": "",
+      "in_feature_nav": false
+    },
+    {
+      "path": "/api/game/research",
+      "page_key": null,
+      "page": "/api/game/research",
+      "title": "/api/game/research",
+      "client_route": false,
+      "server_route": true,
+      "server_note": "行情特征研判：给**截至买入日**的量价材料，一个字的未来都不给",
+      "methods": [
+        "POST"
+      ],
+      "in_home": false,
+      "home_card_id": null,
+      "kicker": "",
+      "tagline": "",
+      "intro": "",
+      "in_feature_nav": false
+    },
+    {
+      "path": "/api/inspect",
+      "page_key": null,
+      "page": "/api/inspect",
+      "title": "/api/inspect",
+      "client_route": false,
+      "server_route": true,
+      "server_note": "建议体检：绕开大模型直调规则引擎",
+      "methods": [
+        "POST"
+      ],
+      "in_home": false,
+      "home_card_id": null,
+      "kicker": "",
+      "tagline": "",
+      "intro": "",
+      "in_feature_nav": false
+    },
+    {
+      "path": "/api/intraday",
+      "page_key": null,
+      "page": "/api/intraday",
+      "title": "/api/intraday",
+      "client_route": false,
+      "server_route": true,
+      "server_note": "",
+      "methods": [
+        "POST"
+      ],
+      "in_home": false,
+      "home_card_id": null,
+      "kicker": "",
+      "tagline": "",
+      "intro": "",
+      "in_feature_nav": false
+    },
+    {
+      "path": "/api/key",
+      "page_key": null,
+      "page": "/api/key",
+      "title": "/api/key",
+      "client_route": false,
+      "server_route": true,
+      "server_note": "网页上填 key 的那条路 —— 写完立刻生效，不用重启，也不用去编辑 .env",
+      "methods": [
+        "DELETE",
+        "GET",
+        "POST"
+      ],
+      "in_home": false,
+      "home_card_id": null,
+      "kicker": "",
+      "tagline": "",
+      "intro": "",
+      "in_feature_nav": false
+    },
+    {
+      "path": "/api/kline",
+      "page_key": null,
+      "page": "/api/kline",
+      "title": "/api/kline",
+      "client_route": false,
+      "server_route": true,
+      "server_note": "",
+      "methods": [
+        "POST"
+      ],
+      "in_home": false,
+      "home_card_id": null,
+      "kicker": "",
+      "tagline": "",
+      "intro": "",
+      "in_feature_nav": false
+    },
+    {
+      "path": "/api/ledger",
+      "page_key": null,
+      "page": "/api/ledger",
+      "title": "/api/ledger",
+      "client_route": false,
+      "server_route": true,
+      "server_note": "台账：先惰性回填到期的，再把分区汇总发出去",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "in_home": false,
+      "home_card_id": null,
+      "kicker": "",
+      "tagline": "",
+      "intro": "",
+      "in_feature_nav": false
+    },
+    {
+      "path": "/api/linkage",
+      "page_key": null,
+      "page": "/api/linkage",
+      "title": "/api/linkage",
+      "client_route": false,
+      "server_route": true,
+      "server_note": "",
+      "methods": [
+        "POST"
+      ],
+      "in_home": false,
+      "home_card_id": null,
+      "kicker": "",
+      "tagline": "",
+      "intro": "",
+      "in_feature_nav": false
+    },
+    {
+      "path": "/api/linkage/anomaly",
+      "page_key": null,
+      "page": "/api/linkage/anomaly",
+      "title": "/api/linkage/anomaly",
+      "client_route": false,
+      "server_route": true,
+      "server_note": "",
+      "methods": [
+        "POST"
+      ],
+      "in_home": false,
+      "home_card_id": null,
+      "kicker": "",
+      "tagline": "",
+      "intro": "",
+      "in_feature_nav": false
+    },
+    {
+      "path": "/api/news",
+      "page_key": null,
+      "page": "/api/news",
+      "title": "/api/news",
+      "client_route": false,
+      "server_route": true,
+      "server_note": "资讯采集：绕开大模型直调 get_news",
+      "methods": [
+        "POST"
+      ],
+      "in_home": false,
+      "home_card_id": null,
+      "kicker": "",
+      "tagline": "",
+      "intro": "",
+      "in_feature_nav": false
+    },
+    {
+      "path": "/api/portfolio",
+      "page_key": null,
+      "page": "/api/portfolio",
+      "title": "/api/portfolio",
+      "client_route": false,
+      "server_route": true,
+      "server_note": "组合体检：绕开大模型直调",
+      "methods": [
+        "POST"
+      ],
+      "in_home": false,
+      "home_card_id": null,
+      "kicker": "",
+      "tagline": "",
+      "intro": "",
+      "in_feature_nav": false
+    },
+    {
+      "path": "/api/predict",
+      "page_key": null,
+      "page": "/api/predict",
+      "title": "/api/predict",
+      "client_route": false,
+      "server_route": true,
+      "server_note": "绕开大模型直调模型链路",
+      "methods": [
+        "POST"
+      ],
+      "in_home": false,
+      "home_card_id": null,
+      "kicker": "",
+      "tagline": "",
+      "intro": "",
+      "in_feature_nav": false
+    },
+    {
+      "path": "/api/probe",
+      "page_key": null,
+      "page": "/api/probe",
+      "title": "/api/probe",
+      "client_route": false,
+      "server_route": true,
+      "server_note": "",
+      "methods": [
+        "DELETE",
+        "GET",
+        "POST"
+      ],
+      "in_home": false,
+      "home_card_id": null,
+      "kicker": "",
+      "tagline": "",
+      "intro": "",
+      "in_feature_nav": false
+    },
+    {
+      "path": "/api/siteguide",
+      "page_key": null,
+      "page": "/api/siteguide",
+      "title": "/api/siteguide",
+      "client_route": false,
+      "server_route": true,
+      "server_note": "引导智能体选项卡的内容 + 这份结构此刻还准不准",
+      "methods": [
+        "GET"
+      ],
+      "in_home": false,
+      "home_card_id": null,
+      "kicker": "",
+      "tagline": "",
+      "intro": "",
+      "in_feature_nav": false
+    },
+    {
+      "path": "/api/siteguide/chat",
+      "page_key": null,
+      "page": "/api/siteguide/chat",
+      "title": "/api/siteguide/chat",
+      "client_route": false,
+      "server_route": true,
+      "server_note": "站内引导的对话 —— 由**导览团**答，不是一个智能体一个人答完",
+      "methods": [
+        "POST"
+      ],
+      "in_home": false,
+      "home_card_id": null,
+      "kicker": "",
+      "tagline": "",
+      "intro": "",
+      "in_feature_nav": false
+    },
+    {
+      "path": "/api/status",
+      "page_key": null,
+      "page": "/api/status",
+      "title": "/api/status",
+      "client_route": false,
+      "server_route": true,
+      "server_note": "状态徽章用：模型加载了没、key 配了没、词表多大",
+      "methods": [
+        "GET"
+      ],
+      "in_home": false,
+      "home_card_id": null,
+      "kicker": "",
+      "tagline": "",
+      "intro": "",
+      "in_feature_nav": false
+    },
+    {
+      "path": "/api/warmup",
+      "page_key": null,
+      "page": "/api/warmup",
+      "title": "/api/warmup",
+      "client_route": false,
+      "server_route": true,
+      "server_note": "后台预热模型，把第一次的加载成本挪到用户提问之前",
+      "methods": [
+        "POST"
+      ],
+      "in_home": false,
+      "home_card_id": null,
+      "kicker": "",
+      "tagline": "",
+      "intro": "",
+      "in_feature_nav": false
+    }
+  ],
+  "client_only": [
+    "/invest-sim",
+    "/luxury-dash"
+  ],
+  "home_cards": [
+    {
+      "id": "siteGuideCard",
+      "href": "/siteguide",
+      "kicker": "引导智能体",
+      "title": "先花一分钟，看清这个站",
+      "desc": "它把本站的结构从源码里读了一遍 —— 有哪些页、每个模块是怎么算的、哪个数字有实测撑着、哪个数它自己承认没证明。进去是一个能问的对话界面，旁边几格是逐块介绍。"
+    },
+    {
+      "id": "agentCard",
+      "href": "/agent",
+      "kicker": "智能体",
+      "title": "有问题直接问它",
+      "desc": "查词、看行情、跑一段 K 线预测，它把结果翻成人话讲给你，还会告诉你它没把握的地方在哪儿。"
+    },
+    {
+      "id": "agentsCard",
+      "href": "/agents",
+      "kicker": "多智能体博弈",
+      "title": "九个角色吵一架，再给结论",
+      "desc": "多头、空头、基本面、技术面、舆情各有各的说法，风控官握着一票否决，投资经理最后汇总裁决。谁被点名谁就得回应，权重按这轮表现动态调。"
+    },
+    {
+      "id": "intradayCard",
+      "href": "/intraday",
+      "kicker": "分钟级策略",
+      "title": "这一分钟，量价在说什么",
+      "desc": "盘中量价怎么看：蜡烛、成交量、均价线和价值区共用一根横轴，每条策略信号都带一条你能自己动手复核的算术。方向不是胜率。"
+    },
+    {
+      "id": "assessCard",
+      "href": "/assess",
+      "kicker": "风险测评",
+      "title": "你的承受能力，由哪几件事决定",
+      "desc": "十道题问的是这笔钱占你资产多少、多久不用、你见过什么样的跌 —— 能核对的事，比「我觉得我能扛」实在。本站的教学口径，不是官方问卷。"
+    },
+    {
+      "id": "guideCard",
+      "href": "/onboarding",
+      "kicker": "新手引导",
+      "title": "第一次来？先看这页",
+      "desc": "这个站是干什么的、三步怎么用、Kronos 模型是什么、以及它做不到什么。一步步走完，顺便把你的投资兴趣和情况填一下。"
+    },
+    {
+      "id": "graphCard",
+      "href": "graph.html",
+      "kicker": "知识图谱",
+      "title": "家庭财富管理词典图谱",
+      "desc": "255 个理财术语，按「属于 / 对比 / 前提」连成一张图。想知道一个词和别的词什么关系，来这儿。"
+    },
+    {
+      "id": "gameCard",
+      "href": "/game",
+      "kicker": "模拟投资",
+      "title": "拿虚拟本金练手",
+      "desc": "本金是虚拟的（跟你在别处填的资产无关），行情是真抓的。回看三个月前买它会赚多少，或者今天建仓、一天天跟着走。"
+    },
+    {
+      "id": "portfolioCard",
+      "href": "/portfolio",
+      "kicker": "组合体检",
+      "title": "看看这样配有没有问题",
+      "desc": "集中度、相关性聚集（哪几只是\"名字不同、走势一条线\"）、波动回撤、Beta 与压力情景。只算数、不给健康总分，算不了的明说算不了。"
+    },
+    {
+      "id": "ledgerCard",
+      "href": "/ledger",
+      "kicker": "预测台账",
+      "title": "它过去猜得怎么样",
+      "desc": "每一次预测都记下来，到期拿真实行情打分。命中率永远和「无脑喊涨」并排显示 —— 没有基线的命中率说明不了任何事。在线记录和离线回填分开算，不混成一个数。"
+    },
+    {
+      "id": "inspectCard",
+      "href": "/inspect",
+      "kicker": "建议体检",
+      "title": "别人给你的建议，先过一遍",
+      "desc": "把那条建议的原文粘进来：它承诺了什么、哪几句是红旗（带原文）、哪几句看着像红旗其实不算、你该问什么、哪几件事它判不了。不给预测、不推产品 —— 判定走规则，每条都能追到词条原文。"
+    },
+    {
+      "id": "dashCard",
+      "href": "/dash",
+      "kicker": "行情总览",
+      "title": "一屏看完几只标的",
+      "desc": "A股、指数、港股、美股、加密各一只：最新收盘价、近 5/20/60 日涨跌、年化波动、区间位置，底下还有一条对比条。每个数都是当场取的，取不到就明说取不到。"
+    },
+    {
+      "id": "profileCard",
+      "href": "/profile",
+      "kicker": "我的画像",
+      "title": "你填过的，智能体记得",
+      "desc": "{bits.join(\" ｜ \")} 点这里改"
+    },
+    {
+      "id": "ruralCard",
+      "href": "graph.html",
+      "kicker": "县乡村",
+      "title": "家里的账，县里的事",
+      "desc": "正在取词表…"
+    }
+  ],
+  "feature_nav": [
+    {
+      "href": "/agents",
+      "label": "多智能体博弈"
+    },
+    {
+      "href": "/intraday",
+      "label": "分钟级策略"
+    },
+    {
+      "href": "/linkage",
+      "label": "关联检测"
+    },
+    {
+      "href": "/collect",
+      "label": "采集监视"
+    },
+    {
+      "href": "/psych",
+      "label": "投资心理"
+    },
+    {
+      "href": "/assess",
+      "label": "风险测评"
+    },
+    {
+      "href": "/inspect",
+      "label": "建议体检"
+    }
+  ],
+  "agent": {
+    "tools": [
+      {
+        "name": "search_terms",
+        "description": "在理财知识图谱里查术语（255 个词条）。用户问\"什么是XX\"\"XX和YY什么区别\"这类概念问题时用它。只读本地词表，不联网、不耗算力，优先用它。"
+      },
+      {
+        "name": "walk_graph",
+        "description": "顺着图谱关系走一步：属于（上位概念）/对比（易混概念）/前提（学它之前该先懂什么）。用来回答\"这跟什么有关\"\"该先学什么\"。"
+      },
+      {
+        "name": "get_kline",
+        "description": "取某个标的的历史日 K 数据摘要（最新价、区间涨跌幅、波动率、区间高低点）。支持 A 股 600519 / 指数 sh000300 / ETF 510300 / 港股 00700 / 美股 AAPL / 加密 BTC。用户问到具体价格的走势时用它。这一步只取数、不跑模型，很快。"
+      },
+      {
+        "name": "get_fundamentals",
+        "description": "取 **A 股个股** 的基本面：估值（PE/PB/市值/PEG/历史分位）、财务比率（ROE/资产负债率/营收与净利增速/毛利率/流动比率）、行业与主营。用户问\"这股票贵不贵\"\"基本面怎么样\"\"什么行业\"\"ROE 多少\"这类问题时用它。只取数、不跑模型，很快，且一小时内有缓存。★ETF/指数/港股/美股**没有**这些数据，调用会明确失败 —— 那时不要编数字。"
+      },
+      {
+        "name": "predict_kline",
+        "description": "用 Kronos 小模型预测未来若干根 K 线。★运行一次要几十秒（GPU），所以只在用户明确想看\"接下来会怎么走\"时才调用，不要和 get_kline 一起无脑调。返回 N 条条件采样路径的中心线 + 它们的极差区间，不含基本面信息。★摘要里的 `spread.withheld=true` 表示**方向弃答**（N 条路径没有系统偏向），那时**不许**说涨或跌，要明说模型在这只上没有一致看法。"
+      },
+      {
+        "name": "get_news",
+        "description": "取资讯/新闻：**只采不析**。用户问\"最近有什么消息\"\"XX 的新闻\"\"市场在发生什么\"时用它。symbol（某只标的的新闻）和 query（某个话题，如\"降息\"）**至少给一个**，都不给会明确失败。返回条目带 ts（可能为空=上游没给时间）、url、heat（同题被几个源报道，>1 说明多源在说同一件事，可当热度信号）。★degraded 非空=有源挂了但别的源还有货，照实用 items、可顺带提一句哪些源没取到。★失败（NO_NEWS）时**直说\"新闻我没取到\"**，绝不许凭记忆编新闻——你的训练数据截止于过去，\"你记得的新闻\"对今天的用户就是假消息。"
+      },
+      {
+        "name": "analyze_portfolio",
+        "description": "给**用户当前的持仓**做一次体检：集中度（前五大/HHI）、相关性聚集（哪几只\"名字不同、走势是一条线\"）、年化波动与最大回撤、有效分散比率 EDR、相对沪深300 的 Beta、以及按 Beta 外推的压力情景。用户问\"我的组合怎么样\"\"这样配有没有问题\"\"分散了吗\"时用它。★**不传 holdings 就是体检他真实的组合**（持仓在浏览器里，本站服务端不保存，由请求带上来）—— 绝大多数情况就该这样调，不要自己去猜他的持仓。只有用户问**假设**（\"如果我再加一只茅台呢\"）时才用 holdings 传一组假设的，传了会在结果里标成\"假设组合\"。★这里只算数、**不给健康总分**（流动性/成本效率本站没有数据源）。"
+      },
+      {
+        "name": "plan_goal",
+        "description": "算\"按他每月能投的钱、打算放的年限，攒到目标金额的概率\"。用户问\"我这样攒够 X 万要多久\"\"能达到吗\"\"每月投 Y 够不够\"时用它。★它把**历史上真实发生过的月份重排**很多遍来数概率，**不是预测**，也不是拿模型外推——历史分布不等于未来分布，回答时必须原样说出这句。★它推的是**沪深300**的历史（`proxy` 字段），**不是他手里那个组合**，说的时候必须点明这个差别。★概率是**两端一对**（画像档位的两端各算一次），**没有中点**：报告时要把这个区间一起给出来，不要自己取中间一个数。★没填过画像就会失败（`NO_PROFILE`）——那时让他先去填，**不要**替他假设金额。"
+      },
+      {
+        "name": "analyze_intraday",
+        "description": "分钟级量价分析（5/15/30 分钟）：开盘区间突破、VWAP 偏离、相对成交量 RVOL、Volume Profile（POC/价值区）、量价背离、短周期动量、布林挤压、多周期共振、ATR 止损目标位、时段效应。用户问\"今天盘中怎么样\"\"短线有没有机会\"\"5 分钟/15 分钟/30 分钟上是什么形态\"\"量能如何\"时用它。只取数+算指标，不跑模型，较快。★`agree` 分歧大时不要挑一边说；`confidence` 低就等于没有结论。★数据不够的策略会整条不出现并写进 `errors` —— 不许用\"技术面偏强\"填空。★先看 `data_source`：**不是 `datasource` 开头就说明这一帧的分钟线是合成/占位的（价位与成交量都是造出来的）**，那种情况下一个数字都不许当市场事实说，要么明说取不到真分钟线，要么什么都别说。"
+      },
+      {
+        "name": "scan_linkage",
+        "description": "关联检测：扫全市场找**异动**（量比/涨跌幅的 z-score 离群），并列出异动标的所属板块与同板块/高相关的其它个股。用户问\"今天什么在异动\"\"XX 异动了，跟它相关的是什么情况\"\"哪些板块一起动了\"时用它。★这个能力的口径是「注重采集、弱化分析」：`collected`（哪个源、几行、几毫秒、什么错）是主角，要如实转述；`links` 只有最朴素的一层（涨跌幅、量比、滚动相关含窗口与样本数、同板块），**不写论述、不给买卖建议、不做预测**。★**慢**：默认 `top=10` 在真源上要几十秒（它要挨个调板块成员、再对每只异动做高相关深挖）。用户催的话把 `top` 说小一点，别在别的工具旁边无脑并调。★摘要放不下时会从尾部砍（`shown.dropped_for_budget` 是砍掉的条数），**完整榜单在数据通道和页面上** —— 转述时按摘要里真有的条数说，不许把榜单说成完整的。"
+      },
+      {
+        "name": "debate",
+        "description": "召集 9 个智能体开会博弈（多头/空头/基本面/技术/舆情/独立风控/投资经理/知识图谱导师/投资心理），两轮辩论 + 动态权重 + 风控官可否决。**只在用户明确要求多人讨论时用它** —— 比如\"让几个分析师辩论一下\"\"多智能体怎么看\"\"开个会讨论下\"。★很慢（几十秒，9 个角色各一次大模型调用），不要和别的工具一起无脑调。★`veto` 非空 = 风控官否决了那个方向，**转述时必须体现降级或风险提示**，不许把被否决的方向当结论说。"
+      }
+    ],
+    "tool_count": 11,
+    "registry_only": [],
+    "schema_only": []
+  },
+  "council": {
+    "roles": [
+      {
+        "key": "bull",
+        "name": "多头分析师",
+        "icon": "🐂",
+        "directional": true
+      },
+      {
+        "key": "bear",
+        "name": "空头分析师",
+        "icon": "🐻",
+        "directional": true
+      },
+      {
+        "key": "fundamental",
+        "name": "基本面分析师",
+        "icon": "📊",
+        "directional": true
+      },
+      {
+        "key": "technical",
+        "name": "技术分析师",
+        "icon": "📈",
+        "directional": true
+      },
+      {
+        "key": "sentiment",
+        "name": "舆情分析师",
+        "icon": "📰",
+        "directional": true
+      },
+      {
+        "key": "risk",
+        "name": "独立风控官",
+        "icon": "🛡️",
+        "directional": false
+      },
+      {
+        "key": "pm",
+        "name": "投资经理",
+        "icon": "🎯",
+        "directional": true
+      },
+      {
+        "key": "kg_tutor",
+        "name": "知识图谱解释官",
+        "icon": "🗺️",
+        "directional": false
+      },
+      {
+        "key": "psych",
+        "name": "投资心理顾问",
+        "icon": "🧠",
+        "directional": false
+      }
+    ],
+    "role_count": 9
+  },
+  "intraday": {
+    "periods": [
+      5,
+      15,
+      30
+    ],
+    "strategies": [
+      {
+        "id": "orb_break",
+        "name": "开盘区间突破"
+      },
+      {
+        "id": "orb_fail",
+        "name": "开盘区间假突破"
+      },
+      {
+        "id": "vwap_revert",
+        "name": "VWAP 偏离回归"
+      },
+      {
+        "id": "rvol",
+        "name": "相对成交量 RVOL"
+      },
+      {
+        "id": "volume_profile",
+        "name": "成交量分布"
+      },
+      {
+        "id": "divergence",
+        "name": "量价背离"
+      },
+      {
+        "id": "momentum",
+        "name": "短周期动量"
+      },
+      {
+        "id": "squeeze",
+        "name": "布林带挤压/扩张"
+      },
+      {
+        "id": "resonance",
+        "name": "多周期共振"
+      },
+      {
+        "id": "atr",
+        "name": "ATR 止损目标位"
+      },
+      {
+        "id": "session",
+        "name": "时段效应"
+      }
+    ],
+    "strategy_count": 11
+  },
+  "kb": {
+    "terms": 255,
+    "cats": [
+      {
+        "code": "A",
+        "name": "地基：钱为什么会变多",
+        "claimed": 15
+      },
+      {
+        "code": "B",
+        "name": "收益与风险怎么量",
+        "claimed": 22
+      },
+      {
+        "code": "C",
+        "name": "存钱与零钱管理",
+        "claimed": 12
+      },
+      {
+        "code": "D",
+        "name": "银行理财",
+        "claimed": 10
+      },
+      {
+        "code": "E",
+        "name": "债券与固收",
+        "claimed": 13
+      },
+      {
+        "code": "F",
+        "name": "基金",
+        "claimed": 29
+      },
+      {
+        "code": "G",
+        "name": "股票",
+        "claimed": 27
+      },
+      {
+        "code": "H",
+        "name": "保险",
+        "claimed": 20
+      },
+      {
+        "code": "I",
+        "name": "养老与长期",
+        "claimed": 8
+      },
+      {
+        "code": "J",
+        "name": "贷款与负债",
+        "claimed": 17
+      },
+      {
+        "code": "K",
+        "name": "税",
+        "claimed": 5
+      },
+      {
+        "code": "L",
+        "name": "策略与心理",
+        "claimed": 20
+      },
+      {
+        "code": "M",
+        "name": "机构与市场",
+        "claimed": 11
+      },
+      {
+        "code": "N",
+        "name": "防坑",
+        "claimed": 13
+      },
+      {
+        "code": "O",
+        "name": "家庭财务场景",
+        "claimed": 18
+      },
+      {
+        "code": "P",
+        "name": "县域与乡村",
+        "claimed": 15
+      }
+    ],
+    "categories": 16,
+    "families": [
+      "地基与指标",
+      "存款与理财",
+      "基金与股票",
+      "保险与养老",
+      "负债·税·机构",
+      "策略与防坑",
+      "家庭与县域"
+    ],
+    "family_count": 7,
+    "nodes": 328,
+    "links": 735,
+    "relations": {
+      "对比": 239,
+      "前提": 246,
+      "属于": 250
+    }
+  },
+  "accuracy": {
+    "measured_at": "2026-09-20 11:35:27",
+    "model": "Kronos-small 24.7M / max_context 512",
+    "model_sha": "b082dfcbd8e8",
+    "starts": 243,
+    "horizon_bars": 30,
+    "lookback_bars": 400,
+    "hit": 52.3,
+    "hit_ci": [
+      46.0,
+      58.5
+    ],
+    "n_called": 243,
+    "n_hit": 127,
+    "band_hit": 49.6,
+    "base_up": 50.6,
+    "base_momentum": 45.9,
+    "mape": 9.018,
+    "mape_flat": 4.9,
+    "cov_nominal": 80.0,
+    "cov_empirical": 28.0,
+    "cov_ci": [
+      22.7,
+      33.9
+    ],
+    "cov_n": 243,
+    "cov_n_paths": 9,
+    "symbols": [
+      "00700",
+      "600519",
+      "AAPL",
+      "BTC"
+    ]
+  },
+  "news": {
+    "enabled": 24,
+    "total": 27,
+    "ttl_sec": 900,
+    "names": [
+      "cls-telegraph",
+      "em-global",
+      "sina-7x24",
+      "em-individual",
+      "em-724",
+      "ths-push",
+      "ths-global",
+      "futu-global",
+      "cx-main",
+      "cctv-xwlb",
+      "cninfo-ann",
+      "szse-ann",
+      "em-ann",
+      "weibo-nlp",
+      "adata-ths-hot",
+      "adata-em-pop",
+      "adata-concept-hot",
+      "adata-lhb",
+      "em-hot-keyword",
+      "em-comment-score",
+      "em-comment-focus",
+      "em-comment-jgcyd",
+      "em-comment-desire",
+      "c4a-jrj"
+    ]
+  }
+}

@@ -87,6 +87,12 @@ export const CHANNEL = {
   collectStatus: '/api/collect/status',
   collectRing: '/api/collect/ring',
   collectOnce: '/api/collect/once',
+  // ★引导智能体那一份**本站结构**（`/siteguide` 页的选项卡）。
+  //   它和上面七条**不同族**：那七条是"某个业务引擎的读数"，
+  //   这一条是"这个站自己长什么样"—— 来源是 `site_map.json`（反向解析产物），
+  //   而上面七条的来源是各自的引擎。放在同一张表里是因为**失败分类共用一套**，
+  //   不是因为它们是一件事。
+  siteguide: '/api/siteguide',
 } as const
 
 /** 一次 JSON 往返。**永不抛**，失败也是一种返回值（`Res`）。

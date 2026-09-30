@@ -78,7 +78,7 @@ export function KeyCard({ probe = false, onChanged }: { probe?: boolean; onChang
     <section className="card keycard" id="keyCard" aria-label="大模型 Key 设置">
       <div className="chd">
         <h2>大模型 Key</h2>
-        <span className="tag">存在本机 .env</span>
+        <span className="tag">存在本机配置文件</span>
       </div>
       <div className="kbody">
         {/* ★这里面**永远只放掩码** */}
@@ -106,7 +106,7 @@ export function KeyCard({ probe = false, onChanged }: { probe?: boolean; onChang
           <button id="kclear" type="button" disabled={busy} onClick={() => send("DELETE")}>清除</button>
         </div>
         <div className="hint">
-          只写进本机 <code>.env</code>，页面上永远只显示掩码；保存后<strong>立刻生效</strong>，不用重启。
+          只写进本机的一个配置文件里，页面上永远只显示掩码；保存后<strong>立刻生效</strong>，不用重启。
           <strong>没有 key 也能用</strong>，只是对话会降级成只答概念。
         </div>
         <div id="kwarn">
@@ -115,7 +115,7 @@ export function KeyCard({ probe = false, onChanged }: { probe?: boolean; onChang
           {shellShadowed ? (
             <div className="kwarn">
               注意：你的系统环境变量里还有一把（<code>{(s as unknown as { shell_mask: string }).shell_mask}</code>），
-              它已经被 <code>.env</code> 里这把盖住了 —— 本站不用它。
+              它已经被本机配置文件里那把盖住了 —— 本站不用它。
             </div>
           ) : null}
         </div>

@@ -23,6 +23,10 @@ import { Psych } from "./pages/Psych/Psych"
 import { Assess } from "./pages/Assess/Assess"
 import { Research } from "./pages/Research/Research"
 import { Inspect } from "./pages/Inspect/Inspect"
+// ★引导智能体：**主页第一张卡**指向这里（`Home.tsx` 的 `#siteGuideCard`）。
+//   它是唯一一页的内容是"这个站自己长什么样" —— 数据来自 `site_map.json`
+//   （反向解析产物），所以它得跟 `build_sitemap.py` 一起看。
+import { SiteGuide } from "./pages/SiteGuide/SiteGuide"
 import { loadDashSync } from "./dash"
 import { loadRuralSync } from "./rural"
 import { loadPortfolioSync, readWeights } from "./portfolio"
@@ -49,9 +53,14 @@ const root = createRoot(host)
 //   （`check_static` 要求它 200），后者是换栈期间的旧链接。**没有匹配上一律落主页**，
 //   不是"落 404 页"——这条默认值本身也是一条判据的落点：
 //   一个拼错的地址应该给人主页，而不是一片空白。
-type PageKey = "home" | "agent" | "onboarding" | "profile" | "game" | "dash" | "portfolio" | "ledger" | "luxuryDash" | "investSim" | "agents" | "intraday" | "linkage" | "collect" | "psych" | "assess" | "research" | "inspect"
+type PageKey = "home" | "agent" | "onboarding" | "profile" | "game" | "dash" | "portfolio" | "ledger" | "luxuryDash" | "investSim" | "agents" | "intraday" | "linkage" | "collect" | "psych" | "assess" | "research" | "inspect" | "siteguide"
 
 const ROUTES: [RegExp, PageKey, string][] = [
+  // ★引导智能体排在**第一条**：它是主页的第一张卡（`#siteGuideCard`），
+  //   也就是这一站的入口。★它**不在** `chrome.tsx: NEW_PAGES` 里
+  //   （与 `/research` 同一个做法）—— 那个导航条的顺序是锁着的，
+  //   而这一页的入口是主页上那张卡，比导航条还靠前。
+  [/^\/siteguide\/?$/, "siteguide", "引导智能体 · 乡e家——县乡村家庭财富管理服务平台"],
   [/^\/agent\/?$/, "agent", "智能体 · 乡e家——县乡村家庭财富管理服务平台"],
   [/^\/onboarding\/?$/, "onboarding", "新手引导 · 乡e家——县乡村家庭财富管理服务平台"],
   [/^\/profile\/?$/, "profile", "我的画像 · 乡e家——县乡村家庭财富管理服务平台"],
@@ -174,6 +183,12 @@ function view(probe: boolean) {
     //   传了就多一条"只有探针才走"的渲染路径，而这一页的纪律是
     //   **探针路径和普通路径走同一个渲染**（判据量的那一屏必须就是用户看的那一屏）。
     case "inspect": return <Inspect probe={probe} />
+    // ★引导智能体：**没有** `initial`，理由与上面那几页同构 ——
+    //   它在组件内部自己走同步路（`loadGuideSync()`，`SiteGuide.tsx` 里那段
+    //   `useMemo` + `useState` 初值），`main.tsx` 不替它先取。
+    //   ★那条同步路**必须**在：异步回来的目录，同步探针量到的是"正在读站点目录…"
+    //     —— 那不是判据变红，是判据**消失**（`Research.tsx:159` 那段记着这个病）。
+    case "siteguide": return <SiteGuide probe={probe} />
     // ★主页那一块行情条也要**同步**取好了再渲染（照 `/dash` 那条），
     //   否则同 tick 量的探针量到的是"正在取行情…" —— 判据**消失**而不是变红。
     default: return <Home probe={probe} initial={probe ? loadDashSync() : undefined}

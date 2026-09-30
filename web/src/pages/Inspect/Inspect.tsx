@@ -740,7 +740,7 @@ export function Inspect({ probe = false }: { probe?: boolean }) {
               </p>
             )}
             <p className="mt-1 text-[10.5px] text-[var(--ink-3)]">
-              ★链接落在知识图谱页（<code>{GRAPH}</code>）上，<b>没有带词名片段</b> ——
+              ★链接落在知识图谱页上，<b>没有带词名片段</b> ——
               那一页不支持按片段跳转，带上只是个空跳转，看着像做了、其实没做。
               落地之后在它的搜索框里搜那个词就行。
             </p>

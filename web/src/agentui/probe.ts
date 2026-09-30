@@ -45,7 +45,10 @@ export function callSync<T>(url: string, body?: unknown): Res<T> {
     return { ok: false, kind: "server", status, reason: `服务端 ${status}`, detail: text.slice(0, 300) }
   }
   if (status === 400 || status === 422) {
-    const d = tryJson<{ ok?: boolean; msg?: string; error?: string; hint?: string }>(text)
+    // ★`T &` 不能省：`fromBody` 收的是 `T`，而这里手上是 `tryJson` 出来的**那个物件** ——
+    //   不带 `T` 就报 TS2322（`Res<{ok?:…}>` 不是 `Res<T>`）。下面第 68 行那处同理，
+    //   它写的是 `data as T & {…}`。两份写法要一起看，别只改一处。
+    const d = tryJson<T & { ok?: boolean; msg?: string; error?: string; hint?: string }>(text)
     if (d && d.ok === false) return fromBody(d, status)
     return { ok: false, kind: "badreq", status, reason: "请求被服务端拒了", detail: text.slice(0, 200) }
   }
@@ -86,7 +89,13 @@ function fromBody<T>(d: T, status: number): Res<T> {
       detail: o.hint,
     }
   }
-  return { ok: true, data }
+  // ★★`data: d` —— **参数叫 `d`，不叫 `data`**。这一行是从 `api2.ts` 那份 `fromBody`
+  //   抄过来的，而那份的参数恰好就叫 `data`，所以那行 `{ ok: true, data }` 是对的；
+  //   搬过来时参数改名成了 `d`，这一行却原样留着 ⇒ `data` 不在作用域（TS18004），
+  //   而 `vite build` **不做类型检查** ⇒ 它照样上线，成功分支返回 `data: undefined`
+  //   ⇒ 探针那条路白屏（`/linkage?probe=1` 就撞在这上面）。
+  //   ⚠ 再抄这一份时，改参数名要连着看下一行的属性简写。
+  return { ok: true, data: d }
 }
 
 /** 探针路径上"这一屏的数据"。`phase: "loading"` 只在**用户那条路**上出现 ——

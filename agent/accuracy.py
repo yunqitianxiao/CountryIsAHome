@@ -38,7 +38,7 @@ PLACEHOLDER = '<!--ACCURACY-->'
 CLS = 'acc'
 
 # 没跑过回测时的文案。★**一个数字都不许有** —— 编一个数字比不写更坏。
-FALLBACK = ('回测还没跑过（<code>backtest_kronos.py</code>），所以这里不给数字 —— '
+FALLBACK = ('回测还没跑过，所以这里不给数字 —— '
             '编一个数字比不写更坏。在那之前，请把下面的预测只当"形态示意"。')
 FALLBACK_MARK = '回测还没跑过'
 

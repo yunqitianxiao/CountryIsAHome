@@ -406,8 +406,8 @@ export function Research({ probe = false }: { probe?: boolean }) {
                 不写的话，用户拿这一屏去讲行情时很容易说成"分钟级"。 */}
             {daily ? (
               <p className="mt-2 text-xs text-[var(--ink-2)]" data-k="dailyNote">
-                <b>口径是日线，不是分钟级。</b>这个标的在本机没有分钟线源，服务端
-                （<code>agent/daily_short.py</code>）把口径降到了日线：周期只有一个、
+                <b>口径是日线，不是分钟级。</b>这个标的在本机没有分钟线源，所以服务端
+                自己把口径降到了日线：周期只有一个、
                 只跑那五条"只用 K 线序列与量能"的特征。
                 <b>这不等于"分钟级那套也能用"</b>，更不许说成分钟线。
               </p>

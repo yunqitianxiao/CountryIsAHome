@@ -143,7 +143,12 @@ function News({ items }: { items: NewsItem[] }) {
   )
 }
 
-function MsgView({ m }: { m: Msg }) {
+/** 一条气泡。★**导出**是给 `/siteguide` 那张大对话界面用的（引导智能体的聊天
+ *  与这一张走的是同一套事件、同一个 reducer、同一份服务端机器）——
+ *  那边自己再写一份渲染的话，"图表事件被静默丢弃"这类坏法就会在两条路上
+ *  各长一个样，而其中一条没人看。★导出它**不改这一页的任何行为**：
+ *  函数体一字未动，只是多了一个 `export`。 */
+export function MsgView({ m }: { m: Msg }) {
   if (m.role === "me") return <div className="msg me">{m.body}</div>
   if (m.role === "err") {
     return (

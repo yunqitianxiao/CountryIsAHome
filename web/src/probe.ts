@@ -15,7 +15,23 @@
  *   两者都要，理由见 `probeAndBeacon` 里那一段：只有 `newsItems` 的话，
  *   "整块被 CSS 藏起来"与"事件被丢弃"长得一样。）/
  *   `guideHref` / `graphHref` / `agentHref` / `gameHref` / `portfolioHref` /
- *   `ledgerHref` / `inspectHref` / `dashHref` / `profileHref` / `backHref`
+ *   `ledgerHref` / `inspectHref` / `dashHref` / `profileHref` / `backHref` /
+ *   `siteGuideHref`（★引导智能体那张卡。它是主页**第一张入口卡**，
+ *   所以这条 href 错了 = 整个引导智能体没入口 —— 不能静默坏。）/
+ *   `sgOrder`（★那张卡**在不在主栏最上面**：`{sg, col, above}` ——
+ *   它自己的 `top`、与 `#agentCard` 同一列的入口卡一共几张（**对照组**）、
+ *   以及比它更靠上的那些卡的名字。★href 与位置是两件事：href 对、
+ *   卡被挪到最后一个，上面所有判据都照样绿。）/
+ *   `sg`（★引导智能体页那一簇，见 `probeAndBeacon` 里那一段：
+ *   选项卡逐格的文字 + 面板条数 + **恰一格**显示着（按高度量，不读状态位）
+ *   + 「亮着的那盏灯」`litBefore` 与「显示着的那一格」`visSecBefore`
+ *   + **点第二盏灯之后**同一组读数 `tabAfter`/`litAfter`/`visSecAfter`/`visibleAfter`
+ *   + 聊天框与欢迎气泡的高度/长度 + 「问问看」的条数 + 目录过时横幅。
+ *   `secTitles` / `tabLabels` 是给判据拿去跟 `/api/siteguide` **逐条对账**的 ——
+ *   只数个数的话，九格渲染成同一张卡照样绿。
+ *   ★`*Before`/`*After` 这一对是**成对的**：只看 `After` 的话，"点不动"
+ *     和"点对了"量出来一模一样。`secTitles` 那几个字是 `txt()` 过的
+ *     （**空白全剥**），判据那一侧要照同样的规矩归一化再比。）/
  *   （★这几个是 **href 字符串**，不是布尔。主页那四张导航卡要同时钉住"卡在"和
  *   "指向哪儿"两件事 —— 只判"有个 id 叫 guideCard 的元素"的话，把 href 改成 `#`
  *   或者改到别的页，判据照样绿。判据那边比的是**全等**。
@@ -188,6 +204,34 @@ function tap(e: Element | null): void {
     // 用元素自己中心点派发**带坐标的**真 MouseEvent：波纹那条 document 监听
     // 只认有坐标的点击（坐标 0 会被当成探针自己的合成事件而跳过）。
     clickAt(e, Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2))
+  })
+}
+
+/**
+ * 点亮一盏 **radix 的选项卡**（`TabsTrigger`）。
+ *
+ * ★为什么不直接用 `tap()`：radix 的灯**认的是 `mousedown`**，不是 `click` ——
+ *   `TabsTrigger` 上挂的是 `onMouseDown`（`button===0 && !ctrlKey` 才切），
+ *   压根没有 `onClick`。只派一个 `click` 的话，灯**怎么点都不亮**，
+ *   而现象看起来像"这一页坏了"。（实测：`litAfter` 一直是 `'chat'`。）
+ *   ⇒ 按真实浏览器那样把 `mousedown → mouseup → click` 三下都发出来：
+ *     前一下切灯，后一下给波纹那条 document 监听（它认的是 `click`）。
+ *   ★仍然走 `flushSync`：要在同一个同步块里读到切完之后的那一格。
+ *   ★**不是**直接调 `setTab`：那就是"判据测接口、用户走按钮"那个坑 ——
+ *     按钮真正接着的那根线（radix 的 `onMouseDown`）会被绕过，接错了也照样绿。
+ */
+function tapTab(e: Element | null): void {
+  if (!e) return
+  const r = e.getBoundingClientRect()
+  const x = Math.round(r.left + r.width / 2)
+  const y = Math.round(r.top + r.height / 2)
+  const mk = (type: string) => new MouseEvent(type, {
+    bubbles: true, cancelable: true, button: 0, clientX: x, clientY: y, view: window,
+  })
+  flushSync(() => {
+    e.dispatchEvent(mk("mousedown"))
+    e.dispatchEvent(mk("mouseup"))
+    clickAt(e, x, y)
   })
 }
 
@@ -465,6 +509,11 @@ export function probeAndBeacon() {
     return a ? a.getAttribute("href") || "" : ""
   }
   out.guideHref = hrefOf("a#guideCard")
+  // ★引导智能体那张卡（`/siteguide`，2026-09-29 加）。它是主页**第一张入口卡**
+  //   （排在 `#agentCard` 之前、`#siteLead` 之后）。同形：回传 **href 字符串**，
+  //   判据比全等 —— 只看"元素在不在"的话，把 href 改成 `#` 照样绿，
+  //   而用户点下去哪儿都到不了，且那是这一版唯一的入口。
+  out.siteGuideHref = hrefOf("a#siteGuideCard")
   out.graphHref = hrefOf("a#graphCard")
   out.agentHref = hrefOf("a#agentCard")
   out.gameHref = hrefOf("a#gameCard")
@@ -482,6 +531,41 @@ export function probeAndBeacon() {
   // ★子页页头那个回主页的链接。主页自己**不渲染**它（一个指向自己的链接是死链的
   //   一种），所以这一条在主页上恒为 ""，判据只在子页那一侧量。
   out.backHref = hrefOf("a#homeLink")
+
+  // ── ★「引导智能体卡在主界面的**第一个**」——用户原话，量**几何**才算数 ──
+  //   `Home.tsx` 那张卡顶上写着"这一张靠**位置**排在第一"，而在这条之前
+  //   **没有任何判据量过位置**：把这张卡挪到 `#agentCard` 后面，所有判据照样绿
+  //   （`siteGuideHref` 只证明 href 对，不证明它在哪儿）。"注释里写了、没人量"
+  //   就是本仓库最怕的那种失效形态。
+  //
+  //   ★判据的形状（在下面算成一个数交回服务端，页面这一侧只负责量）：
+  //     **与 `#agentCard` 同一列**的那些入口卡里，这一张的 `top` 必须严格最小。
+  //   ★为什么必须限定"同一列"：这一页右边还有侧栏卡（`#profileCard` / `#ruralCard`
+  //     也是 `a.linkcard`），它们的 `top` 可能比主栏的任何一张都靠上 ——
+  //     拿"全页最小"去比，会把一张**正确的**版面判红，而红了之后最顺手的"修法"
+  //     是把判据削弱（那就成了把判据改成它的观察记录）。
+  //   ★列位置和宽度都**从 `#agentCard` 现读**，一个数都不写死：
+  //     写死 `l=289 w=810` 的话，改一档视口宽度判据就假红。
+  //   ★`above` 交回的是**名字**不是布尔：红了要知道是**谁**跑到它前面去了。
+  const sgCard = el("a#siteGuideCard")
+  const colRef = el("a#agentCard")
+  if (sgCard && colRef) {
+    const rr = colRef.getBoundingClientRect()
+    const sameCol = els("a.linkcard").filter((n) => {
+      const r = n.getBoundingClientRect()
+      return Math.abs(r.left - rr.left) <= 1 && Math.abs(r.width - rr.width) <= 1
+    })
+    const st = sgCard.getBoundingClientRect().top
+    out.sgOrder = {
+      sg: Math.round(st),
+      // ★同一列一共几张 —— 判据那边要拿它当**对照组**：这个数只有 1 的话，
+      //   "上面没人"是**空转**（没有可比的对象），不是"排在第一"。
+      col: sameCol.length,
+      above: sameCol
+        .filter((n) => n !== sgCard && n.getBoundingClientRect().top < st - 1)
+        .map((n) => n.id || n.className.slice(0, 20)),
+    }
+  }
 
   // ── ★风险提示里那句实测数字：量**几何**和渲染出来的**文字**两样 ──
   //   只量文字是不够的：把这块 CSS 藏起来（display:none）时 textContent
@@ -1287,6 +1371,107 @@ export function probeAndBeacon() {
       dt: Math.round(r1.top - r0.top),
     }
     els(".ripple").forEach((n) => n.remove())       // 量完就摘，别留给后面的字段
+  }
+
+  // ── ★引导智能体页（`/siteguide`）────────────────────────────────────
+  //   这一页的纪律是「**选项卡上的每一个字都来自 `/api/siteguide`**」，
+  //   所以这里回传的必须是**能跟接口逐条对账的东西**（每一格的名字），
+  //   不是"有几个 div"。只数个数的话，九格全渲染成同一张卡照样绿。
+  //
+  //   ★「哪一格显示着」用 **高度** 量，不用 `data-state` / `classList`。
+  //     radix 的 `TabsContent` 在 `forceMount` 之下 **`hidden` 是关掉的**
+  //     （`hidden: !(forceMount || isSelected)`）—— 也就是说页面得自己藏，
+  //     而"自己藏"这件事一旦失效（少一条 CSS、被后一条盖掉），
+  //     九格会**同时铺在屏幕上**，那时状态位一个都没变、照样"对"。
+  //     这正是本仓库那条老规矩的又一例：**状态位分不出"显示着"和"滑出去了"**。
+  //   ★★顺序：**先在"对话"那一格上把几何量完**，再去点第二盏灯。
+  //     反过来量的话，切走之后对话面板就是 `display:none`，`chatH`/`msgsH`
+  //     会读成 0 —— 而"聊天框塌了"和"我量的时候它正好被藏起来"是两件事。
+  out.sg = null
+  if (el("#sgTabs")) {
+    const panels = els('[data-k="sgSec"]')    // 亮着的那盏灯 / 显示着的那一格：两个**不同来源**的答案，判据要它们对上。
+    //   `lit` 读 radix 打的 `data-state`（"哪盏灯亮着"本来就是个状态问题）；
+    //   `visSec` 读几何（"哪一格真有地方"是渲染问题）。状态位当不了后者的证据。
+    const litSec = () => (el('[data-k="sgTab"][data-state="active"]')?.getAttribute("data-sec") || "")
+    const panelsWithBox = () => panels.filter((n) => n.getBoundingClientRect().height > 0)
+    const firstVis = () => {
+      // ★"显示着的那一格"= 8 张介绍卡里几何非零的那一张。
+      //   对话那一格不在这 8 张里（它不是 `data-k="sgSec"`），它自己的证据是
+      //   `chatH`/`msgsH` 那两个数。
+      const v = panelsWithBox()
+      return v.length === 1 ? (v[0].getAttribute("data-sec") || "") : ""
+    }
+    // ★先攒成一个局部对象、点完那一下再交给 `out.sg`：`out` 是 `Rec`
+    //   （下标签名），`out.sg.xxx = ...` 这种写法 TS 只当它是 `unknown`。
+    const sg: Rec = {
+      // 选项卡条数（含"对话"那一格）与每一格的字
+      tabs: els('[data-k="sgTab"]').length,      tabLabels: els('[data-k="sgTab"]').map((n) => txt(n)),
+      // 面板条数 + 逐格的 id 与**文本长度**。
+      // ★`secLens` 是防"空卡"的：九张卡都渲染出来了、标题都在，而正文是空的
+      //   —— 那种坏法在 `panels` 这个数上完全看不出来。
+      panels: panels.length,
+      secIds: panels.map((n) => n.getAttribute("data-sec") || ""),
+      // 每一格的**卡标题**（`Panel` 的 `<h2>`）。判据拿它跟 `/api/siteguide` 的
+      // `title` 逐条比 —— 比的是"页面上写的就是服务端给的那句话"，
+      // 不是"有九个标题元素"。
+      // ★注意 `txt()` **把所有空白都剥掉**了，所以判据那一侧也要照同样的规矩
+      //   归一化再比 —— 不然 `乡e家 —— 基于…` 和页面上的 `乡e家——基于…`
+      //   会被当成两句话（实测就这么红过一次，红的是尺子不是页面）。
+      secTitles: panels.map((n) => txt(el(`#sgSec-${n.getAttribute("data-sec")} .chd h2`))),
+      secLens: panels.map((n) => txt(n).length),
+      // 每一格那个「去这一页 →」的 **href 值**（不是"按钮在不在"）。
+      // ★拿它跟 `/api/siteguide` 的 `href` 逐条全等 —— 那些目标是
+      //   `build_sitemap.py` 从 `main.tsx` 的路由表反向解析出来的，
+      //   页面上这一个字都不许自己写。改成 `#` 的话按钮还在、卡还在，
+      //   用户到不了该去的地方，而"元素在不在"抓不住这个。
+      secHrefs: panels.map((n) => {
+        const a = n.querySelector('[data-k="sgGo"]')
+        return a ? a.getAttribute("href") || "" : ""
+      }),
+      // ★**恰好一格**该是显示着的 —— 见上面那段（`forceMount` 把 `hidden` 关了，
+      //   藏不藏得住是这一页自己的事）。
+      visible: panelsWithBox().length,
+      // 「亮着的那盏灯」与「显示着的那一格」，点之前/点之后各一份。
+      //   ★点之前那两份用来判"一开始就是对的"（对话亮着 ⇒ 没有一张介绍卡该有几何）；
+      //     点之后那两份用来判"**点一下真的换了**" —— 只看点之后的状态的话，
+      //     "点不动"（`onValueChange` 空实现）量出来的和"点对了"一模一样。
+      litBefore: litSec(),
+      visSecBefore: firstVis(),
+      chatH: h(el("#sgChat")),
+      msgsH: h(el("#sgMsgs")),
+      // 开场那句：文本长度（0 = 气泡没了）
+      welcomeLen: txt(el("#sgWelcome")).length,
+      // 「问问看」那一排的条数。★它不许是 0：空的按钮行是**静默**的坏
+      //   （用户没得点，页面上也不报错）。
+      quick: els("#sgQs button").length,
+      sendH: h(el("#sgSend")),
+      // 那份目录"与源码对不上"时的那条横幅在不在（判据配一条注入把它拿掉）。
+      stale: !!el("#sgStale"),
+      // 服务端说目录过时了没有 —— 拿它跟 `stale` 比，才知道那条横幅
+      // **该出现时出现、不该出现时不出现**（只判"出现过"是半个判据）。
+      staleHint: txt(el("#sgStale")),
+      // ── 点第二盏灯（第一张介绍卡），再量一遍 ────────────────────────
+      //   ★走 `tap()`：真点击 + `flushSync`。直接调 `setTab` 就是
+      //     "判据测接口、用户走按钮"那个坑。
+      tabAfter: "",
+      litAfter: "",
+      visSecAfter: "",
+      visibleAfter: -1,
+    }
+    const trigs = els('[data-k="sgTab"]')
+    if (trigs.length > 1) {
+      tapTab(trigs[1])
+      sg.tabAfter = trigs[1].getAttribute("data-sec") || ""
+      sg.litAfter = litSec()
+      sg.visSecAfter = firstVis()
+      sg.visibleAfter = panelsWithBox().length
+      // 量完点回"对话"：这一页剩下的字段（路由、波纹）不该看见我动过的状态，
+      // 探针也**不留状态给别人**（同 ".ripple 量完就摘"）。
+      tapTab(trigs[0])
+      // 上面两下真点击各冒过一个波纹 —— 摘掉，理由同上。
+      els(".ripple").forEach((n) => n.remove())
+    }
+    out.sg = sg
   }
 
   // ── ★路由：探针跑在**哪一页**上 ──────────────────────────────────────

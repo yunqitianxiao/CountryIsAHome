@@ -434,8 +434,8 @@ export function Intraday({ probe = false }: { probe?: boolean }) {
                 <b>这一轮的返回里没有 K 线。</b>
                 <div className="mt-1 text-xs text-[var(--ink-3)]">
                   规格 §3.2 只冻结了分析结果（信号 / 位置 / 共振 / 量能），<b>没有冻结 K 线本身</b>。
-                  前端在 <code>IntradayResp.klines</code> 与 <code>IntradayResp.vwap_series</code>
-                  这两个位置上预留了口子（见 <code>api2.ts</code>）—— 服务端一给，这张图就有了。
+                  前端已经在「K 线」和「分时均价线（VWAP）」这两个位置上预留了口子
+                  —— 服务端一给，这张图就有了。
                   {/* ★「别拿日线顶上来」这句在**日线口径下**会读成自相矛盾
                       （这一屏的口径就是日线）⇒ 分口径说清"不要哪种顶替"。 */}
                   {daily
@@ -729,7 +729,7 @@ export function Intraday({ probe = false }: { probe?: boolean }) {
                 很容易说成"分钟级分析" —— 而那正是这一屏**不是**的东西。 */}
             {daily ? (
               <li><b>口径是日线，不是分钟级</b>：这个市场在本机没有分钟线源，
-                服务端（<code>agent/daily_short.py</code>）把口径降到了日线 ——
+                所以服务端自己把口径降到了日线 ——
                 周期只有一个（<code className="tnum">{P.map(periodLabel).join(" / ")}</code>）、
                 策略只跑那五条"只用 K 线序列与量能"的。
                 <b>这不等于"分钟级那套也能用"</b>，更不许说成分钟线。</li>

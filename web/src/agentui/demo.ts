@@ -395,7 +395,7 @@ export function demoAgentEvents(question: string): AgentEv[] {
         bull: { hit: 0.54, n: 41, prior: 0.5 },
         bear: { hit: 0.51, n: 39, prior: 0.5 },
         technical: { hit: 0.55, n: 37, prior: 0.5 },
-        note: "命中率来自预测台账（agent/ledger.py）里这一角色的历史记录；样本 < 30 的角色退回先验 0.5",
+        note: "命中率来自预测台账里这一角色的历史记录；样本 < 30 的角色退回先验 0.5",
       },
       self_conf: "本轮自报置信度做了**校准收缩**：w ∝ 0.5×场景 + 0.3×历史校准 + 0.2×收缩后的自报置信度（收缩系数 0.5）",
       risk_boost: "风控官命中数值条件，权重额外 +0.04（它的票在这一轮更值钱）",

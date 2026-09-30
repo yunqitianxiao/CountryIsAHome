@@ -270,13 +270,20 @@ def profile_block(profile):
             '更不许据此说"你该买什么"。上面三条硬规矩一条都不因为这段而放宽。')
 
 
-def system_prompt(history=None, profile=None, question=None):
+def system_prompt(history=None, profile=None, question=None, extra=None):
     """基础提示词 + 用户画像 + 本轮实况 + （落在组合诊断上时的）分析框架骨架。
 
     ★每轮调用都重新拼，不缓存。★每个块都是**非空才出现**（`framework_block`
       不触发就返回 ''，拼进去等于没拼）。
+
+    ★`extra` 是**调用方带来的一块上下文**（现在只有引导智能体用它传
+      `siteguide.prompt_block()`）。做成参数而**不是**在 llm 里 import siteguide：
+      一旦 llm 直接依赖 siteguide，每一轮对话都会去读一份几百 KB 的
+      `site_map.json` —— 而绝大多数对话（问行情、查词）**根本不需要知道站的目录**。
+      谁需要谁带，是这一层唯一该做的事。
+      ★它是**每轮参数**不是模块级状态，和 `profile` 同一个理由（见 `build_messages`）。
     """
-    blocks = [profile_block(profile), skills.framework_block(question),
+    blocks = [profile_block(profile), extra, skills.framework_block(question),
               live_context(history)]
     live = '\n\n'.join(b for b in blocks if b)
     return SYSTEM_PROMPT + ('\n\n' + live if live else '')
@@ -671,7 +678,8 @@ def sse_stream(messages, transport=None, holdings=None, profile=None):
         yield sse(ev)
 
 
-def build_messages(question, history=None, terms_context=None, profile=None):
+def build_messages(question, history=None, terms_context=None, profile=None,
+                   extra=None):
     """history 是 [{role, content}] 的前几轮，只保留 user/assistant 的正文。
 
     ★系统提示词**每轮现拼**（`system_prompt(hist, profile)`），不是发那个常量 ——
@@ -685,7 +693,8 @@ def build_messages(question, history=None, terms_context=None, profile=None):
     """
     hist = [h for h in (history or [])[-6:]      # 最多带 3 轮上下文
             if h.get('role') in ('user', 'assistant') and h.get('content')]
-    msgs = [{'role': 'system', 'content': system_prompt(hist, profile, question)}]
+    msgs = [{'role': 'system',
+             'content': system_prompt(hist, profile, question, extra=extra)}]
     for h in hist:
         msgs.append({'role': h['role'], 'content': str(h['content'])[:4000]})
     msgs.append({'role': 'user', 'content': question})
