@@ -1,8 +1,6 @@
 import * as React from "react"
 import { Shell } from "../Shell/Shell"
-import { SiteBanner } from "../SiteBanner/SiteBanner"
 import { ProfileForm } from "../Profile/ProfileForm"
-import { readAccBoot } from "../../chrome"
 import { markOnboardingSeen, readProfile, saveProfile } from "../../profile"
 
 /**
@@ -35,116 +33,49 @@ function P({ children }: { children: React.ReactNode }) {
 export function Onboarding({ probe = false }: { probe?: boolean }) {
   const [i, setI] = React.useState(0)
   const [done, setDone] = React.useState(false)
-  const accHtml = React.useMemo(readAccBoot, [])
   const already = React.useMemo(() => readProfile(), [])
 
   const STEPS: Step[] = [
     {
-      title: "这是个什么站",
+      title: "你是不是也这样？",
+      body: (
+        <>
+          <P>想买点理财，打开 APP 全是专业词，看不懂不敢下手？</P>
+          <P>网上都说"AI 预测很准"，但你不敢信，怕被忽悠？</P>
+          <P>想试试又怕亏，没人可以问？</P>
+          <P>别怕，这个平台就是帮你解决这些的——<b>不收费、不用注册，更不会荐股让你接盘。</b></P>
+        </>
+      ),
+    },
+    {
+      title: "它能帮你做什么",
+      body: (
+        <>
+          <P><b>查词</b>：不懂的术语，大白话给你讲明白——就像讲橘子顺便把橙子、柚子也串起来，一次搞懂。</P>
+          <P><b>问 AI</b>：拿不准的行情，帮你分析风险，但不替你做决定，也不荐股——你多一个参考，少一点盲目。</P>
+          <P><b>练手</b>：用虚拟本金买真实行情，亏了不心疼，赚了能看到自己判断对不对——下手之前先练胆子。</P>
+          <P>除此之外，还有行情总览、风险测评、组合体检等功能，你可以慢慢探索。</P>
+        </>
+      ),
+    },
+    {
+      title: "我们和别的平台不一样",
       body: (
         <>
           <P>
-            一句话：<b>把理财术语和行情数据翻成人话</b>，让你在掏钱之前先看明白。
+            别的平台都在吹"AI 预测很准"，我们不这么说。
           </P>
           <P>
-            但更要紧的是这一句：<b>这个站不发理财建议 —— 它检验你收到的那条。</b>
-            亲戚介绍的"保本、年化 12%"、群里"老师"带着做的单、私聊发来的产品，
-            原文粘进「建议体检」，它告诉你那段话里哪几句有问题、每句凭什么、
-            哪几句看着可疑其实不算、以及<b>哪几件事它查不到、判不了</b>。
+            这个模型的作用<b>不是告诉你明天涨还是跌</b>，而是让你在真金白银下手之前，先用假钱感受一下：预测错起来是什么样。
           </P>
           <P>
-            它不荐股、不给你"该不该买"的答案，也不替你判"这是不是诈骗" ——
-            那是这一站从第一天就定下的规矩。
-          </P>
-          <P>
-            不填任何 Key 也能查词、看图谱、跑 K 线预测；想要会对话的助手，
-            才需要填一把你自己的 DeepSeek Key（只存在本机）。
+            <b>亏的是假钱，长的是真记性</b>——这才是它存在的意义。
           </P>
         </>
       ),
     },
     {
-      title: "最要紧的一件事，和另外三个入口",
-      body: (
-        <>
-          {/* ★这四段**故意不带 ① ② ③ ④ 圈号**：页头已经在用「第 N / M 步」编号，
-              同一屏里两套编号（入口序号 vs 步骤号）会让人把"第 3 个入口"读成"第 3 步"——
-              而这两个数在这一页里都会数到 4，混起来看不出错。
-              主次靠"先看这个"这个说法表达，不靠数字。 */}
-          <P><b>建议体检（先看这个）</b>：亲戚介绍的、群里转的、陌生人私聊发给你的那段理财话，
-            原文粘进来。它告诉你：这段话<b>承诺了什么</b>、哪几句是<b>红旗</b>（每句都带你<b>自己核</b>的原文）、
-            哪几句<b>看着像红旗、其实不算</b>、你<b>该问它什么</b>，以及<b>哪几件事它判不了</b>。
-            <b>它不发建议，只检验你收到的那一条。</b></P>
-          <P><b>查词</b>：知识图谱里有 255 个术语，按「属于 / 对比 / 前提」连成一张图。不懂的词先来这儿。</P>
-          <P><b>问智能体</b>：把你的问题直接丢给它。它会去调工具取真数据，再把结果讲成人话，
-            并且告诉你<b>它没把握的地方在哪儿</b>。</P>
-          <P><b>模拟投资</b>：拿虚拟本金练手。行情是真抓的，本金是假的 —— 亏了不心疼，
-            但会真的看到"我当时要是买了会怎样"。</P>
-          {/* ★这里"255"是**手写的**，真源是 `terms.json`（由 `解释.md` 投影出来）。
-              它没有判据守着 —— 图谱侧有判据守"词表内部一致"（parse_terms.py 的分类小计、
-              build_graph.py 的两层一致），但**守不到这句文案**：词数对不上时它不会红。
-              词表再变时要记得回来改这里。**同类手写数一共四处**（2026-09-28 核实）：
-              `Home.tsx` 图谱卡、`guide.html` 图谱那条、本文件这一句，
-              以及 `graph_template.html` 里 `<h1>` 的副标题（那个在产物 `graph.html` 里）。 */}
-        </>
-      ),
-    },
-    {
-      title: "那个预测模型，能做到什么、做不到什么",
-      body: (
-        <>
-          <P>
-            站里跑着一个本地小模型（Kronos），它看一段历史 K 线，采样出一段"接下来可能长这样"的路径。
-            <b>它不预测新闻、不知道公司做什么生意、也不知道你是谁。</b>
-          </P>
-          {/* ★这段数字**不是手写的**：服务端每次请求现读回测结果填进壳里的
-              `#acc-boot`，这里只是把那段搬过来（和智能体页用的是同一个出口）。
-              手抄一份的话，回测重跑之后这里就开始撒谎，而页面上看不出来。
-              ★外面那层 `disclaim` 类名**不能省**：`.acc-line` 的样式选择器是
-              `.disclaim .acc-line`（后代选择器），少了它这行就退回默认字号。 */}
-          <div className="disclaim mt-3">
-            <div className="acc-line" dangerouslySetInnerHTML={{ __html: accHtml }} />
-          </div>
-          <P>
-            所以请把它当成<b>一条参考路径</b>，不是结论。真想动手之前，
-            先去<b>模拟投资</b>那一页感受一下它错起来是什么样。
-          </P>
-          {/* ★这里原本写的是"先看**第 3 步**的模拟投资"—— 而**没有哪一步是模拟投资**
-              （第 3 步是这一步自己）。那是个指不到任何地方的步号：读者按"第 3 步"去找，
-              找到的是"预测模型能做到什么"。★改成不带步号的说法，和上面那段"故意不写数字"
-              是同一条纪律 —— 会腐烂的坐标不如不给坐标。 */}
-        </>
-      ),
-    },
-    {
-      title: "还有几个地方值得逛逛",
-      body: (
-        <>
-          <P>
-            <b>预测台账</b>：站里那个小模型的战绩公开摆着 —— 命中率
-            <b>永远和"无脑喊涨"并排显示</b>，不许单独出现。我们自己跑出来的结论是
-            <b>它没有超额能力</b>（方向命中率和"抛硬币"统计上分不开，具体数字印在那一页上），
-            这句话就印在那一页上。为什么要把短处摆出来？因为一个只挑好数字给你看的模型，
-            你没法判断它哪次在骗你。
-          </P>
-          {/* ★这里**故意不写命中率的具体数字**（原来是"方向命中率 52.3%"）。两个理由：
-              ① 台账页显示的那个数来自**另一个口径**（`kronos_accuracy.json` 的
-                 `dir_band`），和首页那句实测（`dir_strict`）不是同一个数 ——
-                 引导页写 52.3%、用户点进台账看到 49.6%，就是"文案和页面打架"。
-              ② 手写的数**没有判据守着**（`check_onboarding` 只钉步号、标题互异、
-                 末步出口），回测重跑一次它就过期。指向那一页比抄一个数结实。 */}
-          <P>
-            <b>行情总览</b>：一屏看完几只标的的收盘价和近 5/20/60 日涨跌，
-            每个数都是当场取的，取不到就明说取不到，不会编。
-          </P>
-          <P>
-            想要更细的图文讲解，可以走 <a href="guide.html" id="obGuideLink">详细图文版 →</a>。
-          </P>
-        </>
-      ),
-    },
-    {
-      title: "最后一步：你的投资画像",
+      title: "填个简单画像，开始用",
       body: (
         <>
           <P>
@@ -154,11 +85,12 @@ export function Onboarding({ probe = false }: { probe?: boolean }) {
           <ProfileForm
             formId="obProfileForm"
             initial={already}
-            submitLabel="填好了，开始用 →"
+            compact
+            submitLabel="去试试 →"
             onSubmit={(p) => {
               saveProfile(p)
-              markOnboardingSeen()      // ★「看过了」是在**这一刻**写下的，
-              setDone(true)             //   不是在进入这一页时 —— 中途关掉的不算看完
+              markOnboardingSeen()
+              setDone(true)
             }}
           />
         </>
@@ -175,7 +107,17 @@ export function Onboarding({ probe = false }: { probe?: boolean }) {
       <div className="center-large-container">
         <div className="center-large-card guidance-card">
           <div className="flex flex-col gap-4">
-            <SiteBanner />
+            {i === 0 && (
+              <section className="card rounded-lg border border-[var(--rule)] bg-[var(--card)] p-4" aria-label="零门槛说明">
+                <h3 className="text-lg font-semibold text-[var(--accent)] mb-2">零门槛，直接用</h3>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  <span className="inline-block px-3 py-1 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] text-sm font-medium">不收费</span>
+                  <span className="inline-block px-3 py-1 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] text-sm font-medium">不用注册</span>
+                  <span className="inline-block px-3 py-1 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] text-sm font-medium">不荐股</span>
+                </div>
+                <p className="text-sm text-[var(--ink-2)]">查词、看图谱、跑预测直接用；想让 AI 陪你聊天，再填一把你自己的 DeepSeek Key——只存在你这台电脑上。</p>
+              </section>
+            )}
 
             <section className="card rounded-lg border border-[var(--rule)] bg-[var(--card)] p-4"
                      id="obCard" aria-label="新手引导">

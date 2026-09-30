@@ -76,11 +76,12 @@ function Row({ row, label, hint, htmlFor, children }: {
   )
 }
 
-export function ProfileForm({ initial, submitLabel, onSubmit, formId = "profileForm" }: {
+export function ProfileForm({ initial, submitLabel, onSubmit, formId = "profileForm", compact = false }: {
   initial?: Profile | null
   submitLabel: string
   onSubmit: (p: Profile) => void
   formId?: string
+  compact?: boolean
 }) {
   const [p, setP] = React.useState<Profile>(initial || EMPTY)
   const [err, setErr] = React.useState("")
@@ -130,17 +131,21 @@ export function ProfileForm({ initial, submitLabel, onSubmit, formId = "profileF
         ))}
       </Row>
 
-      <Row row="assets" label="可投资资产" hint="只存在你自己的浏览器里">
-        {ASSETS.map((n) => (
-          <Chip key={n} opt={n} on={p.assets === n} onClick={() => set("assets", n)}>{n}</Chip>
-        ))}
-      </Row>
+      {!compact && (
+        <Row row="assets" label="可投资资产" hint="只存在你自己的浏览器里">
+          {ASSETS.map((n) => (
+            <Chip key={n} opt={n} on={p.assets === n} onClick={() => set("assets", n)}>{n}</Chip>
+          ))}
+        </Row>
+      )}
 
-      <Row row="income" label="每月可投入" hint="不跟模拟投资的虚拟本金挂钩">
-        {INCOMES.map((n) => (
-          <Chip key={n} opt={n} on={p.income === n} onClick={() => set("income", n)}>{n}</Chip>
-        ))}
-      </Row>
+      {!compact && (
+        <Row row="income" label="每月可投入" hint="不跟模拟投资的虚拟本金挂钩">
+          {INCOMES.map((n) => (
+            <Chip key={n} opt={n} on={p.income === n} onClick={() => set("income", n)}>{n}</Chip>
+          ))}
+        </Row>
+      )}
 
       <Row row="note" label="还想说点什么" htmlFor="pfNote">
         <input
