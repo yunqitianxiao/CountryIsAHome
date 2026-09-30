@@ -181,7 +181,7 @@ export function Home({ probe = false, initial, initialRural }: {
                   <span className="kicker">智能体</span>
                   <h2 className="mt-1 text-lg font-semibold text-[var(--ink)]">有问题直接问它</h2>
                   <p className="mt-1 text-sm text-[var(--ink-2)]">
-                    查词、看行情、跑一段 K 线预测，它把结果翻成人话讲给你，还会告诉你
+                    查词、看行情、跑一段 K 线分析，它把结果翻成人话讲给你，还会告诉你
                     <b>它没把握的地方在哪儿</b>。
                   </p>
                 </div>
@@ -306,14 +306,14 @@ export function Home({ probe = false, initial, initialRural }: {
                 <h2 className="mt-1 text-base font-semibold text-[var(--ink)]">第一次来？先看这页</h2>
                 <p className="mt-1 text-sm text-[var(--ink-2)]">
                   这个站是干什么的、三步怎么用、Kronos 模型是什么、以及<b>它做不到什么</b>。
-                  一步步走完，顺便把你的投资兴趣和情况填一下。
+                  一步步走完，顺便把你的理财偏好和情况填一下。
                 </p>
               </a>
 
               <a className="card linkcard block rounded-lg border border-[var(--rule)] bg-[var(--card)] p-4 no-underline"
                  href="graph.html" id="graphCard">
                 <span className="kicker">知识图谱</span>
-                <h2 className="mt-1 text-base font-semibold text-[var(--ink)]">家庭财富管理词典图谱</h2>
+                <h2 className="mt-1 text-base font-semibold text-[var(--ink)]">家庭理财词典图谱</h2>
                 <p className="mt-1 text-sm text-[var(--ink-2)]">
                   255 个理财术语，按「属于 / 对比 / 前提」连成一张图。想知道一个词和别的词什么关系，来这儿。
                 </p>
@@ -344,11 +344,11 @@ export function Home({ probe = false, initial, initialRural }: {
                   它和主页面上那句回测实测是同一件事的两种说法，所以两处都连着基线。 */}
               <a className="card linkcard block rounded-lg border border-[var(--rule)] bg-[var(--card)] p-4 no-underline"
                  href="/ledger" id="ledgerCard">
-                <span className="kicker">预测台账</span>
+                <span className="kicker">复盘记录</span>
                 <h2 className="mt-1 text-base font-semibold text-[var(--ink)]">它过去猜得怎么样</h2>
                 <p className="mt-1 text-sm text-[var(--ink-2)]">
-                  每一次预测都记下来，到期拿<b>真实行情</b>打分。命中率永远和「无脑喊涨」并排显示 ——
-                  没有基线的命中率说明不了任何事。在线记录和离线回填<b>分开算，不混成一个数</b>。
+                  每一次判断都记下来，到期拿<b>真实行情</b>打分。正确率永远和「无脑喊涨」并排显示 ——
+                  没有基线的正确率说明不了任何事。在线记录和离线回填<b>分开算，不混成一个数</b>。
                 </p>
               </a>
 
@@ -375,7 +375,7 @@ export function Home({ probe = false, initial, initialRural }: {
                 <p className="mt-1 text-sm text-[var(--ink-2)]">
                   把那条建议的原文粘进来：它承诺了什么、哪几句是红旗（带原文）、
                   哪几句<b>看着像红旗其实不算</b>、你该问什么、哪几件事它判不了。
-                  <b>不给预测、不推产品</b> —— 判定走规则，每条都能追到词条原文。
+                  <b>不给结论、不推产品</b> —— 判定走规则，每条都能追到词条原文。
                 </p>
               </a>
 
@@ -510,7 +510,7 @@ function ProfileCard() {
           </p>
         ) : (
           <p className="text-sm text-[var(--ink-2)]" id="profileEcho">
-            还没填，去填 →　填了之后智能体回答会带上你的情况，模拟投资也会按你的兴趣推荐标的。
+            还没填，去填 →　填了之后智能体回答会带上你的情况，模拟投资也会按你的偏好推荐产品。
           </p>
         )}
       </div>

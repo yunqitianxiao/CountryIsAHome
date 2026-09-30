@@ -112,10 +112,10 @@ const GameSimulation: React.FC<GameSimulationProps> = ({ initial, probe }) => {
     return (
       <div className="card">
         <div className="card chd">
-          <h2>模拟投资结果</h2>
+          <h2>模拟结果</h2>
         </div>
         <div className="p-4">
-          <p className="text-gray-500">暂无模拟投资数据</p>
+          <p className="text-gray-500">还没有模拟数据</p>
         </div>
       </div>
     );
@@ -130,24 +130,24 @@ const GameSimulation: React.FC<GameSimulationProps> = ({ initial, probe }) => {
       {/* 投资摘要卡片 */}
       <div className="card glow-effect">
         <div className="card chd">
-          <h2>投资摘要</h2>
+          <h2>概览</h2>
         </div>
         <div className="p-4">
           <div className="text-center mb-4">
             <div className="num-hero text-up">{result.profitLossPercent >= 0 ? '+' : ''}{result.profitLossPercent.toFixed(2)}%</div>
-            <div className="text-sm text-gray-400 mt-1">收益率</div>
+            <div className="text-sm text-gray-400 mt-1">收益情况</div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="text-center">
               <div className="num-lg">{result.initialAmount.toLocaleString()}</div>
-              <div className="text-sm text-gray-400">初始资金</div>
+              <div className="text-sm text-gray-400">初始本金</div>
             </div>
             <div className="text-center">
               <div className={`num-lg ${result.currentValue >= result.initialAmount ? 'text-up' : 'text-down'}`}>
                 {result.currentValue.toLocaleString()}
               </div>
-              <div className="text-sm text-gray-400">当前价值</div>
+              <div className="text-sm text-gray-400">当前市值</div>
             </div>
           </div>
 
@@ -156,7 +156,7 @@ const GameSimulation: React.FC<GameSimulationProps> = ({ initial, probe }) => {
               <div className={`num-lg ${result.profitLoss >= 0 ? 'text-up' : 'text-down'}`}>
                 {result.profitLoss >= 0 ? '+' : ''}{result.profitLoss.toLocaleString()}
               </div>
-              <div className="text-sm text-gray-400">盈亏金额</div>
+              <div className="text-sm text-gray-400">盈亏</div>
             </div>
           </div>
         </div>
@@ -166,7 +166,7 @@ const GameSimulation: React.FC<GameSimulationProps> = ({ initial, probe }) => {
       <div className="col-span-full">
         <InvestmentChart
           data={result.historicalData}
-          title={`${result.symbol} - ${holdings.find(h => h.symbol === result.symbol)?.name || '价格走势'} (模拟投资)`}
+          title={`${result.symbol} - ${holdings.find(h => h.symbol === result.symbol)?.name || '走势'} (模拟)`}
           width={800}
           height={500}
         />
@@ -182,13 +182,13 @@ const GameSimulation: React.FC<GameSimulationProps> = ({ initial, probe }) => {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-600">
-                  <th className="text-left py-2 px-3">股票代码</th>
+                  <th className="text-left py-2 px-3">代码</th>
                   <th className="text-left py-2 px-3">名称</th>
-                  <th className="text-right py-2 px-3">持有数量</th>
-                  <th className="text-right py-2 px-3">平均成本</th>
-                  <th className="text-right py-2 px-3">当前价格</th>
-                  <th className="text-right py-2 px-3">当前价值</th>
-                  <th className="text-right py-2 px-3">盈亏比例</th>
+                  <th className="text-right py-2 px-3">数量</th>
+                  <th className="text-right py-2 px-3">成本均价</th>
+                  <th className="text-right py-2 px-3">现价</th>
+                  <th className="text-right py-2 px-3">市值</th>
+                  <th className="text-right py-2 px-3">盈亏</th>
                 </tr>
               </thead>
               <tbody>
@@ -221,7 +221,7 @@ const GameSimulation: React.FC<GameSimulationProps> = ({ initial, probe }) => {
       <div className="col-span-full">
         <div className="card luxury-border">
           <div className="card chd">
-            <h2>交易历史</h2>
+            <h2>操作记录</h2>
           </div>
           <div className="p-4">
             <div className="space-y-3">

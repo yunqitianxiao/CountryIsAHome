@@ -275,7 +275,7 @@ export function Game({ probe = false, initial }: { probe?: boolean; initial?: In
             <div className="chd flex-wrap">
               <h2>不知道买什么？</h2>
               <span className="text-xs text-[var(--ink-3)]">
-                按你画像里填的投资兴趣挑的
+                按你画像里填的偏好挑的
               </span>
             </div>
             <div className="px-4 pt-3 pb-4">
@@ -478,7 +478,7 @@ export function Game({ probe = false, initial }: { probe?: boolean; initial?: In
           </Callout>
           <div className="disclaim mt-3" id="disclaim">
             <b>风险提示</b>：这里的盈亏全按历史行情算，<b>过去涨不代表以后涨</b>；
-            所有内容仅供学习，<b>不构成投资建议</b>。
+            所有内容<b>仅供学习参考</b>。
             <div className="acc-line" dangerouslySetInnerHTML={{ __html: accHtml }} />
           </div>
         </section>
