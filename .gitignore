@@ -21,6 +21,10 @@ web/node_modules/
 .env.local
 .venv/
 venv/
+# ★Windows 本机建的 venv（仓库自带的 `.venv` 是 Linux venv，`pyvenv.cfg` 里
+#   home = /usr/bin，Windows 上永远跑不起来，只能自己建一份。名字区分开，
+#   免得两个平台的 venv 互相顶掉）。同样是可重建物，不入库。
+.venv-win/
 
 
 # ★资讯采集的重依赖层绝不入库（都是可重建物，安装步骤见 README 附录）：

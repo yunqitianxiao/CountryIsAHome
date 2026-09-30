@@ -2074,7 +2074,10 @@ def main():
         print('    ⊘ 本机没有 node —— 这一层没跑（★"没跑"不等于"通过"）')
         verdicts.append(None)
     else:
-        p = '/tmp/_licai_syntax.js'
+        # ★不要写死 `/tmp`：Windows 上 Python 会把它解析成当前盘根的 `F:\tmp`，
+        #   目录不存在 → FileNotFoundError（2026-09-27 在本机实测）。
+        #   走系统临时目录，跨平台都能跑。本文件顶部已经 import 了 tempfile / os。
+        p = os.path.join(tempfile.gettempdir(), '_licai_syntax.js')
         open(p, 'w', encoding='utf-8').write(js)
         r = subprocess.run(['node', '--check', p], capture_output=True, text=True)
         print('    ' + ('✓ 通过' if not r.returncode else '★ ' + r.stderr.strip()[:200]))

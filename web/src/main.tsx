@@ -23,6 +23,7 @@ import { Psych } from "./pages/Psych/Psych"
 import { Assess } from "./pages/Assess/Assess"
 import { Research } from "./pages/Research/Research"
 import { Inspect } from "./pages/Inspect/Inspect"
+import { Verify } from "./pages/Verify/Verify"
 // ★引导智能体：**主页第一张卡**指向这里（`Home.tsx` 的 `#siteGuideCard`）。
 //   它是唯一一页的内容是"这个站自己长什么样" —— 数据来自 `site_map.json`
 //   （反向解析产物），所以它得跟 `build_sitemap.py` 一起看。
@@ -53,7 +54,7 @@ const root = createRoot(host)
 //   （`check_static` 要求它 200），后者是换栈期间的旧链接。**没有匹配上一律落主页**，
 //   不是"落 404 页"——这条默认值本身也是一条判据的落点：
 //   一个拼错的地址应该给人主页，而不是一片空白。
-type PageKey = "home" | "agent" | "onboarding" | "profile" | "game" | "dash" | "portfolio" | "ledger" | "luxuryDash" | "investSim" | "agents" | "intraday" | "linkage" | "collect" | "psych" | "assess" | "research" | "inspect" | "siteguide"
+type PageKey = "home" | "agent" | "onboarding" | "profile" | "game" | "dash" | "portfolio" | "ledger" | "luxuryDash" | "investSim" | "agents" | "intraday" | "linkage" | "collect" | "psych" | "assess" | "research" | "inspect" | "siteguide" | "verify"
 
 const ROUTES: [RegExp, PageKey, string][] = [
   // ★引导智能体排在**第一条**：它是主页的第一张卡（`#siteGuideCard`），
@@ -99,6 +100,13 @@ const ROUTES: [RegExp, PageKey, string][] = [
   //   ★服务端那条路由是有的（`app.py` 的 `inspect_page()`），所以直接粘
   //     `/inspect` 或者刷新都落在这一页上，不是靠客户端跳过去才有。
   [/^\/inspect\/?$/, "inspect", "建议体检 · 别人给你的理财建议，先拿它过一遍"],
+  // ★产品验真：frontend only —— 这一页要的不是 `initial`（没有数据要取），
+  //   而是"这一页完全不许有网络请求"。那条由 `web/pcode_selftest.mjs` 守着，
+  //   守法是**读源码文本**：`pcode.ts` / `Verify.tsx` 里不许出现 fetch / localStorage。
+  //   理由：判断一只理财产品真不真的权限在官方平台（中国理财网，监管指定的行业
+  //   统一信息披露渠道），本站代答不了 —— 代答一次，就从"送你到官方入口"
+  //   变成"替官方背书"。★它在 `chrome.tsx: NEW_PAGES` 里也有一条，位置与这里同序。
+  [/^\/verify\/?$/, "verify", "产品验真 · 拿登记编码去官方平台对一下"],
 ]
 
 function currentPage(): PageKey {
@@ -189,6 +197,7 @@ function view(probe: boolean) {
     //   ★那条同步路**必须**在：异步回来的目录，同步探针量到的是"正在读站点目录…"
     //     —— 那不是判据变红，是判据**消失**（`Research.tsx:159` 那段记着这个病）。
     case "siteguide": return <SiteGuide probe={probe} />
+    case "verify": return <Verify probe={probe} />
     // ★主页那一块行情条也要**同步**取好了再渲染（照 `/dash` 那条），
     //   否则同 tick 量的探针量到的是"正在取行情…" —— 判据**消失**而不是变红。
     default: return <Home probe={probe} initial={probe ? loadDashSync() : undefined}

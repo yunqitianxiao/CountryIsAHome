@@ -266,6 +266,19 @@ def inspect_page():
     return page('index.html', base=DIST)
 
 
+# ── 产品验真页（与 /assess 同族：**没有**后端，连存储都没有）──────────────
+#
+# ★它比 /assess 还空一层：/assess 至少在浏览器里存了十道题的答案，这一页
+#   **什么都不存** —— 校验是 `web/src/pcode.ts` 里的纯函数，编码不进 localStorage、
+#   不发任何请求。这不是"还没做后端"，是**不需要**：判断一只理财产品真不真的
+#   权限在官方平台（中国理财网，监管指定的行业统一信息披露渠道），本站代答不了，
+#   也不该代答 —— 代答一次，本站就从"送你到官方入口"变成"替官方背书"。
+@app.route('/verify')
+def verify_page():
+    """产品验真页。★只校验登记编码的**形状**，真伪由官方平台判定；本站不代查、不落库。"""
+    return page('index.html', base=DIST)
+
+
 @app.route('/legacy')
 def legacy():
     """换栈之前的那个单页（根目录 index.html）。**文件没动、也没删。**

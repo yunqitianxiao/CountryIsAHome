@@ -22,15 +22,23 @@
 import { execFileSync } from "node:child_process"
 import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
-import { fileURLToPath } from "node:url"
+import { fileURLToPath, pathToFileURL } from "node:url"
 
+const NODE = process.execPath
 const here = dirname(fileURLToPath(import.meta.url))
 const bundle = join(tmpdir(), "licai_assess_bundle.mjs")
 
 // 先用项目自己的打包器（rolldown，vite 用的就是它）把 TS 打成 ESM。
+//
+// ★用 `process.execPath` 去跑 `node_modules/rolldown/bin/cli.mjs`，**不是**
+//   `execFileSync("node_modules/.bin/rolldown")`：在 Windows 上 `.bin/rolldown`
+//   只是一个纯文本 shim（内容是一行相对路径），直接拿它当可执行文件跑会 **ENOENT**，
+//   而且报错信息里看不到 shim 两个字，很容易误判成"rolldown 没装"。
+//   （同样的改法见 `pcode_selftest.mjs`。）
 execFileSync(
-  join(here, "node_modules/.bin/rolldown"),
-  [join(here, "src/assess.ts"), "-o", bundle, "-f", "esm", "-p", "node"],
+  NODE,
+  [join(here, "node_modules/rolldown/bin/cli.mjs"),
+   join(here, "src/assess.ts"), "-o", bundle, "-f", "esm", "-p", "node"],
   { cwd: here, stdio: ["ignore", "ignore", "inherit"] },
 )
 
@@ -39,7 +47,9 @@ execFileSync(
 const {
   ASSESS_KEY, DIMS, LEVELS, MAX_TOTAL, MIN_TOTAL, QUESTIONS,
   compareSelfReport, grade, levelOf, missing, sinceText,
-} = await import(bundle)
+  // ★Windows 上 `import()` 一个裸绝对路径（`C:\...`）会 ERR_UNSUPPORTED_ESM_URL_SCHEME：
+  //   ESM loader 只认 file:// URL。必须过一遍 pathToFileURL。
+} = await import(pathToFileURL(bundle).href)
 
 let bad = 0, n = 0
 const t = (name, cond, extra = "") => {

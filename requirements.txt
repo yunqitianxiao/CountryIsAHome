@@ -3,6 +3,18 @@
 # —— 实测那个源在本机的代理下会下到一半断掉（两次都断）。
 #   unset ALL_PROXY all_proxy
 #   uv pip install --python .venv/bin/python -i https://mirrors.aliyun.com/pypi/simple/ torch
+#
+# ★Windows 上这条**不成立**（2026-09-27 实测）：PyPI 和阿里云镜像的 Windows 轮子
+#   都是 **CPU 版**（装完是 `2.14.0+cpu`、`torch.cuda.is_available() = False`）。
+#   要 GPU 只能走上游源：
+#       pip install --index-url https://download.pytorch.org/whl/cu130 torch==2.14.0+cu130
+#   ★两个坑：
+#     1. 版本号**必须写全**（带 `+cu130`）。已经装了 `+cpu` 版时直接 `pip install torch`
+#        会报 "Requirement already satisfied" —— pip 比较版本时忽略 `+` 后面那段。
+#     2. wheel 近 2GB，装之前把临时目录挪到大盘（`TMP`/`TEMP` 指过去），
+#        否则解压时先吃掉 C 盘 2GB。官方源会中途超时，pip 能断点续传，别急着重来。
+#   ★Windows 的 cu130 轮子**自带** CUDA DLL：装完 `nvidia-*` 包数是 0，但 CUDA 照样可用，
+#     不要照 Linux 的经验去找 nvidia 包。
 torch
 einops==0.8.1
 safetensors==0.6.2
