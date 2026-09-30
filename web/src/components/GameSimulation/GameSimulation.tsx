@@ -112,10 +112,10 @@ const GameSimulation: React.FC<GameSimulationProps> = ({ initial, probe }) => {
     return (
       <div className="card">
         <div className="card chd">
-          <h2>模拟结果</h2>
+          <h2>练手结果</h2>
         </div>
         <div className="p-4">
-          <p className="text-gray-500">还没有模拟数据</p>
+          <p className="text-gray-500">还没有练手数据</p>
         </div>
       </div>
     );
@@ -147,7 +147,7 @@ const GameSimulation: React.FC<GameSimulationProps> = ({ initial, probe }) => {
               <div className={`num-lg ${result.currentValue >= result.initialAmount ? 'text-up' : 'text-down'}`}>
                 {result.currentValue.toLocaleString()}
               </div>
-              <div className="text-sm text-gray-400">当前市值</div>
+              <div className="text-sm text-gray-400">现在值多少</div>
             </div>
           </div>
 
@@ -166,7 +166,7 @@ const GameSimulation: React.FC<GameSimulationProps> = ({ initial, probe }) => {
       <div className="col-span-full">
         <InvestmentChart
           data={result.historicalData}
-          title={`${result.symbol} - ${holdings.find(h => h.symbol === result.symbol)?.name || '走势'} (模拟)`}
+          title={`${result.symbol} - ${holdings.find(h => h.symbol === result.symbol)?.name || '走势'} (练手)`}
           width={800}
           height={500}
         />
@@ -176,7 +176,7 @@ const GameSimulation: React.FC<GameSimulationProps> = ({ initial, probe }) => {
       <div className="col-span-full">
         <div className="card luxury-border">
           <div className="card chd">
-            <h2>当前持仓</h2>
+            <h2>当前持有</h2>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -185,9 +185,9 @@ const GameSimulation: React.FC<GameSimulationProps> = ({ initial, probe }) => {
                   <th className="text-left py-2 px-3">代码</th>
                   <th className="text-left py-2 px-3">名称</th>
                   <th className="text-right py-2 px-3">数量</th>
-                  <th className="text-right py-2 px-3">成本均价</th>
+                  <th className="text-right py-2 px-3">买入均价</th>
                   <th className="text-right py-2 px-3">现价</th>
-                  <th className="text-right py-2 px-3">市值</th>
+                  <th className="text-right py-2 px-3">现在值</th>
                   <th className="text-right py-2 px-3">盈亏</th>
                 </tr>
               </thead>

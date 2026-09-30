@@ -63,7 +63,7 @@ function Err({ e }: { e: GameErr }) {
     <div className="gerr" id="gErr">
       <b>没算出来</b>：{e.msg}
       {e.hint ? <div className="hint">{e.hint}</div> : null}
-      <div className="hint">这里不会给你一个编出来的数字 —— 取不到就是取不到。</div>
+      <div className="hint">这里不会编一个数糊弄你 —— 没取到就是没取到。</div>
     </div>
   )
 }
@@ -84,7 +84,7 @@ function Nums({ q }: { q: QuoteOk }) {
             这一局的数字再也对不上了。 */}
         <span className="gv tnum" id="gBuyDate">
           {q.buy_date}
-          {q.date_shifted ? <span className="text-[var(--ink-3)]">（那天不是交易日，按之后第一根日 K 算）</span> : null}
+          {q.date_shifted ? <span className="text-[var(--ink-3)]">（那天不是交易日，按之后第一根 K 线计算）</span> : null}
         </span>
       </div>
       <div className="grow">
@@ -101,7 +101,7 @@ function Nums({ q }: { q: QuoteOk }) {
         <span className="gv tnum" id="gLast">{price(q.last_close)}</span>
       </div>
       <div className="grow">
-        <span className="gk">市值</span>
+        <span className="gk">现在值</span>
         <span className="gv tnum" id="gValue">{num(q.value)}</span>
       </div>
       <div className="grow gbig">
@@ -120,8 +120,8 @@ function Nums({ q }: { q: QuoteOk }) {
         <span className="gv tnum" id="gAmtShown">{num(q.amount)}</span>
       </div>
       <div className="hint">
-        数据源：{q.source} · 共 {q.bars} 根日 K。
-        <b>历史涨跌不代表以后</b>，这一页只是让你看看"那时候买了会怎样"。
+        数据来自：{q.source} · 共 {q.bars} 根日 K。
+        <b>过去涨不表示以后也会涨</b>，这一页就是让你看看"那会儿买了会怎样"。
       </div>
     </div>
   )
@@ -222,8 +222,8 @@ export function Game({ probe = false, initial }: { probe?: boolean; initial?: In
           <header className="sticky top-0 z-30 border-b border-[var(--rule)] bg-[var(--card)]">
             <div className="bar mx-auto flex max-w-[clamp(1180px,78vw,2200px)] flex-wrap items-center gap-2.5 px-5 py-2.5">
               <h1 className="text-lg font-semibold text-[var(--ink)]">
-                模拟投资
-                <span className="ml-2 text-xs font-normal text-[var(--ink-3)]">虚拟本金，真实行情</span>
+                模拟练手
+                <span className="ml-2 text-xs font-normal text-[var(--ink-3)]">假钱练手，行情是真的</span>
               </h1>
               <a className="badge inline-flex items-center gap-1.5 whitespace-nowrap rounded border border-[var(--rule)] bg-[var(--card)] px-2 py-1 text-xs text-[var(--ink-2)] no-underline" href="./">
                 ← 回到主页
@@ -265,7 +265,7 @@ export function Game({ probe = false, initial }: { probe?: boolean; initial?: In
                 这是<b>虚拟</b>本金，赚赔都不影响你的真钱。
                 {/* ★这句话必须写出来：用户会以为这里该填画像里那个"可投资资产"。
                     两者没有任何关系 —— 那个是"你有多少钱"，这个是"你想拿多少练手"。 */}
-                它和你画像里填的资产<b>没有任何关系</b>，也不会自动帮你填上 ——
+                它和你画像里填的情况<b>没有任何关系</b>，也不会自动帮你填上 ——
                 想练多少就填多少，填错了改掉就是。
               </div>
             </div>
@@ -287,7 +287,7 @@ export function Game({ probe = false, initial }: { probe?: boolean; initial?: In
                     <span className="text-[var(--ink-3)]">{it.symbol}</span>
                   </button>
                 ))}
-                {!items.length ? <span className="hint">{rec?.summary?.note || "正在取推荐…"}</span> : null}
+                {!items.length ? <span className="hint">{rec?.summary?.note || "正在加载…"}</span> : null}
               </div>
               {items.length ? <div className="hint">{rec?.summary?.note}</div> : null}
               {rec?.data?.unmapped?.length ? (
@@ -311,7 +311,7 @@ export function Game({ probe = false, initial }: { probe?: boolean; initial?: In
           <div className="px-4 pt-3 pb-4">
             <div className="gform">
               <label className="gf">
-                <span>标的</span>
+                <span>品种</span>
                 <input id="gSym" type="text" autoComplete="off" spellCheck={false}
                        value={sym} onChange={(e) => setSym(e.target.value)}
                        onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); look() } }}
@@ -329,7 +329,7 @@ export function Game({ probe = false, initial }: { probe?: boolean; initial?: In
                        onChange={(e) => setDate(e.target.value)} />
               </label>
               <button id="gGo" type="button" disabled={busy} onClick={look}>算算看</button>
-              <button id="gHold" type="button" disabled={busy} onClick={hold}>按今天的真价建仓</button>
+              <button id="gHold" type="button" disabled={busy} onClick={hold}>按今天真实价买入</button>
             </div>
             <div id="gOut" aria-live="polite" aria-busy={busy}>
               {res ? (isOk(res.summary) ? <Nums q={res.summary} /> : <Err e={res.summary} />) : null}
@@ -361,12 +361,12 @@ export function Game({ probe = false, initial }: { probe?: boolean; initial?: In
            href="/research" id="researchCard">
           <div className="flex items-center justify-between gap-4">
             <div className="min-w-0">
-              <span className="kicker">量价研判</span>
+              <span className="kicker">量价分析</span>
               <h2 className="mt-1 text-lg font-semibold text-[var(--ink)]">先看材料，自己押一边</h2>
               <p className="mt-1 text-sm text-[var(--ink-2)]">
-                系统只给<b>截至买入日</b>的量价特征（趋势、量能、背离、挤压、波动），
-                <b>一个字的涨跌方向都不给</b> —— 看涨看跌由你自己下，下完才揭晓真实结果。
-                每条特征都带一条<b>你能自己动手复核的算术</b>。
+                系统只给<b>截至买入日</b>的量价特征（趋势、成交量、背离、挤压、波动），
+                <b>一个字都不告诉你明天会涨会跌</b> —— 你自己判断，判完才揭晓真实结果。
+                每条指标都附了<b>你能自己动手验证的算法</b>。
               </p>
             </div>
             <span className="kicker shrink-0 whitespace-nowrap" aria-hidden="true">进去 →</span>
@@ -402,11 +402,11 @@ export function Game({ probe = false, initial }: { probe?: boolean; initial?: In
             <Table id="gPos">
               <TableHead>
                 <TableRow>
-                  <TableHeaderCell className={TH}>标的</TableHeaderCell>
+                  <TableHeaderCell className={TH}>品种</TableHeaderCell>
                   <TableHeaderCell className={TH + " text-right"}>本金</TableHeaderCell>
                   <TableHeaderCell className={TH + " text-right"}>买入价</TableHeaderCell>
                   <TableHeaderCell className={TH + " text-right"}>现价</TableHeaderCell>
-                  <TableHeaderCell className={TH + " text-right"}>市值</TableHeaderCell>
+                  <TableHeaderCell className={TH + " text-right"}>现在值</TableHeaderCell>
                   <TableHeaderCell className={TH + " text-right"}>盈亏</TableHeaderCell>
                   <TableHeaderCell className={TH} />
                 </TableRow>
@@ -439,13 +439,13 @@ export function Game({ probe = false, initial }: { probe?: boolean; initial?: In
                           </span>
                         </TableCell>
                         <TableCell className={TD + " text-right"}>
-                          <button type="button" className="gdel" onClick={() => del(r.p.id)}>删掉</button>
+                          <button type="button" className="gdel" onClick={() => del(r.p.id)}>删除</button>
                         </TableCell>
                       </>
                     ) : (
                       // ★坏掉的行也占一行并写明原因：少一行看起来像"我只建了两仓"
                       <TableCell className={TD + " text-xs text-[var(--f5)]"} colSpan={7}>
-                        {r.p.symbol} 这一行没取到：{r.err}
+                        {r.p.symbol} 这一行没读到：{r.err}
                         <button type="button" className="gdel ml-2" onClick={() => del(r.p.id)}>删掉</button>
                       </TableCell>
                     )}
@@ -453,13 +453,13 @@ export function Game({ probe = false, initial }: { probe?: boolean; initial?: In
                 ))}
                 {loadingPos ? (
                   <TableRow>
-                    <TableCell className={TD + " text-xs text-[var(--ink-3)]"} colSpan={7}>正在取最新价…</TableCell>
+                    <TableCell className={TD + " text-xs text-[var(--ink-3)]"} colSpan={7}>正在获取最新价…</TableCell>
                   </TableRow>
                 ) : null}
                 {!shown.length && !loadingPos ? (
                   <TableRow>
                     <TableCell className={TD + " text-xs text-[var(--ink-3)]"} colSpan={7}>
-                      还没建仓。上面选一只、点「按今天的真价建仓」，它就会住进这台浏览器里。
+                      还没买过。上面选一个、点「按今天真实价买入」，它就会存在你浏览器里。
                     </TableCell>
                   </TableRow>
                 ) : null}
@@ -472,12 +472,12 @@ export function Game({ probe = false, initial }: { probe?: boolean; initial?: In
 
         <section className="card p-4" aria-label="风险提示">
           <Callout variant="warning" title="钱是假的，教训是真的">
-            行情来自公开接口，可能延迟、也可能因为数据源不同而和别处差一点点；
-            <b>涨跌颜色是 A 股习惯（红涨绿跌）</b>。持仓只存在你自己的浏览器里，
+            行情来自公开接口，可能会有延迟，不同数据源之间也可能差一点点；
+            <b>涨跌颜色按 A 股习惯（红涨绿跌）</b>。持仓只存在你自己的浏览器里，
             换个浏览器就没了。
           </Callout>
           <div className="disclaim mt-3" id="disclaim">
-            <b>风险提示</b>：这里的盈亏全按历史行情算，<b>过去涨不代表以后涨</b>；
+            <b>风险提示</b>：这里的盈亏都按历史行情计算，<b>过去涨不表示以后也会涨</b>；
             所有内容<b>仅供学习参考</b>。
             <div className="acc-line" dangerouslySetInnerHTML={{ __html: accHtml }} />
           </div>

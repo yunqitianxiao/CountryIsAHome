@@ -88,12 +88,12 @@ export function Home({ probe = false, initial, initialRural }: {
             <section id="siteLead" aria-label="本站立场"
                      className="rounded-lg border border-[var(--rule)] bg-[var(--paper)] p-4">
               <p className="text-sm leading-relaxed text-[var(--ink-2)]">
-                <b className="text-[var(--ink)]">这个站不发理财建议 —— 它检验你收到的那条。</b>
+                <b className="text-[var(--ink)]">这个站不发理财建议 —— 它只帮你看看别人给的建议靠不靠谱。</b>
                 群里转的、亲戚介绍的、理财经理发的，原文粘进「建议体检」，它告诉你：
-                这段话<b>承诺了什么</b>、哪几句是<b>红旗</b>（每条都带你<b>能自己核</b>的原文）、
-                哪几句<b>看着像红旗、其实不算</b>、你<b>该问它什么</b>，
-                以及<b>哪几件事它判不了</b>。它<b>不预测涨跌</b>、<b>不推荐任何产品</b>、
-                <b>不替你判"这是不是诈骗"</b> —— 判定走<b>规则</b>，每条都能追到词条原文。
+                这段话<b>承诺了什么</b>、哪几句是<b>警示信号</b>（每条都带你<b>能自己查</b>的原文）、
+                哪几句<b>像警示、其实不算</b>、你<b>该问它什么</b>，
+                以及<b>哪几件事它判不了</b>。它<b>不预言涨跌</b>、<b>不推荐任何产品</b>、
+                <b>不替你说"这是不是骗局"</b> —— 判定走<b>规则</b>，每条都能追到词条原文。
               </p>
             </section>
 
@@ -225,8 +225,8 @@ export function Home({ probe = false, initial, initialRural }: {
                     <span className="kicker">多智能体博弈</span>
                     <h2 className="mt-1 text-lg font-semibold text-[var(--ink)]">九个角色吵一架，再给结论</h2>
                     <p className="mt-1 text-sm text-[var(--ink-2)]">
-                      多头、空头、基本面、技术面、舆情各有各的说法，风控官握着<b>一票否决</b>，
-                      投资经理最后汇总裁决。谁被点名谁就得回应，权重按这轮表现动态调。
+                      看多的、看空的、研究数据的、画图派的、刷新闻的各有各的道理，风控官握着<b>一票否决权</b>，
+                      最后由决策者汇总结论。谁被点名就得当场回应，权重按本轮表现自动调整。
                     </p>
                   </div>
                   <span className="kicker shrink-0 whitespace-nowrap" aria-hidden="true">进去 →</span>
@@ -237,11 +237,11 @@ export function Home({ probe = false, initial, initialRural }: {
                  href="/intraday" id="intradayCard">
                 <div className="flex items-center justify-between gap-4">
                   <div className="min-w-0">
-                    <span className="kicker">分钟级策略</span>
+                    <span className="kicker">盘中趋势</span>
                     <h2 className="mt-1 text-lg font-semibold text-[var(--ink)]">这一分钟，量价在说什么</h2>
                     <p className="mt-1 text-sm text-[var(--ink-2)]">
-                      盘中量价怎么看：蜡烛、成交量、均价线和价值区共用一根横轴，
-                      每条策略信号都带一条<b>你能自己动手复核的算术</b>。方向不是胜率。
+                      盘中怎么读：蜡烛图、成交量、均价线都画在同一根时间轴上，
+                      每个趋势信号的算法<b>你都能自己动手验证</b>。看的是方向，不是什么成功率。
                     </p>
                     {/* ★这一句**故意不提几档、也不提"日线"**（2026-09-22，
                         与 ylf-88 定的口径）：档位是服务端 `periods` 派生的，港美股/加密
@@ -274,8 +274,8 @@ export function Home({ probe = false, initial, initialRural }: {
                     <span className="kicker">风险测评</span>
                     <h2 className="mt-1 text-lg font-semibold text-[var(--ink)]">你的承受能力，由哪几件事决定</h2>
                     <p className="mt-1 text-sm text-[var(--ink-2)]">
-                      十道题问的是这笔钱占你资产多少、多久不用、你见过什么样的跌 ——
-                      <b>能核对的事</b>，比「我觉得我能扛」实在。本站的教学口径，不是官方问卷。
+                      十道题问的是这笔钱占你积蓄多少、多久用不着、你见过什么样的大跌 ——
+                      <b>自己能核实的事</b>，比「我觉得我能扛」靠谱。本站的教学分类，不是官方问卷。
                     </p>
                   </div>
                   <span className="kicker shrink-0 whitespace-nowrap" aria-hidden="true">测一下 →</span>
@@ -306,7 +306,7 @@ export function Home({ probe = false, initial, initialRural }: {
                 <h2 className="mt-1 text-base font-semibold text-[var(--ink)]">第一次来？先看这页</h2>
                 <p className="mt-1 text-sm text-[var(--ink-2)]">
                   这个站是干什么的、三步怎么用、Kronos 模型是什么、以及<b>它做不到什么</b>。
-                  一步步走完，顺便把你的理财偏好和情况填一下。
+                  一步步走完，顺便把你的情况和偏好填一填。
                 </p>
               </a>
 
@@ -321,22 +321,22 @@ export function Home({ probe = false, initial, initialRural }: {
 
               <a className="card linkcard block rounded-lg border border-[var(--rule)] bg-[var(--card)] p-4 no-underline"
                  href="/game" id="gameCard">
-                <span className="kicker">模拟投资</span>
+                <span className="kicker">模拟练手</span>
                 <h2 className="mt-1 text-base font-semibold text-[var(--ink)]">拿虚拟本金练手</h2>
                 <p className="mt-1 text-sm text-[var(--ink-2)]">
-                  本金是虚拟的（跟你在别处填的资产无关），行情是<b>真抓的</b>。
-                  回看三个月前买它会赚多少，或者今天建仓、一天天跟着走。
+                  本金是虚拟的（跟你在别处填的积蓄无关），行情是<b>实时来的</b>。
+                  回看三个月前买了能赚多少，或者今天下手、一天天跟下来。
                 </p>
               </a>
 
               {/* ★这张卡指向**你在游戏页买的那些**：体检的组合就是它们，不另建一套持仓。 */}
               <a className="card linkcard block rounded-lg border border-[var(--rule)] bg-[var(--card)] p-4 no-underline"
                  href="/portfolio" id="portfolioCard">
-                <span className="kicker">组合体检</span>
+                <span className="kicker">持仓分析</span>
                 <h2 className="mt-1 text-base font-semibold text-[var(--ink)]">看看这样配有没有问题</h2>
                 <p className="mt-1 text-sm text-[var(--ink-2)]">
-                  集中度、相关性聚集（哪几只是"名字不同、走势一条线"）、波动回撤、Beta 与压力情景。
-                  <b>只算数、不给健康总分</b>，算不了的明说算不了。
+                  太集中了没、有没有几只走势一模一样的、涨跌波动有多大、极端行情下会怎样。
+                  <b>只管算、不打总分</b>，算不来的就老实说算不来。
                 </p>
               </a>
 
@@ -347,8 +347,8 @@ export function Home({ probe = false, initial, initialRural }: {
                 <span className="kicker">复盘记录</span>
                 <h2 className="mt-1 text-base font-semibold text-[var(--ink)]">它过去猜得怎么样</h2>
                 <p className="mt-1 text-sm text-[var(--ink-2)]">
-                  每一次判断都记下来，到期拿<b>真实行情</b>打分。正确率永远和「无脑喊涨」并排显示 ——
-                  没有基线的正确率说明不了任何事。在线记录和离线回填<b>分开算，不混成一个数</b>。
+                  每一次判断都记下来，到期拿<b>真实走势</b>打分。正确率永远和「无脑喊涨」并排显示 ——
+                  没有对照的正确率说明不了任何问题。在线记录和离线回填<b>分开算，不混成一个数</b>。
                 </p>
               </a>
 
@@ -373,9 +373,9 @@ export function Home({ probe = false, initial, initialRural }: {
                 <span className="kicker">建议体检</span>
                 <h2 className="mt-1 text-base font-semibold text-[var(--ink)]">别人给你的建议，先过一遍</h2>
                 <p className="mt-1 text-sm text-[var(--ink-2)]">
-                  把那条建议的原文粘进来：它承诺了什么、哪几句是红旗（带原文）、
-                  哪几句<b>看着像红旗其实不算</b>、你该问什么、哪几件事它判不了。
-                  <b>不给结论、不推产品</b> —— 判定走规则，每条都能追到词条原文。
+                  把那条建议的原文粘进来：它保证了什么、哪几句是警示信号（带原文）、
+                  哪几句<b>看着像警示其实不算</b>、你该问什么、哪几件事它判断不了。
+                  <b>不给结论、不推产品</b> —— 只按规则一条条对，每条你都能去查原文。
                 </p>
               </a>
 
@@ -391,11 +391,11 @@ export function Home({ probe = false, initial, initialRural }: {
                     这一张不参与"几何非零"那条判据，不引入任何多余变量。 */}
               <a className="card linkcard block rounded-lg border border-[var(--rule)] bg-[var(--card)] p-4 no-underline"
                  href="/dash" id="dashCard">
-                <span className="kicker">行情总览</span>
-                <h2 className="mt-1 text-base font-semibold text-[var(--ink)]">一屏看完几只标的</h2>
+                <span className="kicker">行情速览</span>
+                <h2 className="mt-1 text-base font-semibold text-[var(--ink)]">一屏看完几只品种</h2>
                 <p className="mt-1 text-sm text-[var(--ink-2)]">
                   A股、指数、港股、美股、加密各一只：最新收盘价、近 5/20/60 日涨跌、
-                  年化波动、区间位置，底下还有一条对比条。每个数都是<b>当场取的</b>，
+                  波动大小、在什么位置，底下还有一条对比条。每个数都是<b>实时拿的</b>，
                   取不到就明说取不到。
                 </p>
               </a>
@@ -419,7 +419,7 @@ function StripRow({ r }: { r: DashRow }) {
       <div className="flex min-w-0 items-center gap-2 rounded border border-[var(--rule-2)] bg-[var(--paper)] px-3 py-2"
            data-sym={r.sym}>
         <span className="min-w-0 flex-1 truncate text-xs text-[var(--ink-3)]">{r.sym}</span>
-        <span className="shrink-0 text-xs text-[var(--f5)]" data-k="err">这一只没取到</span>
+        <span className="shrink-0 text-xs text-[var(--f5)]" data-k="err">这一只没读到</span>
       </div>
     )
   }
@@ -454,7 +454,7 @@ function DataStrip({ rows }: { rows: DashRow[] }) {
       <div className="mb-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <span className="kicker shrink-0">实时行情</span>
         <span className="text-xs text-[var(--ink-3)]">
-          A股 / 指数 / 港股 / 美股 / 加密各一只，收盘价是<b>真抓的</b>，走势是最近三个月
+          A股 / 指数 / 港股 / 美股 / 加密各挑一只，收盘价是<b>实时行情</b>，走势是最近三个月
         </span>
       </div>
       {rows.length ? (
@@ -462,7 +462,7 @@ function DataStrip({ rows }: { rows: DashRow[] }) {
           {rows.map((r) => <StripRow key={r.sym} r={r} />)}
         </div>
       ) : (
-        <p className="text-xs text-[var(--ink-3)]" id="dstripLoading">正在取行情…</p>
+        <p className="text-xs text-[var(--ink-3)]" id="dstripLoading">正在加载行情…</p>
       )}
       {/* ★底下一行实测数字**不在这里手写**：它是服务端现读现填的那一份
           （`agent/accuracy.py` → 壳里的 `#acc-boot`）。页面上的第二份真源会
@@ -510,7 +510,7 @@ function ProfileCard() {
           </p>
         ) : (
           <p className="text-sm text-[var(--ink-2)]" id="profileEcho">
-            还没填，去填 →　填了之后智能体回答会带上你的情况，模拟投资也会按你的偏好推荐产品。
+            还没填，去填 →　填完之后它回你会带上你的情况，模拟练手那边也会按你的偏好来推荐。
           </p>
         )}
       </div>
@@ -580,7 +580,7 @@ function RuralCard({ probe, initial }: { probe: boolean; initial?: RuralGroup[] 
             <p className="mt-1 text-sm text-[var(--ink-2)]">正在取词表…</p>
           ) : groups === null ? (
             <p className="mt-1 text-sm text-[var(--ink-2)]">
-              词表没取到 —— 这不代表这两类没有词，是这份名单没读到，刷新一下再试。
+              词表没读到 —— 不是说这两类词不存在，是名单没加载成功，刷新试试。
             </p>
           ) : total === 0 ? (
             <p className="mt-1 text-sm text-[var(--ink-2)]">

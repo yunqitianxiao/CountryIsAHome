@@ -61,7 +61,7 @@ export function Agent({ probe = false }: { probe?: boolean }) {
               照样过 —— 过的是"行数够多"，不是"样式在"。是**大屏那一档**
               （2400px 下文字只占一行 → 16px）把这件事露出来的。 */}
           <div className="disclaim min-[1900px]:col-span-full" id="disclaim">
-            <b>风险提示</b>：站内的分析来自只看了价格序列的小模型，不含基本面与新闻；
+            <b>风险提示</b>：分析来自一个只看了价格走势的小模型，没考虑公司基本面和新闻；
             所有内容<b>仅供学习参考</b>。
             {/* ★搬运服务端注入的实测数字，不在这里写数字 */}
             <div className="acc-line" dangerouslySetInnerHTML={{ __html: accHtml }} />
