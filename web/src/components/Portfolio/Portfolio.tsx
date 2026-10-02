@@ -21,7 +21,8 @@ import * as React from "react"
 import { Badge } from "../Badge/Badge"
 import { Callout } from "../Callout/Callout"
 import { Divider } from "../Divider/Divider"
-import { readAccBoot, ThemeSwitch } from "../../chrome"
+import { readAccBoot } from "../../chrome"
+import { Shell } from "../Shell/Shell"
 import { readWeights, loadPortfolio, corrTone, type PortfolioResp, type Weight } from "../../portfolio"
 import { num, pct } from "../../format"
 
@@ -125,25 +126,13 @@ export function Portfolio({ probe = false, initial }: { probe?: boolean; initial
   const ok = !!s?.ok && !!d
 
   return (
-    <div className="center-large-container bg-[var(--paper)]">
-      <div className="center-large-card">
-        <header className="sticky top-0 z-30 border-b border-[var(--rule)] bg-[var(--card)]">
-          <div className="bar mx-auto flex max-w-[clamp(1180px,78vw,2200px)] flex-wrap items-center gap-2.5 px-5 py-2.5">
-            <h1 className="text-lg font-semibold text-[var(--ink)]">
-              <a href="/" className="grad-title no-underline">乡e家</a>
-              组合体检
-              <span className="ml-2 text-xs font-normal text-[var(--ink-3)]">
-                你在「模拟投资」里买的每一笔，就是这里体检的组合
-              </span>
-            </h1>
-            <Badge variant="neutral">{weights.length} 笔持仓</Badge>
-            <div className="ml-auto">
-              <ThemeSwitch />
-            </div>
-          </div>
-        </header>
-
-        <main className="mx-auto grid max-w-[clamp(1180px,78vw,2200px)] grid-cols-1 items-start gap-4 p-5">
+    <Shell probe={probe}>
+      <div className="mb-3 mt-3 flex flex-wrap items-center gap-2">
+        <h1 className="serif text-xl font-semibold text-[var(--ink)]">组合体检</h1>
+        <span className="text-xs text-[var(--ink-3)]">你在「模拟投资」里买的每一笔，就是这里体检的组合</span>
+        <Badge variant="neutral">{weights.length} 笔持仓</Badge>
+      </div>
+      <div className="grid grid-cols-1 items-start gap-4">
         {loading ? (
           <section className="card rounded-lg border border-[var(--rule)] bg-[var(--card)] p-4">
             <span className="text-xs text-[var(--ink-3)]">正在算…（要取每只的日线，几秒钟）</span>
@@ -372,8 +361,7 @@ export function Portfolio({ probe = false, initial }: { probe?: boolean; initial
             <div className="acc-line" dangerouslySetInnerHTML={{ __html: accHtml }} />
           </div>
         </section>
-      </main>
-    </div>
-  </div>
+      </div>
+    </Shell>
   )
 }

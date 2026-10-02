@@ -18,7 +18,8 @@ import * as React from "react"
 import { Badge } from "../Badge/Badge"
 import { Callout } from "../Callout/Callout"
 import { Divider } from "../Divider/Divider"
-import { readAccBoot, ThemeSwitch } from "../../chrome"
+import { readAccBoot } from "../../chrome"
+import { Shell } from "../Shell/Shell"
 import { loadDash, rangePos, type DashRow } from "../../dash"
 import { Spark } from "../Spark/Spark"
 import { dirClass, dirOf, num, pct } from "../../format"
@@ -85,23 +86,13 @@ export function Dash({ probe = false, initial }: { probe?: boolean; initial?: Da
   const maxAbs = ok.reduce((m, r) => Math.max(m, Math.abs(r.s!.chg_pct_60d ?? 0)), 0)
 
   return (
-    <div className="center-large-container bg-canvas">
-      <div className="center-large-card">
-        <header className="sticky top-0 z-30 border-b border-line bg-surface">
-          <div className="bar mx-auto flex max-w-[clamp(1180px,78vw,2200px)] flex-wrap items-center gap-2.5 px-5 py-2.5">
-            <h1 className="text-lg font-semibold text-[var(--ink)]">
-              <a href="/" className="grad-title no-underline">乡e家</a>
-              行情总览
-              <span className="ml-2 text-xs font-normal text-[var(--ink-3)]">四个市场，同一套口径</span>
-            </h1>
-            <Badge variant="neutral">{rows.length} 个标的</Badge>
-            <div className="ml-auto">
-              <ThemeSwitch />
-            </div>
-          </div>
-        </header>
-
-        <main className="mx-auto grid max-w-[clamp(1180px,78vw,2200px)] grid-cols-1 items-start gap-4 p-5">
+    <Shell probe={probe}>
+      <div className="mb-3 mt-3 flex flex-wrap items-center gap-2">
+        <h1 className="serif text-xl font-semibold text-[var(--ink)]">行情总览</h1>
+        <span className="text-xs text-[var(--ink-3)]">四个市场，同一套口径</span>
+        <Badge variant="neutral">{rows.length} 个标的</Badge>
+      </div>
+      <div className="grid grid-cols-1 items-start gap-4">
         <section className="card rounded-lg border border-line bg-surface p-4" id="dashCard" aria-label="行情总览">
           <div className="chd mb-2 flex flex-wrap items-baseline gap-2">
             <h2 className="text-base font-semibold text-[var(--ink)]">最新行情</h2>
@@ -212,8 +203,7 @@ export function Dash({ probe = false, initial }: { probe?: boolean; initial?: Da
             <div className="acc-line" dangerouslySetInnerHTML={{ __html: accHtml }} />
           </div>
         </section>
-      </main>
-    </div>
-  </div>
+      </div>
+    </Shell>
   )
 }

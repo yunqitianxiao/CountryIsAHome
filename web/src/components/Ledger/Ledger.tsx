@@ -28,7 +28,8 @@
 import * as React from "react"
 import { Badge } from "../Badge/Badge"
 import { Callout } from "../Callout/Callout"
-import { readAccBoot, ThemeSwitch } from "../../chrome"
+import { readAccBoot } from "../../chrome"
+import { Shell } from "../Shell/Shell"
 import { loadLedger, sourceLabel, type LedgerBlock, type LedgerResp } from "../../ledger"
 import { num } from "../../format"
 
@@ -213,25 +214,13 @@ export function Ledger({ probe = false, initial }: { probe?: boolean; initial?: 
   const blocks = resp?.blocks ?? []
 
   return (
-    <div className="center-large-container min-h-screen bg-[var(--paper)]">
-      <div className="center-large-card">
-        <header className="sticky top-0 z-30 border-b border-[var(--rule)] bg-[var(--card)]">
-          <div className="bar mx-auto flex max-w-[clamp(1180px,78vw,2200px)] flex-wrap items-center gap-2.5 px-5 py-2.5">
-            <h1 className="text-lg font-semibold text-[var(--ink)]">
-              <a href="/" className="grad-title no-underline">乡e家</a>
-              预测台账
-              <span className="ml-2 text-xs font-normal text-[var(--ink-3)]">
-                每一次预测都记下来，到期拿真实行情打分
-              </span>
-            </h1>
-            {s ? <Badge variant="neutral">{s.n} 条记录</Badge> : null}
-            <div className="ml-auto">
-              <ThemeSwitch />
-            </div>
-          </div>
-        </header>
-
-        <main className="mx-auto grid max-w-[clamp(1180px,78vw,2200px)] grid-cols-1 items-start gap-4 p-5">
+    <Shell probe={probe}>
+      <div className="mb-3 mt-3 flex flex-wrap items-center gap-2">
+        <h1 className="serif text-xl font-semibold text-[var(--ink)]">预测台账</h1>
+        <span className="text-xs text-[var(--ink-3)]">每一次预测都记下来，到期拿真实行情打分</span>
+        {s ? <Badge variant="neutral">{s.n} 条记录</Badge> : null}
+      </div>
+      <div className="grid grid-cols-1 items-start gap-4">
         {loading ? (
           <section className="card rounded-lg border border-[var(--rule)] bg-[var(--card)] p-4">
             <span className="text-xs text-[var(--ink-3)]">正在读记录…（顺带把已到期的几条拿去和真实行情核对，要联网取数，几秒钟）</span>
@@ -280,8 +269,7 @@ export function Ledger({ probe = false, initial }: { probe?: boolean; initial?: 
             <div className="acc-line" dangerouslySetInnerHTML={{ __html: accHtml }} />
           </div>
         </section>
-      </main>
-    </div>
-  </div>
+      </div>
+    </Shell>
   )
 }

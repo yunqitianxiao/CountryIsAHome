@@ -185,10 +185,11 @@ export function Shell({ probe, children }: {
           ★它是在**空白的地方**：`<footer>` 排在 `main` 之后，不占任何一个内容位、
             不把任何一张卡往下推 —— 与上一版那块插在卡与卡之间的年画区正相反。
 
-          ★`--nh-paper`（宣纸暖白）**两套主题下都不翻转**，理由写在 `index.css`
-            的 `--nh-*` 那段：年画离开纸白底就不是年画了，视觉上就是
-            「贴在墙上的一张宣纸」。所以这带的字色写死 `--nh-ink`（墨色），
-            那一对 ≈13.5:1，两套主题同值（`verify_page.py` 的 4f 会逐张表算它）。
+          ★2026-10-02（第4轮）：不再用宣纸底 —— 用户要求「不保留宣纸底色不变，
+            修改为统一色调」。横幅底色/字色/边框全部改走主题 token（`bg-surface`/
+            `--ink-2`/`border-line`），两套主题各自成立；图标描边在 `.nh-band` 内
+            统一改走 `--ink-2`（CSS 优先级高于 SVG 的 presentation attribute），
+            简笔画线条与稻穗金/朱红/靛蓝填色保留 —— 风格还是年画，底已与全站一致。
           ★回纹条**通栏**（`preserveAspectRatio="none"`，见 `Nianhua.tsx`）：
             单元数给到 64 是因为这条带最宽能到 2200px，单元太少会被横向拉扁。
           ★整带 `overflow-hidden`：回纹是撑满容器的，圆角与出界靠它裁。
@@ -198,8 +199,7 @@ export function Shell({ probe, children }: {
             那是 `check_links` 的锚（`HOME_LINKS` 里期望值就是 `graph.html`），
             两者**不是同一个链接，别去改那一张**。 */}
       <footer className="relative mt-8" aria-label="县乡村">
-        <div className="nh-band overflow-hidden border-t border-[var(--nh-gold-2)]"
-             style={{ background: "var(--nh-paper)", color: "var(--nh-ink)" }}>
+        <div className="nh-band overflow-hidden border-t border-line bg-surface text-[var(--ink-2)]">
           <HuiWen n={64} h={10} />
           <div className="mx-auto flex max-w-[clamp(1180px,78vw,2200px)] flex-wrap items-center gap-x-6 gap-y-3 px-5 py-4">
             <span aria-hidden="true" className="nh-tiles flex shrink-0 items-center gap-2.5">
@@ -214,8 +214,7 @@ export function Shell({ probe, children }: {
               孩子的学费、老人的药钱、村里的人情往来，都在那 255 个词条和那张图里。
             </p>
             <a href="/graph.html"
-               className="nh-link shrink-0 rounded border px-3 py-1 text-xs no-underline"
-               style={{ borderColor: "var(--nh-gold-2)", color: "var(--nh-ink)" }}>
+               className="nh-link shrink-0 rounded border border-[var(--rule-2)] px-3 py-1 text-xs text-[var(--ink-2)] no-underline">
               看图谱 →
             </a>
           </div>

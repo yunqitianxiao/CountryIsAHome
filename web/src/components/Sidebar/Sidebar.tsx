@@ -58,7 +58,6 @@ const GROUPS: { label: string; items: [href: string, label: string][] }[] = [
       ["/invest-sim", "投资模拟可视化"],
       ["/luxury-dash", "奢华仪表板"],
       ["/psych", "投资心理"],
-      ["/agents", "多智能体博弈"],
     ],
   },
 ]
@@ -81,6 +80,19 @@ export function Sidebar() {
       >
         <span className="side-home-mark" aria-hidden="true">▤</span>
         首页总览
+      </a>
+
+      {/* ★旗舰功能 C 位：多智能体博弈是本项目的主卖点与创新点，
+          放在侧栏最显眼的位置（紧贴「首页总览」之下），一屏即见。
+          `side-*` 前缀纪律不变 —— 不挤进 `.card` 探针样本。 */}
+      <a
+        className="side-feature"
+        href="/agents"
+        aria-current={isCurrent("/agents") ? "page" : undefined}
+      >
+        <span className="side-feature-kicker">旗舰功能</span>
+        <span className="side-feature-title">多智能体博弈</span>
+        <span className="side-feature-desc">九角色议会 · 主卖点与创新点</span>
       </a>
 
       <nav aria-label="功能分组" className="side-groups">

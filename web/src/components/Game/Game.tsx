@@ -27,7 +27,8 @@ import { Divider } from "../Divider/Divider"
 import {
   Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow,
 } from "../Table/Table"
-import { readAccBoot, ThemeSwitch } from "../../chrome"
+import { readAccBoot } from "../../chrome"
+import { Shell } from "../Shell/Shell"
 import { readProfile } from "../../profile"
 import { dirClass, num, pct, price } from "../../format"
 import {
@@ -216,24 +217,13 @@ export function Game({ probe = false, initial }: { probe?: boolean; initial?: In
   const items = rec?.data?.items ?? []
 
   return (
-    <div className="center-large-container min-h-screen bg-[var(--paper)]">
-      <div className="center-large-card">
-        <div className="min-h-screen bg-[var(--paper)]">
-          <header className="sticky top-0 z-30 border-b border-[var(--rule)] bg-[var(--card)]">
-            <div className="bar mx-auto flex max-w-[clamp(1180px,78vw,2200px)] flex-wrap items-center gap-2.5 px-5 py-2.5">
-              <h1 className="text-lg font-semibold text-[var(--ink)]">
-                <a href="/" className="grad-title no-underline">乡e家</a>
-                模拟练手
-                <span className="ml-2 text-xs font-normal text-[var(--ink-3)]">假钱练手，行情是真的</span>
-              </h1>
-              <Badge variant="neutral">钱是假的，行情是真的</Badge>
-              <div className="ml-auto">
-                <ThemeSwitch />
-              </div>
-            </div>
-          </header>
-
-          <main className="mx-auto grid max-w-[clamp(1180px,78vw,2200px)] grid-cols-1 items-start gap-4 p-5">
+    <Shell probe={probe}>
+      <div className="mb-3 mt-3 flex flex-wrap items-center gap-2">
+        <h1 className="serif text-xl font-semibold text-[var(--ink)]">模拟练手</h1>
+        <span className="text-xs text-[var(--ink-3)]">假钱练手，行情是真的</span>
+        <Badge variant="neutral">钱是假的，行情是真的</Badge>
+      </div>
+      <div className="grid grid-cols-1 items-start gap-4">
         {/* ★准备区两列（≥1024px）：左「拿多少练手」、右「不知道买什么」。
             原来五张卡一路竖着排，其中"本金"那张整张卡里只有一个输入框，
             在 1400px 的窗口里横着铺 1140px —— 卡里九成是空白。
@@ -480,9 +470,7 @@ export function Game({ probe = false, initial }: { probe?: boolean; initial?: In
             <div className="acc-line" dangerouslySetInnerHTML={{ __html: accHtml }} />
           </div>
         </section>
-      </main>
-    </div>
-  </div>
-</div>
+      </div>
+    </Shell>
   )
 }

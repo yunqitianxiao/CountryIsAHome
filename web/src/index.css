@@ -2216,9 +2216,10 @@ html {
   background: linear-gradient(90deg, var(--hue-blue), var(--hue-teal));
 }
 
-/* ── 年画页脚 · 高级感（保留宣纸底与简笔画，只改呈现） ──
-   契约：横幅 `background: var(--nh-paper)` + `color: var(--nh-ink)`
-   （verify_page 4f 逐张表算）原样保留，下面的样式全部是"外面包一层"。 */
+/* ── 年画页脚 · 高级感（2026-10-02 第4轮：**去宣纸底、统一主题色调**）──
+   横幅底色/字色/边框由 Shell 改为主题 token（bg-surface / --ink-2 / border-line），
+   亮暗两套主题各自成立。下面这些样式全是"外包一层"：
+   顶部渐变发丝线、图标描边统一走 --ink-2、瓷砖色系、胶囊入口。 */
 .nh-band {
   position: relative;
 }
@@ -2245,38 +2246,96 @@ html {
   height: 52px;
   border-radius: var(--r-md);
   border: 1px solid var(--rule-2);
-  background: color-mix(in srgb, var(--card) 72%, var(--nh-paper));
+  background: var(--card-2);
   box-shadow: var(--shadow-1);
 }
 
 .nh-tile-1 {
   border-color: color-mix(in srgb, var(--hue-blue) 40%, var(--rule-2));
-  background: color-mix(in srgb, var(--hue-blue) 7%, var(--card));
+  background: color-mix(in srgb, var(--hue-blue) 8%, var(--card-2));
 }
 .nh-tile-2 {
   border-color: color-mix(in srgb, var(--hue-teal) 40%, var(--rule-2));
-  background: color-mix(in srgb, var(--hue-teal) 7%, var(--card));
+  background: color-mix(in srgb, var(--hue-teal) 8%, var(--card-2));
 }
 .nh-tile-3 {
   border-color: color-mix(in srgb, var(--hue-violet) 40%, var(--rule-2));
-  background: color-mix(in srgb, var(--hue-violet) 7%, var(--card));
+  background: color-mix(in srgb, var(--hue-violet) 8%, var(--card-2));
 }
 .nh-tile-4 {
   border-color: color-mix(in srgb, var(--hue-amber) 40%, var(--rule-2));
-  background: color-mix(in srgb, var(--hue-amber) 7%, var(--card));
+  background: color-mix(in srgb, var(--hue-amber) 8%, var(--card-2));
 }
 .nh-tile-5 {
   border-color: color-mix(in srgb, var(--hue-blue) 40%, var(--rule-2));
-  background: color-mix(in srgb, var(--hue-blue) 7%, var(--card));
+  background: color-mix(in srgb, var(--hue-blue) 8%, var(--card-2));
 }
 
-/* 看图谱入口：胶囊 + 悬停抬升（字色/边框底色仍走内联的 --nh-ink/--nh-gold-2） */
+/* 图标描边统一走主题字色（CSS 优先级高于 SVG 的 stroke="var(--nh-ink)"）：
+   简笔画线条在暗色横幅上也能看见；纸白填色改成透明，让横幅底色透出来。 */
+.nh-band path,
+.nh-band rect,
+.nh-band circle,
+.nh-band polygon,
+.nh-band line {
+  stroke: var(--ink-2);
+}
+.nh-band [fill="var(--nh-paper)"] {
+  fill: transparent;
+}
+
+/* 看图谱入口：胶囊 + 悬停抬升（字色/边框已走主题 token，无需 !important） */
 .nh-link {
   border-radius: var(--r-pill);
   transition: box-shadow 0.15s ease, border-color 0.15s ease;
 }
 .nh-link:hover {
   box-shadow: var(--shadow-1);
-  border-color: color-mix(in srgb, var(--accent) 55%, var(--nh-gold-2)) !important;
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--rule-2));
+}
+
+/* ── 侧栏旗舰功能卡片（C 位）────────────────────────────────────────
+   多智能体博弈 —— 本项目的主卖点与创新点，放在侧栏「首页总览」之下。
+   与 `.side-link` 同列但不挤进 `.card` 探针样本（`side-*` 前缀纪律）。 */
+.side-feature {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  margin-bottom: var(--sp-2);
+  padding: var(--sp-3);
+  border-radius: var(--r-md);
+  border: 1px solid color-mix(in srgb, var(--accent) 32%, var(--rule-2));
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--hue-blue) 9%, var(--card-2)),
+    color-mix(in srgb, var(--hue-violet) 7%, var(--card-2)));
+  box-shadow: var(--shadow-1);
+  text-decoration: none;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+.side-feature:hover {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--rule-2));
+  box-shadow: var(--shadow-1);
+  transform: translateY(-1px);
+}
+.side-feature[aria-current="page"] {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, var(--card-2));
+}
+.side-feature-kicker {
+  font-size: var(--fs-cap);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+}
+.side-feature-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.25;
+}
+.side-feature-desc {
+  font-size: var(--fs-sm);
+  color: var(--ink-3);
+  line-height: 1.4;
 }
 
