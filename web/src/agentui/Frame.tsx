@@ -42,7 +42,7 @@ export function Frame({
   footExtra?: React.ReactNode
 }) {
   return (
-    <Shell probe={probe} back>
+    <Shell probe={probe}>
       <div className="mb-3 mt-3">
         <h1 className="serif text-xl font-semibold text-[var(--ink)]">{title}</h1>
         {sub ? <p className="mt-0.5 text-sm text-[var(--ink-3)]">{sub}</p> : null}

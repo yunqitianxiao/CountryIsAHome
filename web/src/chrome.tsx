@@ -182,11 +182,14 @@ export const NEW_PAGES: [href: string, label: string][] = [
 /** 新增五页之间的导航。`current` 是当前路径，用来标 `aria-current="page"`。
  *  ★用真 `<a href>`（不是 `onClick` + `history.pushState`）：这几条路由
  *    在 `app.py` 里是**真路由**，直接粘地址、刷新、新标签页打开都得落在同一页上。
- *    SPA 内部那种"点一下不刷新"的写法会让新标签页打开变成主页。 */
+ *    SPA 内部那种"点一下不刷新"的写法会让新标签页打开变成主页。
+ *  ★2026-10-02：加了 `lg:hidden` —— 宽屏（≥1024px）下全站导航改由
+ *    `Sidebar.tsx` 那根左侧栏承担（`Shell.tsx` 里），这排 chips 只在窄屏
+ *    顶替侧栏的职责。`Frame.tsx` 正文顶部那份也共用这个类，一起隐藏。 */
 export function FeatureNav({ current }: { current?: string }) {
   return (
     <nav id="featureNav" aria-label="新增功能页"
-         className="flex flex-wrap items-center gap-1.5">
+         className="flex flex-wrap items-center gap-1.5 lg:hidden">
       {NEW_PAGES.map(([href, label]) => {
         const on = href === current
         return (

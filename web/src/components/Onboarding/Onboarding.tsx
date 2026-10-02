@@ -102,13 +102,39 @@ export function Onboarding({ probe = false }: { probe?: boolean }) {
   const pct = Math.round(((i + 1) / STEPS.length) * 100)
 
   return (
-    <Shell probe={probe} back>
-      {/* 添加居中和放大的容器包装 */}
-      <div className="center-large-container">
+    <Shell probe={probe}>
+      {/* 双栏紧凑布局：左「认识这站」面板（lg+ 显示）+ 右步骤卡；窄屏恢复堆叠。
+          ★所有探针字段（#obCard/#obStepNo/#obTitle/#obBar/#obNext/#obSkip/
+            #obProfileForm）都在右栏，结构、文案、渲染条件一个没动。 */}
+      <div className="center-large-container ob-container">
         <div className="center-large-card guidance-card">
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,300px)_minmax(0,1fr)] lg:items-stretch">
+            <aside className="ob-side hidden lg:block" aria-label="认识这个站">
+              <p className="ob-eyebrow">认识这个站</p>
+              <h2 className="ob-side-title grad-title">乡e家</h2>
+              <p className="ob-side-lead">
+                县乡村家庭的财富工具 —— 查词、看图谱、练手、体检，一站备齐。
+              </p>
+              <div className="ob-chips">
+                <span className="ob-chip">不收费</span>
+                <span className="ob-chip">不用注册</span>
+                <span className="ob-chip">不荐股</span>
+              </div>
+              <div className="ob-side-rule" />
+              <p className="ob-side-why">
+                <b>它不预言明天涨跌</b>，只让你在假钱上先练出真记性。
+              </p>
+              <ol className="ob-mini-steps">
+                <li className="ob-mini-step"><i>01</i>读懂你的顾虑</li>
+                <li className="ob-mini-step"><i>02</i>认识它能做什么</li>
+                <li className="ob-mini-step"><i>03</i>明白它和别的平台不一样</li>
+                <li className="ob-mini-step"><i>04</i>填个简单画像，开始用</li>
+              </ol>
+            </aside>
+
+            <div className="min-w-0">
             {i === 0 && (
-              <section className="card rounded-lg border border-[var(--rule)] bg-[var(--card)] p-4" aria-label="零门槛说明">
+              <section className="card rounded-lg border border-[var(--rule)] bg-[var(--card)] p-4 lg:hidden" aria-label="零门槛说明">
                 <h3 className="text-lg font-semibold text-[var(--accent)] mb-2">零门槛，直接用</h3>
                 <div className="flex flex-wrap gap-2 mb-2">
                   <span className="inline-block px-3 py-1 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] text-sm font-medium">不收费</span>
@@ -178,7 +204,8 @@ export function Onboarding({ probe = false }: { probe?: boolean }) {
                   </div>
                 </>
               )}
-            </section>
+              </section>
+            </div>
           </div>
         </div>
       </div>

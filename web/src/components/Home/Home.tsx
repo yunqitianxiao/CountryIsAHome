@@ -97,6 +97,48 @@ export function Home({ probe = false, initial, initialRural }: {
               </p>
             </section>
 
+            {/* ★★「三步先走一遍」引导条（2026-10-02 加）。
+                它回答新用户进主页后的第一个问题："我现在该点什么"——
+                `#siteLead` 说完"这站是什么"，这张条子紧接着给三条最短路径：
+                填画像 → 体检建议 → 练手（正是本站核心闭环）。
+                ★**故意不挂 `.card`、不用 `a.linkcard`**：探针的 `cardRects`
+                数的是 `.card`、`sgOrder` 比的是 `a.linkcard` 同列卡，
+                这一段是普通 `<section>` + `.qstep` 链接，不进它们的样本
+                —— 与 `#siteLead` 同款做法。
+                ★三个链接都是真 `<a href>`：真路由，刷新/粘地址都落同一页。 */}
+            <section id="quickStart" aria-label="三步先走一遍" className="qs-strip">
+              <div className="qs-head">
+                <h2 className="qs-title">三步，先走一遍</h2>
+                <p className="qs-hint">第一次来？跟着这三步，几分钟就知道这站在干嘛</p>
+              </div>
+              <div className="qs-steps">
+                <a className="qstep" href="/profile">
+                  <span className="qstep-num" aria-hidden="true">01</span>
+                  <span className="qstep-body">
+                    <b>填你的画像</b>
+                    <em>让回答带上你的情况</em>
+                  </span>
+                  <span className="qstep-arrow" aria-hidden="true">→</span>
+                </a>
+                <a className="qstep" href="/inspect">
+                  <span className="qstep-num" aria-hidden="true">02</span>
+                  <span className="qstep-body">
+                    <b>体检一条建议</b>
+                    <em>把别人发的建议原文粘进来</em>
+                  </span>
+                  <span className="qstep-arrow" aria-hidden="true">→</span>
+                </a>
+                <a className="qstep" href="/game">
+                  <span className="qstep-num" aria-hidden="true">03</span>
+                  <span className="qstep-body">
+                    <b>拿虚拟钱练手</b>
+                    <em>亏了不心疼，先练出手感</em>
+                  </span>
+                  <span className="qstep-arrow" aria-hidden="true">→</span>
+                </a>
+              </div>
+            </section>
+
             {/* ── 这里原来有一块 `<section id="nianhua">`（2026-09-28 撤掉）────
                 撤它的原因（用户看过页面之后给的原话）：
                 「主页是在**空白的地方**添加乡村元素，而不是在各个元素间**穿插**

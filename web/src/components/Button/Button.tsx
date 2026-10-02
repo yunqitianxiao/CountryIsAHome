@@ -24,7 +24,7 @@ const buttonFocusRing = [
 const buttonVariants = tv({
   base: [
     // base
-    "relative inline-flex items-center justify-center whitespace-nowrap rounded-md border px-3 py-2 text-center text-sm font-medium shadow-xs transition-all duration-100 ease-in-out",
+    "relative inline-flex items-center justify-center whitespace-nowrap rounded-full border px-3 py-2 text-center text-sm font-medium shadow-xs transition-all duration-100 ease-in-out",
     // disabled
     "disabled:pointer-events-none disabled:shadow-none",
     // focus

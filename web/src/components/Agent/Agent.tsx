@@ -23,7 +23,7 @@ export function Agent({ probe = false }: { probe?: boolean }) {
   const accHtml = React.useMemo(readAccBoot, [])
 
   return (
-    <Shell probe={probe} back>
+    <Shell probe={probe}>
       <div className="grid grid-cols-[minmax(0,1fr)_clamp(300px,15vw,400px)] items-start gap-4 max-[880px]:grid-cols-1">
         {/* ★「人人可用」定位条：措辞被判据双向钉住（'人人可用' 在、'教学' 不在），改字前先看判据。
             判据还要求它在**折叠线以上** —— 所以它必须是这一栏的第一个孩子。 */}

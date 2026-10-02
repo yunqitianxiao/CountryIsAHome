@@ -103,6 +103,13 @@
         })
       })()
     </script>
+
+    <!-- ★2026-10-02：编辑风改造层用到的字体，走自托管镜像（miaoda.feishu.cn，
+         不经 Google）。每条 font-family 都带完整系统 fallback 栈 ——
+         离线时字体加载失败，页面退回系统字体照样成立。 -->
+    <link rel="preconnect" href="https://miaoda.feishu.cn" crossorigin />
+    <link rel="stylesheet"
+          href="https://miaoda.feishu.cn/fonts/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@400;500;600;700&display=swap" />
     <script type="module" crossorigin src="/app.js"></script>
     <link rel="stylesheet" crossorigin href="/app.css">
   </head>
@@ -118,8 +125,8 @@
     <div id="acc-boot" hidden><!--ACCURACY--></div>
 
     <div id="root"></div>
-    <!-- 添加暗色优先主题样式 -->
-    <!-- 添加奢华主题样式 -->
-
+    <!-- 添加暗色优先主题样式 -->
+    <!-- 添加奢华主题样式 -->
+
   </body>
 </html>

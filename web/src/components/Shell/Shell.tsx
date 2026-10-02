@@ -1,6 +1,7 @@
 import * as React from "react"
 import { Badges, FeatureNav, MarketSwitch, ThemeSwitch } from "../../chrome"
 import { ChanZhiLian, DaoSui, HuiWen, JiShi, LiangCang, TongQian, WaFang } from "../Nianhua/Nianhua"
+import { Sidebar } from "../Sidebar/Sidebar"
 
 /**
  * 站点外壳：年画底纹 + 页头 + 主栏容器 + 年画页脚。**每一页都走它**。
@@ -34,13 +35,16 @@ import { ChanZhiLian, DaoSui, HuiWen, JiShi, LiangCang, TongQian, WaFang } from 
  *   ⇒ 这一条 README 里那句"改宽度的地方是两处，改一处等于没改"在这里有了
  *     第三个落点：**两处都得在这一个文件里**。
  *
- * ★`back`：非主页的那几页，站名做成回主页的链接（`#homeLink`）。
- *   主页自己**不渲染**它 —— 一个指向自己的链接是死链的一种，而且探针那条
- *   「智能体页有回主页的链接」的判据就没法用"主页上也一样有"来蒙混。
+ * ★回主页入口（2026-10-02 起全站统一）：**任何非主页**都把左上角站名做成
+ *   回主页的链接（`#homeLink`）—— 之前只有传 `back` 的几页有，其余页面
+ *   左上角是死文字，"回主页的按键布局各不相同"。主页自己**不渲染**它 ——
+ *   一个指向自己的链接是死链的一种，而且探针那条「智能体页有回主页的链接」
+ *   的判据就没法用"主页上也一样有"来蒙混。
+ *   `back` prop 已删除：以前传它的三处（Agent/Frame/Onboarding）现在由
+ *   `location.pathname !== "/"` 自动获得同一份链接。
  */
-export function Shell({ probe, back = false, children }: {
+export function Shell({ probe, children }: {
   probe: boolean
-  back?: boolean
   children: React.ReactNode
 }) {
   return (
@@ -82,10 +86,10 @@ export function Shell({ probe, back = false, children }: {
       <header className="sticky top-0 z-30 border-b border-line bg-surface">
         <div className="bar mx-auto flex max-w-[clamp(1180px,78vw,2200px)] flex-wrap items-center gap-2.5 px-5 py-2.5">
           <h1 className="text-lg font-semibold text-fg">
-            {back
-              ? <a href="/" id="homeLink" className="no-underline text-fg">乡e家</a>
-              : "乡e家"}
-            <span className="ml-2 text-xs font-normal text-faint">多智能体与金融知识图谱驱动的县乡村家庭财富管理平台</span>
+            {location.pathname === "/"
+              ? <span className="grad-title">乡e家</span>
+              : <a href="/" id="homeLink" className="no-underline text-fg grad-title">乡e家</a>}
+            <span className="ml-2 hidden text-xs font-normal text-faint md:inline">多智能体与金融知识图谱驱动的县乡村家庭财富管理平台</span>
           </h1>
 
           {/* ★能力标称，**故意放在 #badges 外面**：那个盒子每 30 秒被整排重建一次，
@@ -159,9 +163,15 @@ export function Shell({ probe, back = false, children }: {
           —— 于是 2490px 的窗口里：页头 1872 宽、主栏还是 1180 宽，
           既"内容不跟着屏幕长"（占 49%），又"页头和主栏左边对不齐"
           （两个都 mx-auto，宽度不同 ⇒ 左边缘必然错开）。两条判据同时红就是这个。
-          ★改宽度的地方是**两处**，改一处等于没改 —— 这正是当初漏掉的那处。 */}
+          ★改宽度的地方是**两处**，改一处等于没改 —— 这正是当初漏掉的那处。
+          ★★2026-10-02：主栏**内部**加了一层 `shell-body` 左导航布局
+             （`Sidebar` + 内容列）。探针那两条几何判据量的是 `<main>` 本身的
+             宽度与左边缘 —— 侧栏在 main 的 padding 框**里面**，两个数都不动。 */}
       <main className="mx-auto max-w-[clamp(1180px,78vw,2200px)] p-5">
-        {children}
+        <div className="shell-body flex items-start">
+          <Sidebar />
+          <div className="min-w-0 flex-1">{children}</div>
+        </div>
       </main>
 
       {/* ── 年画页脚（2026-09-28 加）──────────────────────────────────────
@@ -188,23 +198,23 @@ export function Shell({ probe, back = false, children }: {
             那是 `check_links` 的锚（`HOME_LINKS` 里期望值就是 `graph.html`），
             两者**不是同一个链接，别去改那一张**。 */}
       <footer className="relative mt-8" aria-label="县乡村">
-        <div className="overflow-hidden border-t border-[var(--nh-gold-2)]"
+        <div className="nh-band overflow-hidden border-t border-[var(--nh-gold-2)]"
              style={{ background: "var(--nh-paper)", color: "var(--nh-ink)" }}>
           <HuiWen n={64} h={10} />
           <div className="mx-auto flex max-w-[clamp(1180px,78vw,2200px)] flex-wrap items-center gap-x-6 gap-y-3 px-5 py-4">
-            <span aria-hidden="true" className="flex shrink-0 items-end gap-2">
-              <DaoSui size={44} />
-              <WaFang size={38} />
-              <JiShi size={42} />
-              <LiangCang size={36} />
-              <TongQian size={28} />
+            <span aria-hidden="true" className="nh-tiles flex shrink-0 items-center gap-2.5">
+              <span className="nh-tile nh-tile-1"><DaoSui size={44} /></span>
+              <span className="nh-tile nh-tile-2"><WaFang size={38} /></span>
+              <span className="nh-tile nh-tile-3"><JiShi size={42} /></span>
+              <span className="nh-tile nh-tile-4"><LiangCang size={36} /></span>
+              <span className="nh-tile nh-tile-5"><TongQian size={28} /></span>
             </span>
             <p className="min-w-0 grow basis-72 text-xs leading-relaxed">
               <b>乡e家</b>是按<b>县乡村家庭</b>的过法编的 —— 地里的收成、打工的汇款、
               孩子的学费、老人的药钱、村里的人情往来，都在那 255 个词条和那张图里。
             </p>
             <a href="/graph.html"
-               className="shrink-0 rounded border px-3 py-1 text-xs no-underline"
+               className="nh-link shrink-0 rounded border px-3 py-1 text-xs no-underline"
                style={{ borderColor: "var(--nh-gold-2)", color: "var(--nh-ink)" }}>
               看图谱 →
             </a>

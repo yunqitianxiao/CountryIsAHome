@@ -22,7 +22,7 @@ export function Profile({ probe = false }: { probe?: boolean }) {
   React.useEffect(() => { setHas(!!readProfile()) }, [saved])
 
   return (
-    <Shell probe={probe} back>
+    <Shell probe={probe}>
       <div className="center-large-container">
         <div className="center-large-card">
           <div className="flex flex-col gap-4">

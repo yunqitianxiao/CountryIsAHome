@@ -11,7 +11,7 @@ import { SiteBanner } from "../SiteBanner/SiteBanner"
  */
 export function Soon({ probe, title, note }: { probe: boolean; title: string; note: string }) {
   return (
-    <Shell probe={probe} back>
+    <Shell probe={probe}>
       <div className="flex flex-col gap-4">
         <SiteBanner />
         <div className="card rounded-lg border border-[var(--rule)] bg-[var(--card)] p-4" id="soonCard">

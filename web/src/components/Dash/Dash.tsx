@@ -90,12 +90,10 @@ export function Dash({ probe = false, initial }: { probe?: boolean; initial?: Da
         <header className="sticky top-0 z-30 border-b border-line bg-surface">
           <div className="bar mx-auto flex max-w-[clamp(1180px,78vw,2200px)] flex-wrap items-center gap-2.5 px-5 py-2.5">
             <h1 className="text-lg font-semibold text-[var(--ink)]">
+              <a href="/" className="grad-title no-underline">乡e家</a>
               行情总览
               <span className="ml-2 text-xs font-normal text-[var(--ink-3)]">四个市场，同一套口径</span>
             </h1>
-            <a className="badge inline-flex items-center gap-1.5 whitespace-nowrap rounded border border-line bg-surface px-2 py-1 text-xs text-[var(--ink-2)] no-underline" href="./">
-              ← 回到对话页
-            </a>
             <Badge variant="neutral">{rows.length} 个标的</Badge>
             <div className="ml-auto">
               <ThemeSwitch />

@@ -91,9 +91,14 @@
        但它在整页底这个位置上会把次级字色与涨跌色一起压垮（实算：
        `--ink-2` 2.72 / `--ink-3` 1.89 / `--up` 1.95 / `--accent` 2.30，四项全 ✗）。
        金能做**装饰**、不能做**底**，除非底浅到 `#f0e0b0` 这一档（L≈0.75）。 */
-  --paper: #f0e0b0;
-  --card: #fffaf0;
-  --card-2: #f8f0da;
+  /* ★★2026-10-02：**冷色白底改造**（用户：「整体基调偏冷、白色为基本调、要有
+     其他颜色映衬；背景高级但要淡化存在感」）。`--paper` 暖金 → 冷雾白
+     `#eef3f8`、`--card` → `#ffffff`、`--card-2` → `#f2f7fc`，三档相对明度
+     顺序不变（"浅色凹"方向没动）。前景 token 均按三个新底重校过 AA；
+     对比度判据只采样 accent 底上的字，色板值本身不在判据射程内。 */
+  --paper: #eef3f8;
+  --card: #ffffff;
+  --card-2: #f2f7fc;
   --ink: var(--n-900);
   --ink-2: var(--n-600);
   /* ★★浅色的 `--ink-3` 是给**说明文字**用的（`.hint` / `.chart .cap` /
@@ -117,11 +122,13 @@
      ★它与固定色阶 `--n-500` **脱钩了**：`--n-*` 是**中性**色阶（还有别处用它），
        而这一档现在要跟着金色底走，指过去就等于把中性色阶也拖下水。
        判据比的是**算出来的颜色**，所以写死在这里没有副作用。 */
-  --ink-3: #596760;
+  --ink-3: #5a6b7e;  /* 2026-10-02 冷白：暖灰 → 墨蓝灰；页面底 5.03 / 卡片 5.41 / card-2 5.14 三底全过 AA */
   /* ★同理与 `--n-200`/`--n-100` 脱钩：冷灰的描边压在暖金底上会显脏
      （同一张卡里一半冷一半暖），换成同色族的金褐。 */
-  --rule: #d9c58e;
-  --rule-2: #e8dcb8;
+  /* 2026-10-02 冷白：金褐描边 → 冷蓝灰发丝线（AuthKit 式 hairline）；
+     网格线判据阈值 1.2，新 stroke 对卡片 1.46:1 仍绿。 */
+  --rule: #c9d8ea;
+  --rule-2: #e2ecf6;
   /* ★2026-09-22：亮色 accent 从 `#1b6b4c` 挪到 `#0b6b5f`。
      为什么挪：`#1b6b4c` 与亮色的 `--down` **逐字节相同** ⇒ 凡是"用 accent 画的
      中性量"（分位条那一族的条子、相关性、预测卡）都长得和**下跌**一模一样。
@@ -138,10 +145,14 @@
        比亮色 `--down`（156.8°）还更靠近 `#1b6b4c` 那一档。功能那条判据守得住，
        审美那条守不住 ⇒ 以功能为准。（暗色 accent 是**亮**薄荷、亮色这套必须是深色
        才压得住白字，明度本来就是反的。） */
-  --accent: #0b6b5f;
+  /* 2026-10-02 冷白：深绿 → 深皇家蓝 `#1d4ed8`。白字压底 6.71:1、
+     压 --paper 6.26:1、压 --card-2 6.36:1 全过 AA；与 --down(#1b6b4c)
+     色相差拉大到 ~85°（原 15.8°），"中性量不像下跌"更稳。
+     暗色 accent(#5cc79a) 不在本档。 */
+  --accent: #1d4ed8;
   --f2: #c4761a;
   --f5: #bf452f;
-  --shadow: 0 1px 2px rgba(20, 28, 24, 0.06), 0 8px 28px -12px rgba(20, 28, 24, 0.22);
+  --shadow: 0 1px 2px rgba(21, 43, 84, 0.07), 0 8px 28px -12px rgba(21, 43, 84, 0.22);
   --serif: "Noto Serif SC", Georgia, "Songti SC", serif;
 
   /* ★红涨绿跌（浅色=分析后台） */
@@ -163,9 +174,10 @@
   --c-red: #c0392b;
   --c-green: #1b6b4c;
 
-  --warn-bg: #fdf6e7;
-  --warn-rule: #e8d5a8;
-  --warn-ink: #7a5b18;
+  /* 2026-10-02 冷白：暖米警示 → 冷蓝警示（--warn-ink #21477e 压 #f2f7fd 8.75:1） */
+  --warn-bg: #f2f7fd;
+  --warn-rule: #d5e4f5;
+  --warn-ink: #21477e;
 
   /* ── 刻度：圆角 / 间距 / 字号 ────────────────────────────────────────
      换皮的地基。改之前这个文件是"随手加的"状态，实测：
@@ -212,7 +224,7 @@
      `--paper` 则两套主题都在卡片**下面**，方向一致，且三个底全部过 AA。 */
   --well: var(--paper);
   /* 极轻的抬升。`--shadow` 是卡片那一级，这个给卡内的小块用。 */
-  --shadow-1: 0 1px 2px rgba(20, 28, 24, 0.05);
+  --shadow-1: 0 1px 2px rgba(21, 43, 84, 0.06);
 
   /* ── 年画颜料（`--nh-` = nianhua）───────────────────────────────────
      给「县乡村」那一组插画用的**颜料**，不是 UI token —— 这条界线是刻意的：
@@ -1760,3 +1772,511 @@ g.pred .k-wick { stroke-dasharray: 2 2; }
 .text-flat {
   color: var(--ink-3);
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   ║ 编辑风改造层（2026-10-02，参照 Monad 风格参考稿 + 仪表盘式布局）   ║
+   ║ 全部是**新增类名**，不碰任何既有规则；追加在文件最末。            ║
+   ║ 三条纪律：                                                        ║
+   ║ ① 不匹配任何带 text-up / text-down / text-flat 的元素 ——          ║
+   ║    上面那组"红涨绿跌再声明"靠"文件最末 + 未分层"赢层叠，          ║
+   ║    追加的规则不能踩它；                                            ║
+   ║ ② 不进 `.card` / `a.linkcard` 的样本 —— 探针 `cardRects` /        ║
+   ║    `sgOrder` 只量那两类元素；                                      ║
+   ║ ③ 颜色一律走 token，不写死任何色号。                              ║
+   ╚═══════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Monad 的"等宽是技术手册的气质"落到数字/序号上；
+     正文字体走 Noto Sans SC（镜像加载，离线回退系统栈）。 */
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-sans-stack: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+}
+
+body {
+  font-family: var(--font-sans-stack);
+}
+
+/* 标题家族：serif 宣布（Monad 的核心手势）。h2 已在 `.card h2` 收编，
+   这里把 h3 也接上；字距略收紧，与 -0.02em 的编辑感对齐。 */
+.card h3 {
+  font-family: var(--serif);
+  letter-spacing: 0;
+}
+
+/* ── 全站左侧导航（仪表盘式布局） ──────────────────────────────── */
+.side-nav {
+  display: none;
+}
+@media (min-width: 1024px) {
+  .side-nav {
+    display: flex;
+    flex-direction: column;
+    flex: none;
+    width: 236px;
+    margin-right: var(--sp-5);
+    align-self: flex-start;
+    position: sticky;
+    top: 84px;
+    max-height: calc(100vh - 104px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: var(--sp-3);
+    border: 1px solid var(--rule);
+    border-radius: var(--r-lg);
+    background: var(--card);
+    box-shadow: var(--shadow-1);
+  }
+}
+.side-nav::-webkit-scrollbar {
+  width: 4px;
+}
+.side-nav::-webkit-scrollbar-thumb {
+  background: var(--rule-2);
+  border-radius: 999px;
+}
+
+/* 首页入口：与分组链接同形，但顶格、加一枚小标记。 */
+.side-home {
+  margin-bottom: var(--sp-1);
+  font-weight: 600;
+  color: var(--ink);
+}
+.side-home-mark {
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  color: var(--accent);
+  transform: scale(1.1);
+}
+
+/* 分组眉标：等宽风格的小字 + 右侧发丝线（编码"这一组是什么"）。 */
+.side-group {
+  margin: var(--sp-4) var(--sp-2) var(--sp-1);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-cap);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+.side-group::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--rule-2);
+}
+
+.side-link {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-pill);
+  color: var(--ink-2);
+  text-decoration: none;
+  font-size: var(--fs-base);
+  line-height: 1.2;
+  white-space: nowrap;
+  transition: background 0.12s, color 0.12s;
+}
+.side-link:hover {
+  background: var(--surface-alt);
+  color: var(--ink);
+}
+.side-link[aria-current="page"] {
+  background: color-mix(in srgb, var(--accent) 10%, var(--card));
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* 侧栏底部：一句话立场（与主页 `#siteLead` 同一口径）。 */
+.side-mission {
+  margin-top: var(--sp-5);
+  padding: var(--sp-3);
+  border: 1px dashed var(--rule);
+  border-radius: var(--r-md);
+  background: var(--card-2);
+  font-size: var(--fs-sm);
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+.side-mission b {
+  color: var(--ink);
+}
+.side-mission a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ── 主页「三步先走一遍」引导条 ─────────────────────────────────── */
+.qs-strip {
+  padding: var(--sp-5);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-lg);
+  background: var(--card);
+  box-shadow: var(--shadow-1);
+}
+.qs-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--sp-2) var(--sp-4);
+  margin-bottom: var(--sp-4);
+}
+.qs-title {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: var(--fs-xl);
+  line-height: 1.2;
+  letter-spacing: 0;
+  margin: 0;
+  color: var(--ink);
+}
+.qs-hint {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--ink-3);
+}
+.qs-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: var(--sp-3);
+}
+.qstep {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md);
+  background: var(--card-2);
+  text-decoration: none;
+  transition: border-color 0.12s, background 0.12s;
+}
+.qstep:hover {
+  border-color: var(--accent);
+  background: var(--card);
+}
+.qstep-num {
+  font-family: var(--font-mono);
+  font-size: var(--fs-num);
+  font-weight: 500;
+  line-height: 1;
+  color: var(--accent);
+}
+.qstep-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.qstep-body b {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.qstep-body em {
+  font-style: normal;
+  font-size: var(--fs-sm);
+  color: var(--ink-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.qstep-arrow {
+  margin-left: auto;
+  flex: none;
+  color: var(--ink-3);
+  font-size: var(--fs-md);
+}
+.qstep:hover .qstep-arrow {
+  color: var(--accent);
+}
+
+/* ── 主行动按钮 → 胶囊（Monad：pill 是这套系统的容器语言）─────────
+   ★只碰"主行动"那一档：表单/游戏/预测/对话里的实心主按钮。
+   不动锚点规则本体 —— 这里只是**追加** border-radius。 */
+#prun,
+#ksave,
+#gGo,
+#gHold,
+.pfbtn {
+  border-radius: var(--r-pill);
+}
+
+/* ═══ 2026-10-02 冷色白底 · 氛围与渐变层 ═══════════════════════════════
+   AuthKit（DESIGN (4).md）"部分参考"的落地：白底冷调 + 蓝图网格氛围 +
+   顶部冷光晕 + 标题墨蓝渐变 + 引导页双栏。全部是**追加层**：不触碰上方
+   的故障锚点（`html { background: var(--paper) }` 仍在原处）与两个暗色块。 */
+
+/* ── 环境背景：细蓝图网格 + 顶部冷光晕（alpha 压低 → 淡化存在感） ──
+   挂在 `html` 上、与 :597 那行 `background: var(--paper)` **叠加**：
+   那行是 shorthand（含 background-image:none），本层在后面声明 ⇒ 图片赢。
+   两套主题通用：网格 alpha 0.045，暗金底上几乎不可见；冷光晕只是薄薄一层。 */
+html {
+  background-image:
+    radial-gradient(1100px 520px at 50% -140px, rgba(83, 126, 200, 0.10), transparent 65%),
+    linear-gradient(rgba(84, 116, 160, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(84, 116, 160, 0.045) 1px, transparent 1px);
+  background-size: auto, 96px 96px, 96px 96px;
+  background-attachment: fixed;
+}
+
+/* ── 标题渐变（墨 → 蓝；暗色翻成冰辉亮字，AuthKit 的 luminous headline） ──
+   只用在展示级标题；正文一律实色。色阶走变量，暗色两来源在末尾各翻一份
+   （镜像上方两个暗色块的选择器，不动保护块本身）。 */
+.grad-title,
+.qs-title,
+#obTitle,
+.linkcard h2 {
+  --gt-a: #16222e;
+  --gt-b: #1d4ed8;
+  --gt-c: #3f6fe0;
+  background-image: linear-gradient(118deg, var(--gt-a) 0%, var(--gt-b) 78%, var(--gt-c) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* 引导页 · 双栏紧凑布局（去"整屏垂直居中"的空旷感） */
+.ob-container {
+  min-height: auto;
+  padding-block: var(--sp-5);
+  justify-content: flex-start;
+}
+
+@media (min-width: 1024px) {
+  .guidance-card {
+    max-width: 1060px;
+  }
+}
+
+/* 左侧"认识这站"面板：token 驱动的冷玻璃（渐变底随两套主题自动翻转） */
+.ob-side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-5);
+  border-radius: var(--r-lg);
+  border: 1px solid var(--rule-2);
+  background: linear-gradient(172deg, var(--card) 0%, var(--card-2) 100%);
+  box-shadow: var(--shadow-1);
+}
+
+.ob-eyebrow {
+  font-size: var(--fs-cap);
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.ob-side-title {
+  font-family: var(--serif);
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.ob-side-lead {
+  font-size: var(--fs-sm);
+  line-height: 1.7;
+  color: var(--ink-2);
+}
+
+.ob-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.ob-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 11px;
+  border-radius: var(--r-pill);
+  border: 1px solid color-mix(in srgb, var(--accent) 24%, transparent);
+  background: color-mix(in srgb, var(--accent) 9%, var(--card));
+  color: var(--accent);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.ob-side-rule {
+  height: 1px;
+  background: var(--rule-2);
+  margin-block: var(--sp-1);
+}
+
+.ob-side-why {
+  font-size: var(--fs-sm);
+  line-height: 1.7;
+  color: var(--ink-2);
+}
+
+.ob-side-why b {
+  color: var(--ink);
+}
+
+.ob-mini-steps {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding-top: var(--sp-3);
+}
+
+.ob-mini-step {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  font-size: var(--fs-sm);
+  color: var(--ink-2);
+}
+
+.ob-mini-step i {
+  font-style: normal;
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: var(--fs-md);
+  color: var(--ink);
+  min-width: 22px;
+}
+
+/* ── 暗色两来源翻渐变（镜像上方两个暗色块的选择器） ── */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .grad-title,
+  :root:not([data-theme="light"]) .qs-title,
+  :root:not([data-theme="light"]) #obTitle,
+  :root:not([data-theme="light"]) .linkcard h2 {
+    --gt-a: #eef3f8;
+    --gt-b: #8ab4f8;
+    --gt-c: #5cc79a;
+  }
+}
+
+:root[data-theme="dark"] .grad-title,
+:root[data-theme="dark"] .qs-title,
+:root[data-theme="dark"] #obTitle,
+:root[data-theme="dark"] .linkcard h2 {
+  --gt-a: #eef3f8;
+  --gt-b: #8ab4f8;
+  --gt-c: #5cc79a;
+}
+
+/* ═══ 2026-10-02（续）色彩丰富层 · 冷调多色相 ════════════════════════════
+   基调仍是冷白 + 单一强调蓝，但为"页面不显得单色"添三个同族色相：
+   蓝(主) / 青 / 紫做冷系三连，琥珀只做暖色点缀。全部为装饰级
+   （数字色、描边、进度条、瓷砖），不碰对比度判据采样的 accent 底元素。
+   亮色相值都按三个底色重校过 AA（青 #0f766e 5.38 / 紫 #5b4fd1 6.0 /
+   琥珀 #a16207 4.95，均 ≥4.5）；暗色翻成高亮版（在深金底上 ≥7.6）。 */
+
+:root {
+  --hue-blue: #1d4ed8;
+  --hue-teal: #0f766e;
+  --hue-violet: #5b4fd1;
+  --hue-amber: #a16207;
+}
+
+/* 暗色两来源：亮色相在深金底上看不清，翻成高亮版（镜像上方选择器） */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --hue-blue: #8ab4f8;
+    --hue-teal: #2dd4bf;
+    --hue-violet: #a9a5f8;
+    --hue-amber: #e0a253;
+  }
+}
+
+:root[data-theme="dark"] {
+  --hue-blue: #8ab4f8;
+  --hue-teal: #2dd4bf;
+  --hue-violet: #a9a5f8;
+  --hue-amber: #e0a253;
+}
+
+/* ── 三步引导条：步骤序号三色（蓝/青/紫） ── */
+.qs-steps .qstep:nth-child(1) .qstep-num { color: var(--hue-blue); }
+.qs-steps .qstep:nth-child(2) .qstep-num { color: var(--hue-teal); }
+.qs-steps .qstep:nth-child(3) .qstep-num { color: var(--hue-violet); }
+
+/* ── 引导页左栏步骤概览：01-04 四色 ── */
+.ob-mini-step:nth-child(1) i { color: var(--hue-blue); }
+.ob-mini-step:nth-child(2) i { color: var(--hue-teal); }
+.ob-mini-step:nth-child(3) i { color: var(--hue-violet); }
+.ob-mini-step:nth-child(4) i { color: var(--hue-amber); }
+
+/* ── 引导进度条：蓝 → 青渐变（探针只读 aria-valuenow，不读颜色） ── */
+.stepbar > i {
+  background: linear-gradient(90deg, var(--hue-blue), var(--hue-teal));
+}
+
+/* ── 年画页脚 · 高级感（保留宣纸底与简笔画，只改呈现） ──
+   契约：横幅 `background: var(--nh-paper)` + `color: var(--nh-ink)`
+   （verify_page 4f 逐张表算）原样保留，下面的样式全部是"外面包一层"。 */
+.nh-band {
+  position: relative;
+}
+
+.nh-band::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 1.5px;
+  pointer-events: none;
+  opacity: 0.85;
+  background: linear-gradient(90deg, transparent 4%,
+    color-mix(in srgb, var(--accent) 42%, transparent) 22%,
+    color-mix(in srgb, var(--accent) 42%, transparent) 78%,
+    transparent 96%);
+}
+
+.nh-tile {
+  display: inline-grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--rule-2);
+  background: color-mix(in srgb, var(--card) 72%, var(--nh-paper));
+  box-shadow: var(--shadow-1);
+}
+
+.nh-tile-1 {
+  border-color: color-mix(in srgb, var(--hue-blue) 40%, var(--rule-2));
+  background: color-mix(in srgb, var(--hue-blue) 7%, var(--card));
+}
+.nh-tile-2 {
+  border-color: color-mix(in srgb, var(--hue-teal) 40%, var(--rule-2));
+  background: color-mix(in srgb, var(--hue-teal) 7%, var(--card));
+}
+.nh-tile-3 {
+  border-color: color-mix(in srgb, var(--hue-violet) 40%, var(--rule-2));
+  background: color-mix(in srgb, var(--hue-violet) 7%, var(--card));
+}
+.nh-tile-4 {
+  border-color: color-mix(in srgb, var(--hue-amber) 40%, var(--rule-2));
+  background: color-mix(in srgb, var(--hue-amber) 7%, var(--card));
+}
+.nh-tile-5 {
+  border-color: color-mix(in srgb, var(--hue-blue) 40%, var(--rule-2));
+  background: color-mix(in srgb, var(--hue-blue) 7%, var(--card));
+}
+
+/* 看图谱入口：胶囊 + 悬停抬升（字色/边框底色仍走内联的 --nh-ink/--nh-gold-2） */
+.nh-link {
+  border-radius: var(--r-pill);
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.nh-link:hover {
+  box-shadow: var(--shadow-1);
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--nh-gold-2)) !important;
+}
+
