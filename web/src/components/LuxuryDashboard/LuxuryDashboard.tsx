@@ -1,6 +1,16 @@
 import React, { useState, useEffect } from "react"
 
 import { Callout } from "../Callout/Callout"
+import { Shell } from "../Shell/Shell"
+
+function PageHead() {
+  return (
+    <div className="mb-3 mt-3 flex flex-wrap items-center gap-2">
+      <h1 className="serif text-xl font-semibold text-[var(--ink)]">奢华仪表板</h1>
+      <span className="text-xs text-[var(--ink-3)]">四只标的一屏看完：涨跌、成交量、市值、估值</span>
+    </div>
+  )
+}
 
 interface FinancialData {
   symbol: string
@@ -106,9 +116,12 @@ export const LuxuryDashboard: React.FC<DashboardProps> = ({ initial, probe }) =>
 
   if (loading && !probe) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="luxury-loader" role="status" aria-label="正在载入"></div>
-      </div>
+      <Shell probe={probe}>
+        <PageHead />
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="luxury-loader" role="status" aria-label="正在载入"></div>
+        </div>
+      </Shell>
     )
   }
 
@@ -118,18 +131,23 @@ export const LuxuryDashboard: React.FC<DashboardProps> = ({ initial, probe }) =>
      而那条通道现在取不到数（后端还没上线）。 */
   if (!rows.length) {
     return (
-      <div className="center-large-container">
-        <div className="center-large-card">
-          <h2>这一页还没有接上行情数据</h2>
-          <p className="text-muted">
-            卡片的骨架都在，但行情、成交量、市值、市盈率要等行情通道接上才会出现。
-          </p>
-          <Callout variant="warning" title="这里现在什么都不显示，是有意的">
-            以前这一页摆的是四个写死的标的（含价格和涨跌幅），页面上没说明它们不是行情。
-            与其摆一份看不出真假的数，不如让这里空着。
-          </Callout>
+      <Shell probe={probe}>
+        <PageHead />
+        <div className="card">
+          <div className="chd">
+            <h2>这一页还没有接上行情数据</h2>
+          </div>
+          <div className="p-4">
+            <p className="text-muted">
+              卡片的骨架都在，但行情、成交量、市值、市盈率要等行情通道接上才会出现。
+            </p>
+            <Callout variant="warning" title="这里现在什么都不显示，是有意的">
+              以前这一页摆的是四个写死的标的（含价格和涨跌幅），页面上没说明它们不是行情。
+              与其摆一份看不出真假的数，不如让这里空着。
+            </Callout>
+          </div>
         </div>
-      </div>
+      </Shell>
     )
   }
 
@@ -142,9 +160,9 @@ export const LuxuryDashboard: React.FC<DashboardProps> = ({ initial, probe }) =>
   const totalVolume = rows.reduce((sum, item) => sum + item.volume, 0)
 
   return (
-    <div className="center-large-container">
-      <div className="center-large-card">
-        <div className="luxury-grid">
+    <Shell probe={probe}>
+      <PageHead />
+      <div className="luxury-grid">
           {/* 总览卡片 */}
           <div className="card glow-effect">
             <div className="card chd">
@@ -394,7 +412,6 @@ export const LuxuryDashboard: React.FC<DashboardProps> = ({ initial, probe }) =>
             ))}
           </div>
         </div>
-      </div>
-    </div>
+    </Shell>
   )
 }

@@ -2032,7 +2032,10 @@ html {
 .grad-title,
 .qs-title,
 #obTitle,
-.linkcard h2 {
+.linkcard h2,
+.chd h2,
+.card h2,
+.shell-body h1.serif {
   --gt-a: #16222e;
   --gt-b: #1d4ed8;
   --gt-c: #3f6fe0;
@@ -2153,7 +2156,10 @@ html {
   :root:not([data-theme="light"]) .grad-title,
   :root:not([data-theme="light"]) .qs-title,
   :root:not([data-theme="light"]) #obTitle,
-  :root:not([data-theme="light"]) .linkcard h2 {
+  :root:not([data-theme="light"]) .linkcard h2,
+  :root:not([data-theme="light"]) .chd h2,
+  :root:not([data-theme="light"]) .card h2,
+  :root:not([data-theme="light"]) .shell-body h1.serif {
     --gt-a: #eef3f8;
     --gt-b: #8ab4f8;
     --gt-c: #5cc79a;
@@ -2163,7 +2169,10 @@ html {
 :root[data-theme="dark"] .grad-title,
 :root[data-theme="dark"] .qs-title,
 :root[data-theme="dark"] #obTitle,
-:root[data-theme="dark"] .linkcard h2 {
+:root[data-theme="dark"] .linkcard h2,
+:root[data-theme="dark"] .chd h2,
+:root[data-theme="dark"] .card h2,
+:root[data-theme="dark"] .shell-body h1.serif {
   --gt-a: #eef3f8;
   --gt-b: #8ab4f8;
   --gt-c: #5cc79a;

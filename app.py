@@ -220,6 +220,22 @@ def intraday_page():
     return page('index.html', base=DIST)
 
 
+# ── 两个早期演示页：并入统一外壳后补上服务端路由 ─────────────────────────
+# ★这两页在 `main.tsx` 里有客户端路由（/luxury-dash / /invest-sim），但此前
+#   `app.py` 一直没给它们出口 —— 直接访问会落到 catch-all 的 404。
+#   第 5 轮把它们并入 Shell 外壳后补上路由，让链接真正可达（与上面各页同构）。
+@app.route('/luxury-dash')
+def luxury_dash_page():
+    """奢华仪表板（演示页）。"""
+    return page('index.html', base=DIST)
+
+
+@app.route('/invest-sim')
+def invest_sim_page():
+    """投资模拟可视化（演示页）。"""
+    return page('index.html', base=DIST)
+
+
 @app.route('/linkage')
 def linkage_page():
     """关联检测页。**重采集、弱分析**。"""

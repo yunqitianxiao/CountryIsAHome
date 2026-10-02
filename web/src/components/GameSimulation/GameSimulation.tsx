@@ -1,5 +1,15 @@
 import React, { useState, useEffect } from "react";
 import InvestmentChart from '../Charts/InvestmentChart';
+import { Shell } from "../Shell/Shell";
+
+function PageHead() {
+  return (
+    <div className="mb-3 mt-3 flex flex-wrap items-center gap-2">
+      <h1 className="serif text-xl font-semibold text-[var(--ink)]">投资模拟可视化</h1>
+      <span className="text-xs text-[var(--ink-3)]">一笔虚拟投入的完整回放：本金、走势、持仓、操作</span>
+    </div>
+  )
+}
 
 interface Holding {
   symbol: string;
@@ -102,31 +112,37 @@ const GameSimulation: React.FC<GameSimulationProps> = ({ initial, probe }) => {
 
   if (loading && !probe) {
     return (
-      <div className="flex justify-center items-center min-h-[400px]">
-        <div className="luxury-loader"></div>
-      </div>
+      <Shell probe={probe}>
+        <PageHead />
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="luxury-loader"></div>
+        </div>
+      </Shell>
     );
   }
 
   if (!simulationData) {
     return (
-      <div className="card">
-        <div className="card chd">
-          <h2>练手结果</h2>
+      <Shell probe={probe}>
+        <PageHead />
+        <div className="card">
+          <div className="card chd">
+            <h2>练手结果</h2>
+          </div>
+          <div className="p-4">
+            <p className="text-muted">还没有练手数据</p>
+          </div>
         </div>
-        <div className="p-4">
-          <p className="text-gray-500">还没有练手数据</p>
-        </div>
-      </div>
+      </Shell>
     );
   }
 
   const { result, holdings } = simulationData;
 
   return (
-    <div className="center-large-container">
-      <div className="center-large-card">
-        <div className="luxury-grid">
+    <Shell probe={probe}>
+      <PageHead />
+      <div className="luxury-grid">
       {/* 投资摘要卡片 */}
       <div className="card glow-effect">
         <div className="card chd">
@@ -135,28 +151,28 @@ const GameSimulation: React.FC<GameSimulationProps> = ({ initial, probe }) => {
         <div className="p-4">
           <div className="text-center mb-4">
             <div className="num-hero text-up">{result.profitLossPercent >= 0 ? '+' : ''}{result.profitLossPercent.toFixed(2)}%</div>
-            <div className="text-sm text-gray-400 mt-1">收益情况</div>
+            <div className="text-sm text-muted mt-1">收益情况</div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="text-center">
               <div className="num-lg">{result.initialAmount.toLocaleString()}</div>
-              <div className="text-sm text-gray-400">初始本金</div>
+              <div className="text-sm text-muted">初始本金</div>
             </div>
             <div className="text-center">
               <div className={`num-lg ${result.currentValue >= result.initialAmount ? 'text-up' : 'text-down'}`}>
                 {result.currentValue.toLocaleString()}
               </div>
-              <div className="text-sm text-gray-400">现在值多少</div>
+              <div className="text-sm text-muted">现在值多少</div>
             </div>
           </div>
 
-          <div className="mt-4 pt-4 border-t border-gray-700">
+          <div className="mt-4 pt-4 border-t border-line">
             <div className="text-center">
               <div className={`num-lg ${result.profitLoss >= 0 ? 'text-up' : 'text-down'}`}>
                 {result.profitLoss >= 0 ? '+' : ''}{result.profitLoss.toLocaleString()}
               </div>
-              <div className="text-sm text-gray-400">盈亏</div>
+              <div className="text-sm text-muted">盈亏</div>
             </div>
           </div>
         </div>
@@ -181,7 +197,7 @@ const GameSimulation: React.FC<GameSimulationProps> = ({ initial, probe }) => {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-600">
+                <tr className="border-b border-line">
                   <th className="text-left py-2 px-3">代码</th>
                   <th className="text-left py-2 px-3">名称</th>
                   <th className="text-right py-2 px-3">数量</th>
@@ -198,7 +214,7 @@ const GameSimulation: React.FC<GameSimulationProps> = ({ initial, probe }) => {
                   const plPercent = ((holding.currentPrice - holding.avgPrice) / holding.avgPrice) * 100;
 
                   return (
-                    <tr key={index} className="border-b border-gray-700">
+                    <tr key={index} className="border-b border-line">
                       <td className="py-2 px-3 font-mono">{holding.symbol}</td>
                       <td className="py-2 px-3 font-medium">{holding.name}</td>
                       <td className="py-2 px-3 text-right">{holding.shares}</td>
@@ -225,10 +241,10 @@ const GameSimulation: React.FC<GameSimulationProps> = ({ initial, probe }) => {
           </div>
           <div className="p-4">
             <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 rounded-lg bg-gray-800">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-surface-alt">
                 <div>
                   <div className="font-medium">买入 600519 贵州茅台</div>
-                  <div className="text-sm text-gray-400">2026-08-01</div>
+                  <div className="text-sm text-muted">2026-08-01</div>
                 </div>
                 <div className="text-right">
                   <div className="font-medium">5 股</div>
@@ -236,10 +252,10 @@ const GameSimulation: React.FC<GameSimulationProps> = ({ initial, probe }) => {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between p-3 rounded-lg bg-gray-800">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-surface-alt">
                 <div>
                   <div className="font-medium">买入 000001 平安银行</div>
-                  <div className="text-sm text-gray-400">2026-08-05</div>
+                  <div className="text-sm text-muted">2026-08-05</div>
                 </div>
                 <div className="text-right">
                   <div className="font-medium">1000 股</div>
@@ -247,10 +263,10 @@ const GameSimulation: React.FC<GameSimulationProps> = ({ initial, probe }) => {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between p-3 rounded-lg bg-gray-800">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-surface-alt">
                 <div>
                   <div className="font-medium">买入 000858 五粮液</div>
-                  <div className="text-sm text-gray-400">2026-08-10</div>
+                  <div className="text-sm text-muted">2026-08-10</div>
                 </div>
                 <div className="text-right">
                   <div className="font-medium">200 股</div>
@@ -262,8 +278,7 @@ const GameSimulation: React.FC<GameSimulationProps> = ({ initial, probe }) => {
         </div>
       </div>
         </div>
-      </div>
-    </div>
+    </Shell>
   );
 };
 
